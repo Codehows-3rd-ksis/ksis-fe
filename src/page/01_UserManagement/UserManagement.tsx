@@ -34,6 +34,8 @@ function UserManagement() {
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false)
   const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
   const [openEditDoneAlert, setOpenEditDoneAlert] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const getTableDatas = async () => {
       try {
@@ -50,7 +52,8 @@ function UserManagement() {
       }
       catch(err) {
           console.error(err)
-          alert('getUser 실패')
+          setErrorMsg('get User 실패');
+          setOpenErrorAlert(true)
       }
   }
 
@@ -92,20 +95,22 @@ function UserManagement() {
     setOpenDeleteAlert(true)
   }
   const handleDelete = async () => {
-    // delete api 연결
     try {
       if(!selectedRow) {
-        alert('deleteUser 실패 - selectedRow is Null')
+        setErrorMsg('User 삭제 실패');
+        setOpenErrorAlert(true)
         return
       };
       await deleteUser(selectedRow.userId).then(()=>{
         // 삭제완료 팝업
+        setSelectedRow(null)
         setOpenDelDoneAlert(true);
       })
     }
     catch(err) {
       console.error(err)
-      alert('deleteUser 실패')
+      setErrorMsg('User 삭제 실패');
+      setOpenErrorAlert(true)
     }
   }
   /**  이력조회 페이지  =========================================== */
@@ -183,6 +188,15 @@ function UserManagement() {
               setOpenDelDoneAlert(false);
               BoardRefresh()
             }}
+        />
+        {/* Error Alert */}
+        <Alert
+          open={openErrorAlert}
+          text={errorMsg}
+          type="error"
+          onConfirm={() => {
+            setOpenErrorAlert(false);
+          }}
         />
     </Box>
   )

@@ -45,6 +45,8 @@ export default function RegPage(props: RegPageProps) {
     ];
     const [openValidAlert, setOpenValidAlert] = useState(false)
     const [validateMsg, setValidateMsg] = useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     const handleShowPassword = () => {
         setIsVisible(!isVisible);
@@ -139,8 +141,8 @@ export default function RegPage(props: RegPageProps) {
         catch(err) {
             console.error(err)
             setOpenRegAlert(false);
-            setValidateMsg('get User 실패');
-            setOpenValidAlert(true)
+            setErrorMsg('get User 실패');
+            setOpenErrorAlert(true)
         }
     }
 
@@ -159,8 +161,8 @@ export default function RegPage(props: RegPageProps) {
         catch(err) {
             console.error(err)
             setOpenRegAlert(false);
-            setValidateMsg('User 등록 실패');
-            setOpenValidAlert(true)
+            setErrorMsg('User 등록 실패');
+            setOpenErrorAlert(true)
         }
 
     }
@@ -391,12 +393,22 @@ export default function RegPage(props: RegPageProps) {
                 setOpenRegAlert(false);
               }}
             />
+            {/* Validation Alert */}
             <Alert
               open={openValidAlert}
               text={validateMsg}
               type="validate"
               onConfirm={() => {
                 setOpenValidAlert(false);
+              }}
+            />
+            {/* Error Alert */}
+            <Alert
+              open={openErrorAlert}
+              text={errorMsg}
+              type="error"
+              onConfirm={() => {
+                setOpenErrorAlert(false);
               }}
             />
         </Box>

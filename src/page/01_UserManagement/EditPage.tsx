@@ -48,6 +48,8 @@ export default function EditPage(props: EditPageProps) {
     ];
     const [openValidAlert, setOpenValidAlert] = useState(false)
     const [validateMsg, setValidateMsg] = useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     const handleShowPassword = () => {
         setIsVisible(!isVisible);
@@ -144,8 +146,8 @@ export default function EditPage(props: EditPageProps) {
         catch(err) {
             console.error(err)
             setOpenEditAlert(false);
-            setValidateMsg('get User 실패');
-            setOpenValidAlert(true)
+            setErrorMsg('get User 실패');
+            setOpenErrorAlert(true)
         }
         
     }
@@ -153,8 +155,8 @@ export default function EditPage(props: EditPageProps) {
         try {
             if(row === null) {
                 setOpenEditAlert(false);
-                setValidateMsg('row is null // User 수정 실패');
-                setOpenValidAlert(true)
+                setErrorMsg('row is null // User 수정 실패');
+                setOpenErrorAlert(true)
                 return;
             }
             await updateUser(row.userId,{
@@ -170,8 +172,9 @@ export default function EditPage(props: EditPageProps) {
         catch(err) {
             console.error(err)
             setOpenEditAlert(false);
-            setValidateMsg('User 수정 실패');
-            setOpenValidAlert(true)
+            setErrorMsg('User 수정 실패');
+            setOpenErrorAlert(true)
+            
         }
     }
 
@@ -373,6 +376,7 @@ export default function EditPage(props: EditPageProps) {
                 <CustomButton text="닫기" onClick={()=>setOpenCancelAlert(true)} backgroundColor='#f0f0f0' radius={2}/>
             </Box>
 
+            {/* Cancel Alert */}
             <Alert
               open={openCancelAlert}
               text="정말로 닫으시겠습니까?"
@@ -384,6 +388,7 @@ export default function EditPage(props: EditPageProps) {
                 setOpenCancelAlert(false);
               }}
             />
+            {/* Edit Alert */}
             <Alert
               open={openEditAlert}
               text="수정 하시겠습니까?"
@@ -396,12 +401,22 @@ export default function EditPage(props: EditPageProps) {
                 setOpenEditAlert(false);
               }}
             />
+            {/* Validation Alert */}
             <Alert
               open={openValidAlert}
               text={validateMsg}
               type="validate"
               onConfirm={() => {
                 setOpenValidAlert(false);
+              }}
+            />
+            {/* Error Alert */}
+            <Alert
+              open={openErrorAlert}
+              text={errorMsg}
+              type="error"
+              onConfirm={() => {
+                setOpenErrorAlert(false);
               }}
             />
         </Box>
