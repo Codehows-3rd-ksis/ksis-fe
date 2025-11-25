@@ -8,8 +8,8 @@ import ProtectedRoute from "./component/ProtectedRoute";
 
 import { type User_Type } from "./Types/Components";
 import LoginPage from './page/00_Login/Login'
-import { jwtDecode } from "jwt-decode";
 import { getProfile } from "./API/00_LoginApi"
+
 //** 유저관리 */
 import UserManagement from "./page/01_UserManagement/UserManagement";
 import UserLog from "./page/01_UserManagement/LogPage"
@@ -24,13 +24,6 @@ import StatusDetail from "./page/03_Status/StatusDetail"
 //** 수집이력 */
 import History from "./page/05_History/History"
 import HistoryDetail from "./page/05_History/HistoryDetail";
-
-
-interface JwtPayload {
-  sub: string;
-  role: "ROLE_ADMIN" | "";
-  exp: number;
-}
 
 function App() {
   const location = useLocation();
@@ -47,12 +40,10 @@ function App() {
   const handleLoginSuccess = async (accessToken: string) => {
     try {
       localStorage.setItem("accessToken", accessToken);
-      const payload = jwtDecode<JwtPayload>(accessToken);
-      // payload = { sub, role, exp }
-      console.log("payload", payload)
       
       const userData = await getProfile() // return { userId, username, name, role }
-      console.log('userData', userData)
+      // console.log('userData', userData)
+
       localStorage.setItem("userInfo", JSON.stringify(userData));
       setUserInfo(userData);
       

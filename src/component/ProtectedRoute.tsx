@@ -9,8 +9,6 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ userInfo, children, requiredRole }: ProtectedRouteProps) {
-  if (!userInfo) return <Navigate to="/login" replace />;
-
   // 1️⃣ 토큰이 없으면 로그인 페이지로
   const accessToken = localStorage.getItem("accessToken");
   if (!accessToken) return <Navigate to="/login" replace />;
