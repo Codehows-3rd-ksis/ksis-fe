@@ -5,7 +5,7 @@ import CustomButton from "../../component/CustomButton"
 import CustomIconButton from '../../component/CustomIconButton'
 import CustomTextField from "../../component/CustomTextField"
 import { loginUser } from "../../API/00_LoginApi"
-// import { type User_Type } from "../../Types/Components"
+import Alert from "../../component/Alert";
 
 interface LoginProps {
   onLoginSuccess: (accessToken: string) => void;
@@ -14,6 +14,8 @@ interface LoginProps {
 function Login({onLoginSuccess}: LoginProps) {
   const [loginInfo, setLoginInfo] = useState<{username: string, password: string}>({username: "", password: ""})
   const [isVisible, setIsVisible] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleInputChange = (key: keyof typeof loginInfo, value: string) => {
         setLoginInfo((prev) => ({ ...prev, [key]: value }));
@@ -28,7 +30,8 @@ function Login({onLoginSuccess}: LoginProps) {
     } 
     catch(err) {
       console.error(err);
-      alert('login 실패');
+      setErrorMsg('등록되지 않은 이용자입니다.');
+      setOpenErrorAlert(true)
     }
   };
 
@@ -94,6 +97,15 @@ function Login({onLoginSuccess}: LoginProps) {
           </Box>
         </Box>
       </Box>
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   )
 }
