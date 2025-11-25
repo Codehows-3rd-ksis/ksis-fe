@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate  } from "react-router-dom";
-import {Box} from '@mui/material'
+import {Box, Typography} from '@mui/material'
 import { useAuthStore } from "./Store/AuthStore";
 import Side from "./layout/Side";
 import Content from "./layout/Content";
@@ -27,11 +27,13 @@ import HistoryDetail from "./page/05_History/HistoryDetail";
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, setToken, fetchUserProfile, loadFromStorage } = useAuthStore();
+  const { user, isLoading, setToken, fetchUserProfile, loadFromStorage } = useAuthStore();
 
   // 새로고침 시 저장된 값 로드
   useEffect(() => {
-    loadFromStorage();
+    (async () => {
+      await loadFromStorage();
+    })();
   }, []);
 
   // 사이드바/콘텐츠를 숨길 경로 목록
@@ -50,6 +52,13 @@ function App() {
       navigate("/status");
     }
   };
+
+  if (isLoading) {
+    // 프로필 로딩 중엔 로딩 UI 또는 빈 화면 표시
+    return <Box sx={{ width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Typography>Loading...</Typography>
+    </Box>;
+  }
 
 
   return (
