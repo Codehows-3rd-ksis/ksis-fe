@@ -4,7 +4,7 @@ import {Box, TextField} from '@mui/material'
 import {type TextField_Type} from '../Types/Components'
 
 export default function CustomTextField(props: TextField_Type) {
-    const {value, label, variant, border, radius, inputWidth, height, 
+    const {value, label, variant, border, radius, inputWidth, height, fontSize,
         disabled, placeholder, readOnly, type, step, 
         onChange, startAdornment, endAdornment} = props
     return (
@@ -14,7 +14,7 @@ export default function CustomTextField(props: TextField_Type) {
                     backgroundColor: 'white', 
                     border: border || '', 
                     width: inputWidth || '246px', 
-                    minWidth: '246px',
+                    minWidth: '246px'
                 }}
                 size= "small"
                 value={value || ''}
@@ -34,7 +34,8 @@ export default function CustomTextField(props: TextField_Type) {
                         },
                         sx: {
                             borderRadius: radius || 1, 
-                            height: height || '40px'
+                            height: height || '40px',
+                            fontSize: fontSize || '16px'
                         }, 
                     },
                 }}
