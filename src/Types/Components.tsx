@@ -9,6 +9,7 @@ export interface TextField_Type {
     radius?: number | string;
     inputWidth?: string;
     height?: string;
+    fontSize?: string;
     disabled?: boolean;
     // required?: boolean;
     placeholder?: string;
@@ -83,8 +84,8 @@ export interface Select_Type {
 }
 
 export interface User_Type {
-    id? : number;
-    loginId? : string;
+    userId? : number;
+    username? : string;
     name? : string;
     role? : string;
 }
