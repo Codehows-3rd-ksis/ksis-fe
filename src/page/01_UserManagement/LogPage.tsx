@@ -11,7 +11,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
-import { getUserLog } from './Api';
+import { getUserLog } from '../../API/01_UsermanagementApi';
 
 export default function LogPage () {
     const location = useLocation();
