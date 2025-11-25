@@ -25,7 +25,6 @@ function Login({onLoginSuccess}: LoginProps) {
       
       // server response: { accessToken }
       onLoginSuccess(data.accessToken);
-
     } 
     catch(err) {
       console.error(err);
