@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate  } from "react-router-dom";
 import {Box, Typography} from '@mui/material'
-import { useAuthStore } from "./Store/AuthStore";
+import { useAuthStore } from "./Store/authStore";
 import Side from "./layout/Side";
 import Content from "./layout/Content";
 import Menu from "./component/Menu";
