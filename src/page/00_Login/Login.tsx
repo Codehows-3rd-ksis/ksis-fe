@@ -28,9 +28,19 @@ function Login({onLoginSuccess}: LoginProps) {
       // server response: { accessToken }
       onLoginSuccess(data.accessToken);
     } 
-    catch(err) {
+    catch(err:any) {
       console.error(err);
-      setErrorMsg('등록되지 않은 이용자입니다.');
+
+      // axios 에러일 때
+      console.log('err', err)
+      if (err.response && err.response.data) {
+        const serverMsg = err.response.data.message;  // <-- 백엔드 메시지
+        setErrorMsg(serverMsg);
+      } else {
+        // 네트워크 에러 등
+        setErrorMsg("로그인 중 오류가 발생했습니다.");
+      }
+      
       setOpenErrorAlert(true)
     }
   };

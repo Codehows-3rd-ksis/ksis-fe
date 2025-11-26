@@ -46,7 +46,7 @@ function UserManagement() {
               id: row.userId,
               index: i+1,
           }))
-        
+
           setBaseRows(result)
           setFilteredRows(result)
       }
