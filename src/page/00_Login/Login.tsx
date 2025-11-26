@@ -32,9 +32,8 @@ function Login({onLoginSuccess}: LoginProps) {
       console.error(err);
 
       // axios 에러일 때
-      console.log('err', err)
       if (err.response && err.response.data) {
-        const serverMsg = err.response.data.message;  // <-- 백엔드 메시지
+        const serverMsg = err.response.data.message;  // 백엔드 메시지
         setErrorMsg(serverMsg);
       } else {
         // 네트워크 에러 등
