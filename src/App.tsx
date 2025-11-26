@@ -46,7 +46,8 @@ function App() {
     await fetchUserProfile();
 
     // 로그인 성공 후 권한에 따라 이동
-    if (user?.role === "ROLE_ADMIN") {
+    const currentUser = useAuthStore.getState().user; 
+    if (currentUser?.role === "ROLE_ADMIN") {
       navigate("/user");
     } else {
       navigate("/status");
