@@ -1,10 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
-import {
-  useParams,
-  useNavigate,
-  useLocation,
-  Link as RouterLink,
-} from "react-router-dom";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -18,13 +13,19 @@ import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
 
-import { getStatusDetail, createStatusWebSocket } from "./Api";
+import { getStatusDetail } from "./Api";
+import useWebSocketStore from "../../store/useWebSocketStore";
 
 function StatusDetail() {
   // ========== 1. 라우터 훅 ==========
-  const { id } = useParams<{ id: string }>();
+  const { workId: workIdParam } = useParams<{
+    workId: string;
+  }>();
+  const workId = workIdParam ? Number(workIdParam) : undefined;
   const navigate = useNavigate();
-  const location = useLocation();
+
+  const { connect, subscribeCrawling, readyState, disconnect } =
+    useWebSocketStore();
 
   // ========== 2. State 선언 (데이터) ==========
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
@@ -34,98 +35,9 @@ function StatusDetail() {
   const [collectionRows, setCollectionRows] = useState<
     Array<{ id: number; progressNo: string; [key: string]: any }>
   >([]);
+  const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState("");
-
-  // const [failureRows, setFailureRows] = useState<
-  //   Array<{ id: number; progressNo: string; url: string }>
-  // >([{ id: 1, progressNo: "4", url: "https://example.com/failed-page" }]);
-
-  // const [collectionRows, setCollectionRows] = useState<
-  //   Array<{ id: number; progressNo: string; [key: string]: any }>
-  // >([
-  //   {
-  //     id: 1,
-  //     progressNo: "1",
-  //     title: "2025년 4분기",
-  //     writer: "항만물류정책과",
-  //     date: "2025-11-24 14:00",
-  //     context: "올해 국토부의",
-  //   },
-  //   {
-  //     id: 2,
-  //     progressNo: "2",
-  //     title: "2025년 대한민국",
-  //     writer: "전략산업과",
-  //     date: "2025-11-11 13:00",
-  //     context: "창원특례시는 12일",
-  //   },
-  //   {
-  //     id: 3,
-  //     progressNo: "3",
-  //     title: "2025년 4분기",
-  //     writer: "농업정책과",
-  //     date: "2025-11-10 11:30",
-  //     context: "창원특례시는 2020년",
-  //   },
-  //   {
-  //     id: 4,
-  //     progressNo: "4",
-  //     title: "창원특례시",
-  //     writer: "투자유치단",
-  //     date: "2025-11-09 12:00",
-  //     context: "이번 행사는 해외 인사",
-  //   },
-  //   {
-  //     id: 5,
-  //     progressNo: "5",
-  //     title: "경상남도",
-  //     writer: "전략산업과",
-  //     date: "2025-11-23 09:10",
-  //     context: "경상남도는 2024년",
-  //   },
-  // ]);
-
-  // const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([
-  //   {
-  //     field: "progressNo",
-  //     headerName: "진행번호",
-  //     flex: 1,
-  //     headerAlign: "center",
-  //     align: "center",
-  //   },
-  //   {
-  //     field: "title",
-  //     headerName: "제목",
-  //     flex: 1,
-  //     headerAlign: "center",
-  //     align: "center",
-  //   },
-  //   {
-  //     field: "writer",
-  //     headerName: "작성자",
-  //     flex: 1,
-  //     headerAlign: "center",
-  //     align: "center",
-  //   },
-  //   {
-  //     field: "date",
-  //     headerName: "작성일",
-  //     flex: 1,
-  //     headerAlign: "center",
-  //     align: "center",
-  //   },
-  //   {
-  //     field: "context",
-  //     headerName: "본문",
-  //     flex: 4,
-  //     headerAlign: "center",
-  //     align: "left",
-  //   },
-  // ]);
-
-  // const [totalCount, setTotalCount] = useState(10);
-  // const [estimatedTime, setEstimatedTime] = useState("2025-11-13 16:00:00");
 
   // ========== 3. State 선언 (UI 상태) ==========
 
@@ -257,15 +169,6 @@ function StatusDetail() {
     [collectionRows, failureProgressNos]
   );
 
-  // collectionRows에 isFailure 플래그만 추가
-  // const collectionRowsWithFailure = useMemo(() =>
-  //   collectionRows.map(row => ({
-  //     ...row, //기존 row의 모든 필드 복사
-  //     isFailure: failureProgressNos.has(row.progressNo) //해당 progressNo가 실패 Set에 있으면 true
-  //   })),
-  //   [collectionRows, failureProgressNos]
-  // )
-
   // ========== 5. 계산된 값 ==========
   const failureCount = failureRows.length;
   const collectionCount = collectionRows.length;
@@ -281,10 +184,10 @@ function StatusDetail() {
   // 페이지 진입 시 초기 데이터 로딩
   useEffect(() => {
     const fetchDetailData = async () => {
-      if (!id) return; // id가 없으면 실행 안 함
+      if (!workId) return; // workId가 없으면 실행 안 함
 
       try {
-        const data = await getStatusDetail(Number(id)); // API 호출 // 받아온 데이터로 각 state 업데이트
+        const data = await getStatusDetail(workId); // API 호출 // 받아온 데이터로 각 state 업데이트
         setDetailData(data.basicInfo); // 기본 정보
         setFailureRows(data.failureList); // 실패 목록
         setCollectionRows(data.collectionData.rows); // 수집 데이터
@@ -294,6 +197,7 @@ function StatusDetail() {
         // 동적 컬럼 생성 (수집 데이터 컬럼이 동적으로 변할 수 있음)
         if (data.collectionData.columns.length > 0) {
           const dynamicColumns = data.collectionData.columns.map((col) => ({
+            // 백엔드가 보내준 컬럼 정보
             field: col.field,
             headerName: col.headerName,
             flex: col.field === "context" ? 4 : 1,
@@ -301,7 +205,7 @@ function StatusDetail() {
             align:
               col.field === "context" ? ("left" as const) : ("center" as const),
           }));
-          setCollectionColumns(dynamicColumns);
+          setCollectionColumns(dynamicColumns); //컬럼 한번에 생성
         }
       } catch (error) {
         console.error("상세 정보 조회 실패:", error);
@@ -309,74 +213,114 @@ function StatusDetail() {
     };
 
     fetchDetailData();
-  }, [id]); // id가 변경될 때마다 실행
+  }, [workId]); // workId가 변경될 때마다 실행
 
-  // useEffect(() => {
-  //   if (location.state && location.state.rowData) {
-  //     setDetailData(location.state.rowData);
-  //   } else if (id) {
-  //     // TODO: API 호출로 데이터 가져오기
-  //     console.log("Fetching data for id:", id);
-  //   }
-  // }, [id, location.state]);
-
-  // WebSocket 연결 및 실시간 데이터 수신
+  // WebSocket 연결 (앱 시작 시 한 번만)
   useEffect(() => {
-    if (!id) return; // id가 없으면 실행 안 함
+    const WS_URL = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
+    if (readyState !== 1) {
+      // 1 = OPEN
+      connect(WS_URL);
+    }
+    return () => {
+      // cleanup 시 연결 유지 (다른 페이지에서도 사용 가능)
+    };
+  }, [connect, readyState]);
 
-    const ws = createStatusWebSocket(Number(id), {
-      onMessage: (data) => {
-        // 메시지 타입에 따라 다른 처리
-        if (data.type === "failure") {
-          // 실패 목록 실시간 업데이트
-          setFailureRows(data.rows || []);
-        } else if (data.type === "collection") {
-          // 수집 데이터 실시간 업데이트
-          setCollectionRows(data.rows || []);
+  // 크롤링 작업 구독 (workId가 있고 연결되었을 때)
+  useEffect(() => {
+    if (!workId || readyState !== 1) return; // readyState 1 = OPEN
 
-          // 새로운 컬럼이 추가될 수 있으므로  동적 생성
-          if (data.rows && data.rows.length > 0) {
-            const keys = Object.keys(data.rows[0]).filter(
+    console.log(`크롤링 작업 ${workId} 구독 시작`);
+
+    const subscription = subscribeCrawling(workId, (data) => {
+      //
+      console.log("수신된 메시지:", data);
+
+      // 메시지 타입에 따라 처리
+      switch (data.type) {
+        case "PROGRESS":
+          // 진행률 업데이트
+          if (data.totalCount !== undefined) {
+            setTotalCount(data.totalCount);
+          }
+          if (data.estimatedTime) {
+            setEstimatedTime(data.estimatedTime);
+          }
+          break;
+
+        case "COLLECTION":
+          // 수집 데이터 업데이트
+          if (data.row) {
+            // 단일 row 추가
+            setCollectionRows((prev) => [...prev, data.row]);
+          } else if (data.rows) {
+            // 여러 rows 교체
+            setCollectionRows(data.rows);
+          }
+
+          // 동적 컬럼 생성
+          if (
+            collectionColumns.length === 0 &&
+            (data.row || (data.rows && data.rows.length > 0))
+          ) {
+            // 크롤링 막 시작하여 컬럼 정보 없고 + 데이터가 있으면, 그 때 컬럼 생성"
+            const sampleRow = data.row || data.rows[0];
+            const keys = Object.keys(sampleRow).filter(
               (k) => k !== "id" && k !== "progressNo"
             );
-            const dynamicColumns = [
+
+            const dynamicColumns: GridColDef[] = [
               {
                 field: "progressNo",
                 headerName: "진행번호",
                 flex: 1,
-                headerAlign: "center" as const,
-                align: "center" as const,
+                headerAlign: "center",
+                align: "center",
               },
               ...keys.map((key) => ({
                 field: key,
                 headerName: key,
                 flex: key === "context" ? 4 : 1,
                 headerAlign: "center" as const,
-                align:
-                  key === "context" ? ("left" as const) : ("center" as const),
+                align: (key === "context" ? "left" : "center") as
+                  | "left"
+                  | "center",
               })),
             ];
             setCollectionColumns(dynamicColumns);
           }
-        } else if (data.type === "progress") {
-          // 진행률 정보 실시간 업데이트
-          setTotalCount(data.totalCount || 0);
-          setEstimatedTime(data.estimatedTime || "");
-        }
-      },
-      onError: (error) => {
-        console.error("WebSocket 오류:", error);
-      },
-      onClose: () => {
-        console.log("WebSocket 연결 종료");
-      },
+          break;
+
+        case "FAILURE":
+          // 실패 목록 업데이트
+          if (data.failure) {
+            // 단일 failure 추가
+            setFailureRows((prev) => [...prev, data.failure]);
+          } else if (data.rows) {
+            // 여러 failures 교체
+            setFailureRows(data.rows);
+          }
+          break;
+
+        case "COMPLETE":
+          // 크롤링 완료
+          console.log("크롤링 완료!");
+          break;
+
+        default:
+          console.warn("알 수 없는 메시지 타입:", data.type);
+      }
     });
 
-    // cleanup: 컴포넌트 언마운트 시 WebSocket 연결 종료
+    // cleanup: 컴포넌트 언마운트 또는 workId 변경 시 구독 해제
     return () => {
-      ws.close();
+      if (subscription) {
+        subscription.unsubscribe();
+        console.log(`크롤링 작업 ${workId} 구독 해제`);
+      }
     };
-  }, [id]); // id가 변경될 때마다 재연결
+  }, [workId, readyState, subscribeCrawling]);
 
   // ========== 9. JSX 반환 ==========
   return (

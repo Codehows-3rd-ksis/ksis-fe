@@ -15,7 +15,6 @@ function Status() {
 
   // ========== 2. State 선언 (데이터) ==========
   const [baseRows, setBaseRows] = useState<StatusTableRows[]>([]);
-  const [filteredRows, setFilteredRows] = useState<StatusTableRows[]>([]);
 
   // ========== 3. State 선언 (UI 상태) ==========
   const [alertOpen, setAlertOpen] = useState(false);
@@ -24,7 +23,7 @@ function Status() {
   // ========== 4. API 함수 ==========
   const handleStopCrawl = async (row: StatusTableRows) => {
     try {
-      await stopCrawl(row.id);
+      await stopCrawl(row.workId);
       console.log("수집 중지 성공:", row.settingName);
       // 목록 새로고침
       fetchStatusList();
@@ -37,7 +36,6 @@ function Status() {
     try {
       const data = await getStatusList();
       setBaseRows(data);
-      setFilteredRows(data);
     } catch (error) {
       console.error("수집 현황 목록 조회 실패:", error);
     }
@@ -45,7 +43,7 @@ function Status() {
 
   // ========== 5. 이벤트 핸들러 ==========
   const handleDetailOpen = (row: StatusTableRows) => {
-    navigate(`/status/detail/${row.id}`, { state: { rowData: row } });
+    navigate(`/status/detail/${row.workId}`);
   };
 
   const handleStopClick = (row: StatusTableRows) => {
@@ -72,53 +70,6 @@ function Status() {
   useEffect(() => {
     fetchStatusList();
   }, []);
-
-  // useEffect(() => {
-  //   const data = [
-  //     {
-  //       id: 1,
-  //       settingName: "창원시청 공지사항 수집",
-  //       startAt: "2025-10-24 09:00",
-  //       type: "스케줄링",
-  //       startDate: "2025.10.24",
-  //       endDate: "2025.11.23",
-  //       period: "2025.10.24 ~ 2025.11.23",
-  //       cycle: "매주 월요일",
-  //       state: "진행중",
-  //       userId: "",
-  //       progress: "50%",
-  //     },
-  //     {
-  //       id: 2,
-  //       settingName: "경상남도 보도자료 수집",
-  //       startAt: "2025-10-04 09:00",
-  //       type: "스케줄링",
-  //       startDate: "2025.10.24",
-  //       endDate: "2025.11.23",
-  //       period: "2025.10.24 ~ 2025.11.23",
-  //       cycle: "매주 월요일",
-  //       state: "진행중",
-  //       userId: "",
-  //       progress: "70%",
-  //     },
-  //     {
-  //       id: 3,
-  //       settingName: "창원관광",
-  //       startAt: "2025-11-24 09:00",
-  //       type: "수동실행",
-  //       startDate: "",
-  //       endDate: "",
-  //       period: "",
-  //       cycle: "",
-  //       state: "진행중",
-  //       userId: "ksis1",
-  //       progress: "10%",
-  //     },
-  //   ];
-
-  //   setBaseRows(data);
-  //   setFilteredRows(data);
-  // }, []);
 
   // ========== 8. JSX ==========
   return (
@@ -150,7 +101,7 @@ function Status() {
             }}
           >
             <Box sx={{ padding: 2, marginTop: "auto", marginBottom: "auto" }}>
-              <CommonTable columns={columns} rows={filteredRows} />
+              <CommonTable columns={columns} rows={baseRows} />
             </Box>
           </Box>
         </Paper>
@@ -159,7 +110,7 @@ function Status() {
       <Alert
         open={alertOpen}
         type="question"
-        text={`${selectedRow?.settingName} 수집을 중지하시겠습니까?`}
+        text={`"${selectedRow?.settingName}"의 수집을 중지하시겠습니까?`}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />

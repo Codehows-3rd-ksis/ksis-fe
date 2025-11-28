@@ -6,7 +6,8 @@ import { Box, LinearProgress } from "@mui/material";
 export interface StatusTableRows {
   // 기본 정보
   id: number;
-  SettingId?: number;
+  workId: number;
+  settingId?: number;
   settingName?: string;
   type?: string;
   userId?: string;
