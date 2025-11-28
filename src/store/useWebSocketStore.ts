@@ -25,7 +25,8 @@ export const enum ReadyState {
 }
 
 /**
- * 크롤링 진행 상황 메시지 타입
+ * 크롤링 진행 상황 메시지 타입 (선택적 사용)
+ * subscribe() 콜백에서 message.body를 파싱한 결과의 타입 참고용
  */
 export interface CrawlingMessage {
   type: "PROGRESS" | "COLLECTION" | "FAILURE" | "COMPLETE";
@@ -48,9 +49,9 @@ interface WebSocketState {
 
   connect: (url: string) => void;
   disconnect: () => void;
-  subscribeCrawling: (
-    workId: number,
-    callback: (message: CrawlingMessage) => void
+  subscribe: (
+    destination: string,
+    callback: (message: Stomp.Message) => void
   ) => Stomp.Subscription | undefined;
 }
 
@@ -225,14 +226,14 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
   },
 
   /**
-   * 특정 크롤링 작업 구독
-   * @param workId - 작업ID
+   * STOMP 목적지 구독
+   * @param destination - 구독할 경로 (예: /user/queue/crawling/123)
    * @param callback - 메시지 수신 콜백
    * @returns STOMP 구독 객체
    */
-  subscribeCrawling: (
-    workId: number,
-    callback: (message: CrawlingMessage) => void
+  subscribe: (
+    destination: string,
+    callback: (message: Stomp.Message) => void
   ) => {
     const { stompClient, readyState } = get();
 
@@ -245,20 +246,8 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
       return undefined;
     }
 
-    // 사용자별 개인 큐 구독 (중요: /user/queue/... 형식)
-    // 백엔드에서 현재 인증된 사용자의 큐로만 메시지 전송
-    const destination = `/user/queue/crawling/${workId}`;
-
     console.log(`[WebSocket] 구독 시작: ${destination}`);
-
-    return stompClient.subscribe(destination, (message: Stomp.Message) => {
-      try {
-        const data: CrawlingMessage = JSON.parse(message.body);
-        callback(data);
-      } catch (error) {
-        console.error("[WebSocket] 메시지 파싱 오류:", error);
-      }
-    });
+    return stompClient.subscribe(destination, callback);
   },
 }));
 
