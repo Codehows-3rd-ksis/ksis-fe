@@ -132,7 +132,7 @@ function App() {
                   }
                 />
                 <Route path="/status/detail/:workId" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <StatusDetail />
                   </ProtectedRoute>
                   }

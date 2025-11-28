@@ -5,7 +5,7 @@
  */
 
 import type { AxiosInstance } from "axios";
-import useAuthStore from "../store/useAuthStore"; // 인증 상태를 관리하는 Zustand 스토어
+import { useAuthStore } from "../Store/authStore"; // 인증 상태를 관리하는 Zustand 스토어
 
 /**
  * @function setupAxiosInterceptors
@@ -28,7 +28,7 @@ const setupAxiosInterceptors = (apiClient: AxiosInstance) => {
   );
 
   // 응답 인터셉터: 401 Unauthorized 에러 발생 시 Refresh Token을 사용하여 Access Token을 재발급받습니다.
-  apiClient.interceptors.response.use(
+  /* apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
@@ -67,7 +67,7 @@ const setupAxiosInterceptors = (apiClient: AxiosInstance) => {
       }
       return Promise.reject(error);
     }
-  );
+  ); */
 };
 
 export default setupAxiosInterceptors;

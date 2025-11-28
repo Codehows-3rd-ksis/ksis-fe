@@ -106,11 +106,23 @@ export const getColumns = ({
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-      // 진행도 값에서 숫자 추출 (예: "50%" -> 50, "완료" -> 100)
-      const progressValue =
-        typeof params.value === "string"
-          ? parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0
-          : params.value || 0;
+      let progressValue: number;
+      let progressLabel: string;
+
+      if (typeof params.value === 'number') {
+        progressValue = params.value;
+        if (progressValue === 100) {
+          progressLabel = "완료";
+        } else {
+          progressLabel = `${Math.floor(progressValue)}%`;
+        }
+      } else if (typeof params.value === 'string') {
+        progressLabel = params.value;
+        progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
+      } else {
+        progressValue = 0;
+        progressLabel = "-";
+      }
 
       return (
         <Box
@@ -121,7 +133,7 @@ export const getColumns = ({
             gap: 1,
           }}
         >
-          <span>{params.value}</span>
+          <span>{progressLabel}</span>
           <Box
             sx={{
               display: "inline-flex",

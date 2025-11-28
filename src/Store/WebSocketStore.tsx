@@ -12,33 +12,58 @@
 import { create } from "zustand";
 import SockJS from "sockjs-client";
 import * as Stomp from "stompjs";
+import { useAuthStore } from "./authStore";
 
 /**
  * WebSocket 연결 상태
  */
-export const enum ReadyState {
-  CONNECTING = 0, // 연결 시도 중
-  OPEN = 1, // 연결 성공
-  CLOSING = 2, // 연결 종료 중
-  CLOSED = 3, // 연결 끊김
-  UNINSTANTIATED = 4, // 초기 상태
+export const ReadyState = {
+  CONNECTING: 0, // 연결 시도 중
+  OPEN: 1, // 연결 성공
+  CLOSING: 2, // 연결 종료 중
+  CLOSED: 3, // 연결 끊김
+  UNINSTANTIATED: 4, // 초기 상태
+} as const;
+
+export type ReadyState = (typeof ReadyState)[keyof typeof ReadyState];
+
+// 기본 타입 정의
+interface CollectionRow {
+  id: number;
+  progressNo: string;
+  [key: string]: any; // 동적 필드 (title, writer 등)
 }
 
-/**
- * 크롤링 진행 상황 메시지 타입 (선택적 사용)
- * subscribe() 콜백에서 message.body를 파싱한 결과의 타입 참고용
- */
-export interface CrawlingMessage {
-  type: "PROGRESS" | "COLLECTION" | "FAILURE" | "COMPLETE";
-  workId: number;
-  totalCount?: number;
-  collectionCount?: number;
-  failureCount?: number;
-  estimatedTime?: string;
-  row?: any;
-  rows?: any[];
-  failure?: any;
+interface FailureRow {
+  id: number;
+  progressNo: string;
+  url: string;
 }
+
+// Union 타입
+export type CrawlingMessage =
+  | {
+      type: "PROGRESS";
+      workId: number;
+      totalCount: number;
+      estimatedTime: string;
+    }
+  | {
+      type: "COLLECTION";
+      workId: number;
+      row?: CollectionRow; // 단일 데이터(크롤링 진행중)
+      rows?: CollectionRow[]; // 일괄 데이터(초기로딩, 재연결)
+    }
+  | {
+      type: "FAILURE";
+      workId: number;
+      failure?: FailureRow; // 단일 실패
+      rows?: FailureRow[]; // 일괄 실패
+    }
+  | {
+      type: "COMPLETE";
+      workId: number;
+    };
 
 interface WebSocketState {
   stompClient: Stomp.Client | null;
@@ -96,20 +121,8 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
       });
       return;
     }
-
-    if (
-      stompClient &&
-      (readyState === ReadyState.CLOSED ||
-        readyState === ReadyState.CLOSING ||
-        !stompClient.connected)
-    ) {
-      stompClient.disconnect(() => {
-        set({
-          stompClient: null,
-          readyState: ReadyState.UNINSTANTIATED,
-        });
-      });
-    } else if (stompClient) {
+    // 기존 stompClient가 있으면 무조건 정리
+    if (stompClient) {
       stompClient.disconnect(() => {
         set({
           stompClient: null,
@@ -123,13 +136,13 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
     });
 
     // JWT 토큰 가져오기 (localStorage에서)
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = useAuthStore.getState().accessToken;
     const headers: { [key: string]: string } = accessToken
       ? { Authorization: `Bearer ${accessToken}` }
       : {};
 
     // SockJS 연결 생성
-    const socket = new SockJS(url, null, { headers });
+    const socket = new SockJS(url);
     const newStompClient = Stomp.over(socket);
 
     // STOMP 디버그 로그 비활성화
@@ -148,8 +161,15 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
           reconnectAttempts: 0,
         });
       },
-      (error: Stomp.Frame | CloseEvent) => {
-        console.error("[WebSocket] 연결 오류:", error);
+      (error: string | Stomp.Frame) => {
+        // 에러 타입에 따라 상세 로그 출력
+        if (typeof error === "string") {
+          console.error(`[WebSocket] 연결 오류: ${error}`);
+        } else if (error instanceof Stomp.Frame) {
+          console.error(`[WebSocket] STOMP 에러: ${error.body}`);
+        } else {
+          console.error("[WebSocket] 연결 오류:", error);
+        }
 
         set((state) => {
           const nextAttempts = state.reconnectAttempts + 1;
@@ -171,7 +191,7 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
               reconnectTimeoutId: timeoutId,
             };
           } else {
-            console.error("[WebSocket] 최대 재연결 시도 횟수 도달");
+            console.warn("[WebSocket] 최대 재연결 시도 횟수 도달");
             return {
               readyState: ReadyState.CLOSED,
               stompClient: null,
@@ -180,25 +200,12 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
             };
           }
         });
-
-        // 에러 타입에 따라 상세 로그 출력
-        if (error instanceof CloseEvent) {
-          console.log(
-            `>>>> [WebSocket] Connection closed due to error. Code: ${error.code}, Reason: ${error.reason}`
-          );
-        } else if (error instanceof Stomp.Frame) {
-          console.log(`>>>> [WebSocket] STOMP error frame: ${error.body}`);
-        }
       }
     );
-
-    // 새로 생성된 stompClient 인스턴스를 스토어에 저장
-    set({ stompClient: newStompClient });
   },
 
   disconnect: () => {
-    const { stompClient, readyState, reconnectTimeoutId } = get();
-    // 디버그 로그: console.log(`[WebSocketStore] disconnect called. Current ReadyState: ${readyState}`);
+    const { stompClient, reconnectTimeoutId } = get();
 
     // 재연결 타이머 취소
     if (reconnectTimeoutId) {
