@@ -14,7 +14,7 @@ import RegPage from "./RegPage"
 // Comp
 import Alert from "../../component/Alert";
 // API
-import { getUser, deleteUser } from "./Api";
+import { getUser, deleteUser } from "../../API/01_UsermanagementApi";
 
 function UserManagement() {
   // Table
@@ -34,6 +34,8 @@ function UserManagement() {
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false)
   const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
   const [openEditDoneAlert, setOpenEditDoneAlert] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const getTableDatas = async () => {
       try {
@@ -44,31 +46,23 @@ function UserManagement() {
               id: row.userId,
               index: i+1,
           }))
-        
+
           setBaseRows(result)
           setFilteredRows(result)
       }
       catch(err) {
           console.error(err)
-          alert('getUser 실패')
+          setErrorMsg('get User 실패');
+          setOpenErrorAlert(true)
       }
   }
 
   useEffect(()=> {
-    const data = [
-      { userId: 1, id: 1, index: 1, username: 'ksis1', password: 'test1234', name: '김철수', dept: '비즈니스 사업부', ranks: '부장', loginAt: '2025-11-05', state: '승인완료' },
-      { userId: 2, id: 2, index: 2, username: 'ksis2', password: 'test5678', name: '김영희', dept: '소프트웨어 사업부', ranks: '대리', loginAt: '2025-11-06', state: '승인완료' },
-      { userId: 3, id: 3, index: 3, username: 'ksis3', password: 'test0000', name: '홍길동', dept: '경영지원부', ranks: '과장', loginAt: '2024-04-24', state: '승인대기' },
-    ];
-
-    setBaseRows(data)
-    setFilteredRows(data)
-
-    // getTableDatas();
+    getTableDatas();
   }, [])
 
   const BoardRefresh = () => {
-        // getTableDatas();
+        getTableDatas();
     }
 
   /**  등록 페이지  =========================================== */
@@ -101,20 +95,22 @@ function UserManagement() {
     setOpenDeleteAlert(true)
   }
   const handleDelete = async () => {
-    // delete api 연결
     try {
       if(!selectedRow) {
-        alert('deleteUser 실패 - selectedRow is Null')
+        setErrorMsg('User 삭제 실패');
+        setOpenErrorAlert(true)
         return
       };
       await deleteUser(selectedRow.userId).then(()=>{
         // 삭제완료 팝업
+        setSelectedRow(null)
         setOpenDelDoneAlert(true);
       })
     }
     catch(err) {
       console.error(err)
-      alert('deleteUser 실패')
+      setErrorMsg('User 삭제 실패');
+      setOpenErrorAlert(true)
     }
   }
   /**  이력조회 페이지  =========================================== */
@@ -129,11 +125,9 @@ function UserManagement() {
 
   return (
     <Box sx={{ height: '97%'}}>
-        {/* <Box sx={{ bgcolor: '#FFC98B', height: '120px', borderRadius: '10px 10px 0px 0px', display: 'flex', alignItems: 'center'}}>
-        </Box> */}
-            <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
-              유저관리
-            </Typography>
+        <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
+          유저관리
+        </Typography>
         <SearchHeader
           baseRows={baseRows}                 // 전체 데이터 원본
           setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
@@ -144,7 +138,7 @@ function UserManagement() {
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable columns={columns} rows={filteredRows} /> {/* ✅ 변경 */}
+            <CommonTable columns={columns} rows={filteredRows} />
         </Box>
 
         {/* 등록 페이지 */}
@@ -194,6 +188,15 @@ function UserManagement() {
               setOpenDelDoneAlert(false);
               BoardRefresh()
             }}
+        />
+        {/* Error Alert */}
+        <Alert
+          open={openErrorAlert}
+          text={errorMsg}
+          type="error"
+          onConfirm={() => {
+            setOpenErrorAlert(false);
+          }}
         />
     </Box>
   )

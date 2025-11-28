@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { Routes, Route, Navigate, useLocation, useNavigate   } from "react-router-dom";
-import {Box} from '@mui/material'
+import { useEffect } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate  } from "react-router-dom";
+import {Box, Typography} from '@mui/material'
+import { useAuthStore } from "./Store/authStore";
 import Side from "./layout/Side";
 import Content from "./layout/Content";
 import Menu from "./component/Menu";
 import ProtectedRoute from "./component/ProtectedRoute";
 
-import { type User_Type } from "./Types/Components";
 import LoginPage from './page/00_Login/Login'
-import { jwtDecode } from "jwt-decode";
-import { getProfile } from "./API/00_LoginApi"
+
 //** 유저관리 */
 import UserManagement from "./page/01_UserManagement/UserManagement";
 import UserLog from "./page/01_UserManagement/LogPage"
@@ -25,62 +24,43 @@ import StatusDetail from "./page/03_Status/StatusDetail"
 import History from "./page/05_History/History"
 import HistoryDetail from "./page/05_History/HistoryDetail";
 
-
-interface JwtPayload {
-  sub: string;
-  role: "ROLE_ADMIN" | "";
-  exp: number;
-}
-
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isLoading, setToken, fetchUserProfile, loadFromStorage } = useAuthStore();
 
-  const [userInfo, setUserInfo] = useState<User_Type | null>(() => {
-      // 새로고침시 로그인정보 유지
-      const saved = localStorage.getItem("userInfo");
-      return saved ? JSON.parse(saved) : null;
-  });
-
-
-  // ✅ 로그인 후 상태 업데이트
-  const handleLoginSuccess = async (accessToken: string) => {
-    try {
-      localStorage.setItem("accessToken", accessToken);
-      const payload = jwtDecode<JwtPayload>(accessToken);
-      // payload = { sub, role, exp }
-      console.log("payload", payload)
-      
-      const userData = await getProfile() // return { userId, username, name, role }
-      console.log('userData', userData)
-      localStorage.setItem("userInfo", JSON.stringify(userData));
-      setUserInfo(userData);
-      
-      // 관리자일 경우 로그인 시 유저관리 페이지로, 외에는 현황페이지로 자동 진입
-      if(userData.role === 'ROLE_ADMIN') {
-        navigate("/user");
-      } else navigate("/status")
-
-    }
-    catch(err) {
-      console.error(err)
-      alert('로그인 유저 정보 조회 실패')
-    }
-
-  };
-
-  // ✅ 로그아웃 처리
-  const handleLogout = () => {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userInfo");
-      setUserInfo(null);
-
-      navigate("/login");
-  };
+  // 새로고침 시 저장된 값 로드
+  useEffect(() => {
+    (async () => {
+      await loadFromStorage();
+    })();
+  }, []);
 
   // 사이드바/콘텐츠를 숨길 경로 목록
   const hideLayoutPaths = ["/login"];
   const shouldHideLayout = hideLayoutPaths.includes(location.pathname);
+
+  // zustand store 이용하여 유저 프로필과 토큰을 전역 저장
+  const handleLoginSuccess = async (accessToken: string) => {
+    setToken(accessToken);
+    await fetchUserProfile();
+
+    // 로그인 성공 후 권한에 따라 이동
+    const currentUser = useAuthStore.getState().user; 
+    if (currentUser?.role === "ROLE_ADMIN") {
+      navigate("/user");
+    } else {
+      navigate("/status");
+    }
+  };
+
+  if (isLoading) {
+    // 프로필 로딩 중엔 로딩 UI 또는 빈 화면 표시
+    return <Box sx={{ width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Typography>Loading...</Typography>
+    </Box>;
+  }
+
 
   return (
     <Box sx={{ width: '100vw', display: 'flex', backgroundColor: '#FEF4EA' }}>
@@ -88,7 +68,6 @@ function App() {
         // 로그인 페이지는 단독 표시
         <Routes>
           <Route index element={<Navigate to="/login" replace />} />
-          {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/login" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
         </Routes>
       ) : (
@@ -97,8 +76,8 @@ function App() {
           <Box sx={{width: '14.5vw', padding: 1, minWidth: '260px'}}>
             <Side>
               {/* <Menu /> */}
-              <ProtectedRoute userInfo={userInfo}>
-                <Menu userInfo={userInfo} onLogout={handleLogout} />
+              <ProtectedRoute userInfo={user}>
+                <Menu />
               </ProtectedRoute>
             </Side>
           </Box>
@@ -108,53 +87,52 @@ function App() {
                 <Route
                   path="/"
                   element={
-                    userInfo
-                    // isAuthenticated
+                    user
                       ? <Navigate to="/status" replace />
                       : <Navigate to="/login" replace />
                   }
                 />
                 {/* 유저관리 */}
                 <Route path="/user" element={
-                  <ProtectedRoute userInfo={userInfo} requiredRole="ROLE_ADMIN">
+                  <ProtectedRoute userInfo={user} requiredRole="ROLE_ADMIN">
                     <UserManagement />
                   </ProtectedRoute>
                   } 
                 />
                 <Route path="/user/log" element={
-                  <ProtectedRoute userInfo={userInfo} requiredRole="ROLE_ADMIN">
+                  <ProtectedRoute userInfo={user} requiredRole="ROLE_ADMIN">
                     <UserLog />
                   </ProtectedRoute>
                   } 
                 />
                 {/* 수집설정 */}
                 <Route path="/setting" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <Setting />
                   </ProtectedRoute>
                   } 
                 />
                 <Route path="/setting/reg" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <SettingReg />
                   </ProtectedRoute>
                   } 
                 />
                 <Route path="/setting/edit" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <SettingEdit />
                   </ProtectedRoute>
                   } 
                 />
                 {/* 수집현황 */}
                 <Route path="/status" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <Status />
                   </ProtectedRoute>
                   }
                 />
                 <Route path="/status/detail/:id" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <StatusDetail />
                   </ProtectedRoute>
                   }
@@ -162,14 +140,14 @@ function App() {
 
                 {/* 수집이력 */}
                 <Route path="/history" element={
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <History />
                   </ProtectedRoute>
                   }
                 />
                 <Route path="/history/detail/:id" element={
 
-                  <ProtectedRoute userInfo={userInfo}>
+                  <ProtectedRoute userInfo={user}>
                     <HistoryDetail />
                   </ProtectedRoute>
                   }

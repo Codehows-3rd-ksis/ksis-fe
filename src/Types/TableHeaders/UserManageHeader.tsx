@@ -13,6 +13,7 @@ export interface UserTableRows {
     ranks?: string, // 직위
     loginAt?: string, // 접속일
     state?: string, // 승인상태
+    role?: string, // 권한
 }
 
 // 외부에서 받을 핸들러들을 타입으로 정의
@@ -28,8 +29,8 @@ export const getColumns = ({
   handleDeleteOpen,
   handleShowLogOpen,
 }: UserTableColumnHandlers): GridColDef[] => [
-  { field: 'index',   headerName: '번호',       flex: 0.7,  headerAlign: 'center',  align: 'center' },
-  { field: 'username', headerName: '아이디',     flex: 1,    headerAlign: 'center',  align: 'center' },
+  { field: 'index',   headerName: '번호',       width: 70,  headerAlign: 'center',  align: 'center' },
+  { field: 'username', headerName: 'ID',     flex: 1.5,    headerAlign: 'center',  align: 'center' },
   { field: 'name',    headerName: '이름',       flex: 1,    headerAlign: 'center',  align: 'center' },
   { field: 'dept',    headerName: '부서',       flex: 1.5,  headerAlign: 'center',  align: 'center' },
   { field: 'ranks',    headerName: '직위',       flex: 1,    headerAlign: 'center',  align: 'center' },
@@ -37,12 +38,12 @@ export const getColumns = ({
   { field: 'loginAt', headerName: '최근접속일',  flex: 1.5,  headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
       if (!params.value) return ''; // 값 없으면 빈 문자열
-      return dayjs(params.value).format('YY-MM-DD');           
+      return dayjs(params.value).format('YY.MM.DD HH:mm');           
     }
   },
   {
     field: 'edit', headerName: '수정', width: 70, headerAlign: 'center', align: 'center',
-    renderCell: (params) => ( <CustomIconButton icon="edit" onClick={() => handleEditOpen(params.row)} /> ),
+    renderCell: (params) => ( <CustomIconButton icon="edit" onClick={() => handleEditOpen(params.row)} /> )
   },
   {
     field: 'del', headerName: '삭제', width: 70, headerAlign: 'center', align: 'center',

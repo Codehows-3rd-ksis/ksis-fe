@@ -30,11 +30,11 @@ function StatusDetail() {
   // ========== 2. State 선언 (데이터) ==========
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
 
-  const [failureRows, setFailureRows] = useState<
+  const [failureRows, /*setFailureRows*/] = useState<
     Array<{ id: number; progressNo: string; url: string }>
   >([{ id: 1, progressNo: "4", url: "https://example.com/failed-page" }]);
 
-  const [collectionRows, setCollectionRows] = useState<
+  const [collectionRows, /*setCollectionRows*/] = useState<
     Array<{ id: number; progressNo: string; [key: string]: any }>
   >([
     {
@@ -79,7 +79,7 @@ function StatusDetail() {
     },
   ]);
 
-  const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([
+  const [collectionColumns, /*setCollectionColumns*/] = useState<GridColDef[]>([
     {
       field: "progressNo",
       headerName: "진행번호",
@@ -117,8 +117,8 @@ function StatusDetail() {
     },
   ]);
 
-  const [totalCount, setTotalCount] = useState(10);
-  const [estimatedTime, setEstimatedTime] = useState("2025-11-13 16:00:00");
+  const [totalCount, /*setTotalCount*/] = useState(10);
+  const [estimatedTime, /*setEstimatedTime*/] = useState("2025-11-13 16:00:00");
 
   // ========== 3. State 선언 (UI 상태) ==========
   // const [alertOpen, setAlertOpen] = useState(false);

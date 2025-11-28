@@ -5,7 +5,7 @@ import CustomButton from "../../component/CustomButton"
 import CustomIconButton from '../../component/CustomIconButton'
 import CustomTextField from "../../component/CustomTextField"
 import { loginUser } from "../../API/00_LoginApi"
-// import { type User_Type } from "../../Types/Components"
+import Alert from "../../component/Alert";
 
 interface LoginProps {
   onLoginSuccess: (accessToken: string) => void;
@@ -14,6 +14,8 @@ interface LoginProps {
 function Login({onLoginSuccess}: LoginProps) {
   const [loginInfo, setLoginInfo] = useState<{username: string, password: string}>({username: "", password: ""})
   const [isVisible, setIsVisible] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleInputChange = (key: keyof typeof loginInfo, value: string) => {
         setLoginInfo((prev) => ({ ...prev, [key]: value }));
@@ -25,11 +27,20 @@ function Login({onLoginSuccess}: LoginProps) {
       
       // server response: { accessToken }
       onLoginSuccess(data.accessToken);
-
     } 
-    catch(err) {
+    catch(err:any) {
       console.error(err);
-      alert('login 실패');
+
+      // axios 에러일 때
+      if (err.response && err.response.data) {
+        const serverMsg = err.response.data.message;  // 백엔드 메시지
+        setErrorMsg(serverMsg);
+      } else {
+        // 네트워크 에러 등
+        setErrorMsg("로그인 중 오류가 발생했습니다.");
+      }
+      
+      setOpenErrorAlert(true)
     }
   };
 
@@ -95,6 +106,15 @@ function Login({onLoginSuccess}: LoginProps) {
           </Box>
         </Box>
       </Box>
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   )
 }

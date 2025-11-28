@@ -79,7 +79,7 @@ export default function HistoryDetail() {
     },
   ]); // 수집 데이터
 
-  const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([
+  const [collectionColumns, /*setCollectionColumns*/] = useState<GridColDef[]>([
     {
       field: "progressNo",
       headerName: "진행번호",
