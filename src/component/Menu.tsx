@@ -20,7 +20,7 @@ import {
     PlayArrow,
     Notifications,
 } from '@mui/icons-material';
-import { useAuthStore } from '../Store/AuthStore';
+import { useAuthStore } from '../Store/authStore';
 
 function Menu() {
     const user = useAuthStore(state => state.user);

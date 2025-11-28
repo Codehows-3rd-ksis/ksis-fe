@@ -114,6 +114,7 @@ function Status() {
     ];
 
     setBaseRows(data);
+    console.log('baseRows',baseRows)
     setFilteredRows(data);
   }, []);
 

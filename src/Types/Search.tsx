@@ -14,10 +14,10 @@ export const getTestSearchCategory = () : SearchCategory<keyof TestRows>[] => [
 ]
 
 export const getUserSearchCategory = (): SearchCategory<keyof UserTableRows>[] => [
-    {id: 1, name: '아이디', value: 'loginId'},
+    {id: 1, name: '아이디', value: 'username'},
     {id: 2, name: '이름', value: 'name'},
     {id: 3, name: '부서', value: 'dept'},
-    {id: 4, name: '직위', value: 'rank'},
+    {id: 4, name: '직위', value: 'ranks'},
     {id: 5, name: '접속일', value: 'loginAt'},
 ]
 

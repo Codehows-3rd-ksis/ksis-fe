@@ -11,12 +11,12 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { Dayjs } from 'dayjs';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
-import { getUserLog } from '../../API/01_UsermanagementApi';
+// import { getUserLog } from '../../API/01_UsermanagementApi';
 
 export default function LogPage () {
     const location = useLocation();
     const navigate = useNavigate();
-    const { userId, username } = location.state || {}
+    const { /*userId,*/ username } = location.state || {}
 
     const [baseRows, setBaseRows] = useState<UserLogTableRows[]>([])
     const [filteredRows, setFilteredRows] = useState<UserLogTableRows[]>([]);
@@ -28,24 +28,24 @@ export default function LogPage () {
     const [searchName, setSearchName] = useState('')
     const [searchCount, setSearchCount] = useState(0)
 
-    const getTableDatas = async () => {
-        try {
-            const data = await getUserLog(userId);
+    // const getTableDatas = async () => {
+    //     try {
+    //         const data = await getUserLog(userId);
             
-            const result = data.map((row: UserLogTableRows, i: number) => ({
-                ...row,
-                id: row.workId,
-                index: i+1,
-            }))
+    //         const result = data.map((row: UserLogTableRows, i: number) => ({
+    //             ...row,
+    //             id: row.workId,
+    //             index: i+1,
+    //         }))
 
-            setBaseRows(result)
-            setFilteredRows(result)
-        }
-        catch(err) {
-            console.error(err)
-            alert('getUserLog 실패')
-        }
-    }
+    //         setBaseRows(result)
+    //         setFilteredRows(result)
+    //     }
+    //     catch(err) {
+    //         console.error(err)
+    //         alert('getUserLog 실패')
+    //     }
+    // }
     
     useEffect(()=> {
         const data = [
