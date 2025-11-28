@@ -20,10 +20,12 @@ import {
     PlayArrow,
     Notifications,
 } from '@mui/icons-material';
-import { type Menu_Type } from '../Types/Components';
+import { useAuthStore } from '../Store/authStore';
 
-function Menu(props: Menu_Type) {
-    const {userInfo, onLogout} = props
+function Menu() {
+    const user = useAuthStore(state => state.user);
+    const logout = useAuthStore(state => state.logout);
+    
     const navigate = useNavigate();
     const location = useLocation();  // 현재 경로 얻기
 
@@ -44,7 +46,6 @@ function Menu(props: Menu_Type) {
             justifyContent: 'space-between',  // ✅ 상단(로고+메뉴)과 하단(유저영역) 분리
             height: '98vh',
             minWidth: '260px',
-            // width: '260px',
             boxSizing: 'border-box'
         }}>
             {/* --- 상단 영역 (로고 + 메뉴) --- */}
@@ -74,7 +75,7 @@ function Menu(props: Menu_Type) {
                 >
                   <Box sx={{paddingLeft: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                     <Typography variant="subtitle1" fontWeight="bold" fontSize={25} >
-                      {userInfo?.name + ' 님'|| '게스트'}
+                      {user?.name + ' 님'|| '게스트'}
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.8 }} fontSize={15}>
                       환영합니다.
@@ -84,7 +85,10 @@ function Menu(props: Menu_Type) {
                     <CustomIconButton
                         icon="logout"
                         backgroundColor='#F8F8F5'
-                        onClick={onLogout}
+                        onClick={()=> {
+                            logout()
+                            navigate('/login')
+                        }}
                     />
                   </Box>
             </Box>
@@ -97,7 +101,7 @@ function Menu(props: Menu_Type) {
                     minWidth: '240px',
                 }}>
                     {/* ✅ 관리자 전용 메뉴 */}
-                    {userInfo?.role === 'admin' && (
+                    {user?.role === 'ROLE_ADMIN' && (
                         <>
                             <MenuList>
                                 {userMenu.map((item, index) => (

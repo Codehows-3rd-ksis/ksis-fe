@@ -73,8 +73,10 @@ export const getColumns = ({
     flex: 1,
     headerAlign: "center",
     align: "center",
-    valueGetter: (value, row) =>
-      `${row.startDate || ""} ~ ${row.endDate || ""}`,
+    valueGetter: (value, row) => {
+      console.log('value', value)
+      return `${row.startDate || ""} ~ ${row.endDate || ""}`
+    },
     renderCell: (params) => {
       const startDate = params.row.startDate || "";
       const endDate = params.row.endDate || "";

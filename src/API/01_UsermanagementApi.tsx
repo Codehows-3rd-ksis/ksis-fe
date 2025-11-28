@@ -1,15 +1,8 @@
-import axios from "axios"
-
-const BASE_URL = import.meta.env.VITE_API_URL;
-
-// 공통 axios config (토큰, 헤더 등 필요 시 확장 가능)
-const getAxiosConfig = () => ({
-  headers: { "Content-Type": "application/json" },
-});
+import instance from "./AxiosInstance";
 
 // 유저관리 - 조회
 export const getUser = async () => {
-  const response = await axios.get(`${BASE_URL}/user`, getAxiosConfig());
+  const response = await instance.get(`/user`);
   return response.data;
 };
 
@@ -22,7 +15,7 @@ export const registUser = async (data: Partial<{
   ranks: string; // 직위
   state: string; // 승인상태
 }>) => {
-  const response = await axios.post(`${BASE_URL}/user`, data, getAxiosConfig());
+  const response = await instance.post(`/user`, data);
   return response.data;
 };
 
@@ -35,18 +28,18 @@ export const updateUser = async (id:number, data: Partial<{
   ranks: string; // 직위
   state: string; // 승인상태
 }>) => {
-  const response = await axios.put(`${BASE_URL}/user/${id}`,data, getAxiosConfig());
+  const response = await instance.put(`/user/${id}`,data);
   return response.data;
 };
 
 // 유저관리 - 삭제
 export const deleteUser = async (id: number) => {
-  const response = await axios.delete(`${BASE_URL}/user/${id}`, getAxiosConfig());
+  const response = await instance.delete(`/user/${id}`);
   return response.data;
 };
 
 // 유저관리 - 특정 유저의 로그 조회
 export const getUserLog = async (id: number) => {
-  const response = await axios.get(`${BASE_URL}/user/log/${id}`, getAxiosConfig());
+  const response = await instance.get(`/user/log/${id}`);
   return response.data;
 };

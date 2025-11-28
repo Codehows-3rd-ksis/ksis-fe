@@ -135,6 +135,36 @@ export default function Alert (props: Alert_Type) {
                     </DialogActions>
                 </Dialog>
             )
+        case 'error':
+            return (
+                <Dialog 
+                    open={open} 
+                    onClose={onCancel} 
+                    disableAutoFocus
+                    disableRestoreFocus
+                >
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                        <WarningAmberIcon color="error" fontSize="large" />
+                        <Typography variant="h6" component="div">
+                            알림
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent
+                        sx={{ 
+                            marginTop: 2,
+                            minWidth: 300,
+                        }}
+                    >
+                        <Typography variant="body1" color="text.primary" sx={{ whiteSpace: 'pre-line', color: 'red' }}>
+                            {text}
+                        </Typography>
+                    </DialogContent>
+                    
+                    <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
+                        <CustomButton text="닫기" onClick={onConfirm} radius={2}/>
+                    </DialogActions>
+                </Dialog>
+            )
         case 'warning':
         default:
             return (

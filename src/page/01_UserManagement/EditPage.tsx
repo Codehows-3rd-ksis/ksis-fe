@@ -5,7 +5,7 @@ import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { updateUser } from './Api';
+import { updateUser, getUser } from '../../API/01_UsermanagementApi';
 
 import { type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 
@@ -15,40 +15,41 @@ interface EditPageProps {
     handleCancel: () => void;
 }
 
-const mapStateValue = (state: string | undefined) => {
-  switch(state) {
-    case '승인완료':
-      return 'Y';
-    case '대기중':
-      return 'N';
-    default:
-      return ''; // 빈값이나 기본값
-  }
+interface UserForm {
+  username: string;
+  password: string;
+  passwordConfirm: string;
+  name: string;
+  dept: string;
+  ranks: string;
+  state: string;
 }
 
 export default function EditPage(props: EditPageProps) {
     const {row, handleDone, handleCancel} = props
-    const [isValid_id, setIsValid_id] = useState<boolean | null>(null);
+    const [isValid_id, setIsValid_id] = useState<boolean | null>(row?.userId? true : null);
     const [isValidPassword, setIsValidPassword] = useState<boolean | null>(null);
     const [isVisible, setIsVisible] = useState(false)
     const [isPasswordMismatch, setIsPasswordMismatch] = useState(false);
-    const [newData, setNewData] = useState({
+    const [newData, setNewData] = useState<UserForm>({
         username: row?.username || '',
         password: row?.password || '',
         passwordConfirm: '',
         name: row?.name || '',
         dept: row?.dept || '',
         ranks: row?.ranks || '',
-        state: mapStateValue(row?.state),
+        state: row?.state || '승인대기',
     })
     const [openCancelAlert, setOpenCancelAlert] = useState(false)
     const [openEditAlert, setOpenEditAlert] = useState(false)
     const stateList = [
-        { value: 'Y', name: '승인' },
-        { value: 'N', name: '대기중' },
+        { value: '승인대기', name: '승인대기' },
+        { value: '승인완료', name: '승인완료' },
     ];
     const [openValidAlert, setOpenValidAlert] = useState(false)
     const [validateMsg, setValidateMsg] = useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     const handleShowPassword = () => {
         setIsVisible(!isVisible);
@@ -104,41 +105,58 @@ export default function EditPage(props: EditPageProps) {
       return count >= 3;
     };
 
-    const handleValidate = () => {
-        const password = newData.password;
-        const passwordConfirm = newData.passwordConfirm;
+    const handleValidate = async () => {
+        try {
+            if(row === null) return;
+            // console.log('row', row)
+            const userData = await getUser();
+            // ID 중복검사, true 일시 중복, 수정할 row 본인의 username이 중복되는 것은 허용
+            const findSameUsername = userData.find(
+                (user:any) => user.username === newData.username && user.userId !== row.userId
+            )
+            // console.log('중복 ID 검사', findSameUsername)
 
-        // 한글 포함 여부 검사
-        const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(password);
-        const hasKoreanC = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(passwordConfirm);
+            const password = newData.password;
+            const passwordConfirm = newData.passwordConfirm;
 
-        if (hasKorean || hasKoreanC) {
-            alert('비밀번호에 한글은 포함될 수 없습니다.');
-            return;
-        }
+            // 한글 포함 여부 검사
+            const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(password);
+            const hasKoreanC = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(passwordConfirm);
 
-        const errMsg = []
-        if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
-        if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
-        if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
-        if (newData.name === '') errMsg.push('이름 미입력')
-
-        if(errMsg.length !== 0) {
-            let message = ''
-            for(let i=0; i <= errMsg.length-1; i++) {
-                if(i===0) message = errMsg[i]
-                else message += '\n' + errMsg[i]
+            if (hasKorean || hasKoreanC) {
+                setValidateMsg('비밀번호에 한글은 포함될 수 없습니다.');
+                setOpenValidAlert(true)
+                return;
             }
-            setValidateMsg(message)
-            setOpenValidAlert(true)
-        } else {
-            handleEdit()
+
+            const errMsg = []
+            if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
+            if (findSameUsername) errMsg.push('아이디 중복') 
+            if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
+            if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
+            if (newData.name === '') errMsg.push('이름 미입력')
+
+            if(errMsg.length !== 0) {
+                setValidateMsg(errMsg.join('\n'));
+                setOpenValidAlert(true)
+            } else {
+                handleEdit()
+            }
         }
+        catch(err) {
+            console.error(err)
+            setOpenEditAlert(false);
+            setErrorMsg('get User 실패');
+            setOpenErrorAlert(true)
+        }
+        
     }
     const handleEdit = async () => {
         try {
             if(row === null) {
-                alert('updateUser 실패')    
+                setOpenEditAlert(false);
+                setErrorMsg('row is null // User 수정 실패');
+                setOpenErrorAlert(true)
                 return;
             }
             await updateUser(row.userId,{
@@ -148,13 +166,15 @@ export default function EditPage(props: EditPageProps) {
                 dept: newData.dept,
                 ranks: newData.ranks,
                 state: newData.state,
-            }).then(()=> {
-                handleDone()
             })
+            handleDone()
         }
         catch(err) {
             console.error(err)
-            alert('updateUser 실패')
+            setOpenEditAlert(false);
+            setErrorMsg('User 수정 실패');
+            setOpenErrorAlert(true)
+            
         }
     }
 
@@ -199,10 +219,12 @@ export default function EditPage(props: EditPageProps) {
                         />
                         <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
                             <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 6자 이상 20자 이하 이어야 합니다.</Typography>
-                            {isValid_id ? (
+                            {isValid_id === null ? null : (
+                              isValid_id ? (
                                 <Typography sx={{ color: 'green' }}>사용 가능한 아이디 형식입니다.</Typography>
-                            ) : (
-                              <Typography sx={{ color: 'red' }}>사용 불가능한 아이디 형식입니다.</Typography>
+                              ) : (
+                                <Typography sx={{ color: 'red' }}>사용 불가능한 아이디 형식입니다.</Typography>
+                              )
                             )}
                         </Box>
                     </Box>
@@ -234,10 +256,12 @@ export default function EditPage(props: EditPageProps) {
                         />
                         <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
                             <Typography sx={{fontSize:14}}>∴ 9자 이상의 영대문자, 영소문자, 숫자, 특수문자 중 3종류 이상의 조합만 가능합니다.</Typography>
-                            {isValidPassword ? (
-                                <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
-                            ) : (
-                                <Typography sx={{ color: 'red' }}>사용 불가능한 비밀번호 형식입니다.</Typography>
+                            {isValidPassword === null ? null : (
+                                isValidPassword ? (
+                                    <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
+                                ) : (
+                                    <Typography sx={{ color: 'red' }}>사용 불가능한 비밀번호 형식입니다.</Typography>
+                                )
                             )}
                         </Box>
                     </Box>
@@ -352,6 +376,7 @@ export default function EditPage(props: EditPageProps) {
                 <CustomButton text="닫기" onClick={()=>setOpenCancelAlert(true)} backgroundColor='#f0f0f0' radius={2}/>
             </Box>
 
+            {/* Cancel Alert */}
             <Alert
               open={openCancelAlert}
               text="정말로 닫으시겠습니까?"
@@ -363,6 +388,7 @@ export default function EditPage(props: EditPageProps) {
                 setOpenCancelAlert(false);
               }}
             />
+            {/* Edit Alert */}
             <Alert
               open={openEditAlert}
               text="수정 하시겠습니까?"
@@ -375,12 +401,22 @@ export default function EditPage(props: EditPageProps) {
                 setOpenEditAlert(false);
               }}
             />
+            {/* Validation Alert */}
             <Alert
               open={openValidAlert}
               text={validateMsg}
               type="validate"
               onConfirm={() => {
                 setOpenValidAlert(false);
+              }}
+            />
+            {/* Error Alert */}
+            <Alert
+              open={openErrorAlert}
+              text={errorMsg}
+              type="error"
+              onConfirm={() => {
+                setOpenErrorAlert(false);
               }}
             />
         </Box>

@@ -90,11 +90,6 @@ export interface User_Type {
     role? : string;
 }
 
-export interface Menu_Type {
-    userInfo?: User_Type | null;
-    onLogout: () => void;
-}
-
 export interface Alert_Type {
     open: boolean;
     text?: string;

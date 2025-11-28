@@ -5,11 +5,21 @@ import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { registUser } from './Api';
+import { registUser, getUser } from '../../API/01_UsermanagementApi';
 
 interface RegPageProps {
     handleDone: () => void;
     handleCancel: () => void;
+}
+
+interface UserForm {
+  username: string;
+  password: string;
+  passwordConfirm: string;
+  name: string;
+  dept: string;
+  ranks: string;
+  state: string;
 }
 
 export default function RegPage(props: RegPageProps) {
@@ -18,23 +28,25 @@ export default function RegPage(props: RegPageProps) {
     const [isValidPassword, setIsValidPassword] = useState<boolean | null>(null);
     const [isVisible, setIsVisible] = useState(false)
     const [isPasswordMismatch, setIsPasswordMismatch] = useState(false);
-    const [newData, setNewData] = useState({
+    const [newData, setNewData] = useState<UserForm>({
         username: '',
         password: '',
         passwordConfirm: '',
         name: '',
         dept: '',
         ranks: '',
-        state: '',
-    })
+        state: '승인대기',
+    });
     const [openCancelAlert, setOpenCancelAlert] = useState(false)
     const [openRegAlert, setOpenRegAlert] = useState(false)
     const stateList = [
-        { value: 'Y', name: '승인' },
-        { value: 'N', name: '대기중' },
+        { value: '승인대기', name: '승인대기' },
+        { value: '승인완료', name: '승인완료' },
     ];
     const [openValidAlert, setOpenValidAlert] = useState(false)
     const [validateMsg, setValidateMsg] = useState('')
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     const handleShowPassword = () => {
         setIsVisible(!isVisible);
@@ -90,35 +102,47 @@ export default function RegPage(props: RegPageProps) {
       return count >= 3;
     };
 
-    const handleValidate = () => {
-        const password = newData.password;
-        const passwordConfirm = newData.passwordConfirm;
+    const handleValidate = async () => {
+        try {
+            const userData = await getUser();
+            // ID 중복검사, true 일시 중복
+            const findSameUsername = userData.find(
+                (user:any) => user.username === newData.username
+            )
+            // console.log('중복 ID 검사', findSameUsername)
 
-        // 한글 포함 여부 검사
-        const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(password);
-        const hasKoreanC = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(passwordConfirm);
+            const password = newData.password;
+            const passwordConfirm = newData.passwordConfirm;
 
-        if (hasKorean || hasKoreanC) {
-            alert('비밀번호에 한글은 포함될 수 없습니다.');
-            return;
-        }
+            // 한글 포함 여부 검사
+            const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(password);
+            const hasKoreanC = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(passwordConfirm);
 
-        const errMsg = []
-        if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
-        if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
-        if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
-        if (newData.name === '') errMsg.push('이름 미입력')
-
-        if(errMsg.length !== 0) {
-            let message = ''
-            for(let i=0; i <= errMsg.length-1; i++) {
-                if(i===0) message = errMsg[i]
-                else message += '\n' + errMsg[i]
+            if (hasKorean || hasKoreanC) {
+                setValidateMsg('비밀번호에 한글은 포함될 수 없습니다.');
+                setOpenValidAlert(true)
+                return;
             }
-            setValidateMsg(message)
-            setOpenValidAlert(true)
-        } else {
-            handleRegist()
+
+            const errMsg = []
+            if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식')
+            if (findSameUsername) errMsg.push('아이디 중복') 
+            if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
+            if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
+            if (newData.name === '') errMsg.push('이름 미입력')
+
+            if(errMsg.length !== 0) {
+                setValidateMsg(errMsg.join('\n'));
+                setOpenValidAlert(true)
+            } else {
+                handleRegist()
+            }
+        } 
+        catch(err) {
+            console.error(err)
+            setOpenRegAlert(false);
+            setErrorMsg('get User 실패');
+            setOpenErrorAlert(true)
         }
     }
 
@@ -131,13 +155,14 @@ export default function RegPage(props: RegPageProps) {
                 dept: newData.dept,
                 ranks: newData.ranks,
                 state: newData.state,
-            }).then(()=> {
-                handleDone()
             })
+            handleDone()
         }
         catch(err) {
             console.error(err)
-            alert('POST registUser 실패')
+            setOpenRegAlert(false);
+            setErrorMsg('User 등록 실패');
+            setOpenErrorAlert(true)
         }
 
     }
@@ -189,10 +214,12 @@ export default function RegPage(props: RegPageProps) {
                             p: '1px'
                         }}>
                             <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 6자 이상 20자 이하 이어야 합니다.</Typography>
-                            {isValid_id ? (
+                            {isValid_id === null ? null : (
+                              isValid_id ? (
                                 <Typography sx={{ color: 'green' }}>사용 가능한 아이디 형식입니다.</Typography>
-                            ) : (
-                              <Typography sx={{ color: 'red' }}>사용 불가능한 아이디 형식입니다.</Typography>
+                              ) : (
+                                <Typography sx={{ color: 'red' }}>사용 불가능한 아이디 형식입니다.</Typography>
+                              )
                             )}
                         </Box>
                     </Box>
@@ -224,10 +251,12 @@ export default function RegPage(props: RegPageProps) {
                         />
                         <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
                             <Typography sx={{fontSize: 14}}>∴ 9자 이상의 영대문자, 영소문자, 숫자, 특수문자 중 3종류 이상의 조합만 가능합니다.</Typography>
-                            {isValidPassword ? (
-                                <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
-                            ) : (
-                                <Typography sx={{ color: 'red' }}>사용 불가능한 비밀번호 형식입니다.</Typography>
+                            {isValidPassword === null ? null : (
+                                isValidPassword ? (
+                                    <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
+                                ) : (
+                                    <Typography sx={{ color: 'red' }}>사용 불가능한 비밀번호 형식입니다.</Typography>
+                                )
                             )}
                         </Box>
                     </Box>
@@ -326,7 +355,6 @@ export default function RegPage(props: RegPageProps) {
                 <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
                     <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>승인상태</Typography>
-                        <Typography sx={{color: 'red'}}>*</Typography>
                     </Box>
                     <Box sx={{marginRight: '20px'}}>
                         <CustomSelect
@@ -365,12 +393,22 @@ export default function RegPage(props: RegPageProps) {
                 setOpenRegAlert(false);
               }}
             />
+            {/* Validation Alert */}
             <Alert
               open={openValidAlert}
               text={validateMsg}
               type="validate"
               onConfirm={() => {
                 setOpenValidAlert(false);
+              }}
+            />
+            {/* Error Alert */}
+            <Alert
+              open={openErrorAlert}
+              text={errorMsg}
+              type="error"
+              onConfirm={() => {
+                setOpenErrorAlert(false);
               }}
             />
         </Box>
