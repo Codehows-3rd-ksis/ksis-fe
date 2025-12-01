@@ -68,7 +68,8 @@ export default function RegPage(props: RegPageProps) {
               if (value === '') {
                 setIsValidPassword(null);
               } else {
-                setIsValidPassword(validatePassword(value));
+                    if(value.length < 8) setIsValidPassword(false);
+                    else setIsValidPassword(true);
               }
             }
             
@@ -87,19 +88,13 @@ export default function RegPage(props: RegPageProps) {
     };
 
     const validateLoginId = (id: string): boolean => {
-      const regex = /^[a-z0-9]{6,20}$/;
-      return regex.test(id);
-    };
-    const validatePassword = (password: string): boolean => {
-      if (password.length < 9) return false;
+      if( id.length < 8 || id.length > 20) return false;
 
       let count = 0;
-      if (/[A-Z]/.test(password)) count++;    // 영대문자
-      if (/[a-z]/.test(password)) count++;    // 영소문자
-      if (/[0-9]/.test(password)) count++;    // 숫자
-      if (/[^A-Za-z0-9]/.test(password)) count++;  // 특수문자
+      if (/[a-z]/.test(id)) count++;    // 영소문자
+      if (/[0-9]/.test(id)) count++;    // 숫자
 
-      return count >= 3;
+      return count >= 2;
     };
 
     const handleValidate = async () => {
@@ -213,7 +208,7 @@ export default function RegPage(props: RegPageProps) {
                             width: '300px',
                             p: '1px'
                         }}>
-                            <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 6자 이상 20자 이하 이어야 합니다.</Typography>
+                            <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 8자 이상 20자 이하 이어야 합니다.</Typography>
                             {isValid_id === null ? null : (
                               isValid_id ? (
                                 <Typography sx={{ color: 'green' }}>사용 가능한 아이디 형식입니다.</Typography>
@@ -250,7 +245,7 @@ export default function RegPage(props: RegPageProps) {
                             }
                         />
                         <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
-                            <Typography sx={{fontSize: 14}}>∴ 9자 이상의 영대문자, 영소문자, 숫자, 특수문자 중 3종류 이상의 조합만 가능합니다.</Typography>
+                            <Typography sx={{fontSize: 14}}>∴ 8자 이상 입력해주세요.</Typography>
                             {isValidPassword === null ? null : (
                                 isValidPassword ? (
                                     <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
