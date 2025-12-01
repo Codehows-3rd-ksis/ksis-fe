@@ -19,16 +19,22 @@ export const registUser = async (data: Partial<{
   return response.data;
 };
 
-// 유저관리 - 회원 수정
-export const updateUser = async (id:number, data: Partial<{
-  username: string; // 사용자 ID (= login ID)
-  password: string; // 비밀번호
+// 유저관리 - 회원 정보수정
+export const updateUserInfo = async (id:number, data: Partial<{
   name: string; // 이름
   dept: string; // 부서
   ranks: string; // 직위
   state: string; // 승인상태
 }>) => {
-  const response = await instance.put(`/user/${id}`,data);
+  const response = await instance.put(`/userInfo/${id}`,data);
+  return response.data;
+};
+// 유저관리 - 회원 계정수정
+export const updateUserAccount = async (id:number, data: Partial<{
+  username: string; // 사용자 ID (= login ID)
+  password: string; // 비밀번호
+}>) => {
+  const response = await instance.put(`/userAccount/${id}`,data);
   return response.data;
 };
 

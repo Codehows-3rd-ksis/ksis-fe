@@ -15,11 +15,32 @@ import StopIcon from '@mui/icons-material/Stop';
 import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DownloadIcon from '@mui/icons-material/Download';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
 
 export default function CustomIconButton(props: IconButton_Type) {
     const {width, height, fontSize, color, fontWeight, backgroundColor, border, onClick, icon} = props
 
     switch (icon) {
+        case 'add':
+            return (
+                <IconButton 
+                    sx={{
+                        width: width || '30px',
+                        height: height || '30px',
+                        color: color || 'black',
+                        fontWeight: fontWeight || 'bold',
+                        fontSize: fontSize || '16px',
+                        backgroundColor: backgroundColor || '#fff',
+                        border: border || '',
+                        // borderRadius: 3,
+                        // boxShadow: '0px 3px 0px black'
+                    }}
+                    onClick={onClick? onClick : ()=>{}}
+                >
+                    <AddCircleOutlineIcon />
+                </IconButton>
+            )
         case 'search':
             return (
                 <IconButton 
@@ -246,6 +267,25 @@ export default function CustomIconButton(props: IconButton_Type) {
                     onClick={onClick? onClick : ()=>{}}
                 >
                     <DownloadIcon />
+                </IconButton>
+            )
+        case 'account':
+            return (
+                <IconButton 
+                    sx={{
+                        width: width || '30px',
+                        height: height || '30px',
+                        color: color || 'black',
+                        fontWeight: fontWeight || 'bold',
+                        fontSize: fontSize || '16px',
+                        backgroundColor: backgroundColor || '#fff',
+                        border: border || '',
+                        // borderRadius: 3,
+                        // boxShadow: '0px 3px 0px black'
+                    }}
+                    onClick={onClick? onClick : ()=>{}}
+                >
+                    <AccountBoxIcon />
                 </IconButton>
             )
     }
