@@ -156,10 +156,12 @@ export const getColumns = ({
               }}
             />
           </Box>
-          <CustomIconButton
-            icon="stop"
-            onClick={() => handleStopClick(params.row)}
-          />
+          {params.row.state === "진행중" && (
+            <CustomIconButton
+              icon="stop"
+              onClick={() => handleStopClick(params.row)}
+            />
+          )}
         </Box>
       );
     },

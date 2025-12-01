@@ -1,4 +1,4 @@
-import axios from "axios";
+import AxiosInstance from "../../API/AxiosInstance";
 import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
 
 // 상세 조회 응답 타입
@@ -22,11 +22,6 @@ if (!BASE_URL) {
   throw new Error("VITE_API_URL 환경 변수가 설정되지 않았습니다.");
 }
 
-// 공통 axios config
-const getAxiosConfig = () => ({
-  headers: { "Content-Type": "application/json" },
-});
-
 // ==================== 수집 현황 관련 API ====================
 
 /**
@@ -34,7 +29,7 @@ const getAxiosConfig = () => ({
  * @returns 진행 중인 수집 현황 목록
  */
 export const getStatusList = async (): Promise<StatusTableRows[]> => {
-  const response = await axios.get(`${BASE_URL}/status`, getAxiosConfig());
+  const response = await AxiosInstance.get(`/status`);
   return response.data;
 };
 
