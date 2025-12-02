@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import SearchBarSet from "../../component/SearchBarSet";
-import type { SearchConditions } from "../../component/SearchBarSet";
 import {
   getColumns,
   type SchedulerTableRows,
@@ -87,64 +86,6 @@ export default function Scheduler() {
     setOpenDelDoneAlert(true);
   };
 
-  //** 검색 ================================================== */
-  const handleSearch = (conditions: SearchConditions) => {
-    // 모든 조건이 비어있으면 빈 배열
-    if (!conditions.startDate && !conditions.endDate && !conditions.keyword) {
-      setFilteredRows([]);
-      return;
-    }
-
-    //   // 조건 없으면 검색 막기
-    //   if (!conditions.startDate &&
-    // !conditions.endDate &&
-    // !conditions.keyword?.trim()) {
-    //     alert("검색 조건을 입력해주세요.");
-    //     return;
-    //   }
-
-    let filtered = [...baseRows];
-
-    // 날짜 범위 필터링
-    if (conditions.startDate) {
-      filtered = filtered.filter((row) => {
-        const rowDate = row.startAt.split(" ")[0];
-        return rowDate >= conditions.startDate!;
-      });
-    }
-    if (conditions.endDate) {
-      filtered = filtered.filter((row) => {
-        const rowDate = row.startAt.split(" ")[0];
-        return rowDate <= conditions.endDate!;
-      });
-    }
-
-    // 키워드 필터링 (type에 따라 검색 필드 결정)
-    if (conditions.keyword) {
-      filtered = filtered.filter((row) => {
-        const searchType = conditions.type || "all";
-        const keyword = conditions.keyword!.toLowerCase();
-
-        if (searchType === "all") {
-          // 전체: 모든 필드에서 검색
-          return (
-            row.settingName.toLowerCase().includes(keyword) ||
-            row.cycle.toLowerCase().includes(keyword) ||
-            row.startAt.toLowerCase().includes(keyword)
-          );
-        } else {
-          // 특정 필드만 검색
-          const fieldValue = row[searchType as keyof SchedulerTableRows];
-          return (
-            fieldValue?.toString().toLowerCase().includes(keyword) || false
-          );
-        }
-      });
-    }
-
-    setFilteredRows(filtered);
-  };
-
   const columns = getColumns({ handleEditOpen, handleDeleteOpen });
 
   return (
@@ -168,25 +109,25 @@ export default function Scheduler() {
           display: "flex",
           flexDirection: "column",
           height: "100%",
-          // justifyContent: "center",
         }}
       >
         <SearchBarSet
+          baseRows={baseRows}
+          setFilteredRows={setFilteredRows}
+          dateField="startAt"
           showDateRange={true}
           showKeyword={true}
           showSearchType={true}
           showCount={true}
-          count={filteredRows.length}
           getSearchCategory={getSchedulerSearchCategory}
           showButton={true}
           buttonLabel="스케줄 등록"
           buttonWidth="100px"
           onButtonClick={() => navigate("/scheduler/reg")}
-          onSearch={handleSearch}
         />
 
-        <Box sx={{ mt: 2 }}>
-          <CommonTable columns={columns} rows={filteredRows}/>
+        <Box sx={{ mt: 10 }}>
+          <CommonTable columns={columns} rows={filteredRows} />
         </Box>
       </Box>
 

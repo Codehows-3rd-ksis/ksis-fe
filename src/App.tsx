@@ -28,7 +28,7 @@ import StatusDetail from "./page/03_Status/StatusDetail";
 
 //** 스케줄러 */
 import Scheduler from "./page/04_Scheduler/Scheduler";
-// import SchedulerReg from "./page/04_Scheduler/RegPage"
+import SchedulerReg from "./page/04_Scheduler/RegPage"
 // import SchedulerEdit from "./page/04_Scheduler/EditPage"
 
 //** 수집이력 */
@@ -205,13 +205,13 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                {/* <Route path="/scheduler/reg" element={
+                <Route path="/scheduler/reg" element={
                   <ProtectedRoute userInfo={user}>
                     <SchedulerReg />
                   </ProtectedRoute>
                   }
                 />
-                <Route path="/scheduler/edit" element={
+                {/* <Route path="/scheduler/edit/:id" element={
                   <ProtectedRoute userInfo={user}>
                     <SchedulerEdit />
                   </ProtectedRoute>
