@@ -9,12 +9,18 @@ export default defineConfig([
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
-      reactRefresh.configs.vite,
     ],
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...reactRefresh.configs.vite.rules,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
