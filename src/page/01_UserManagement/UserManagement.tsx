@@ -6,7 +6,7 @@ import { Box, Dialog, Typography } from '@mui/material'
 import CommonTable from "../../component/CommonTable"
 import { getColumns, type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 // Search
-import SearchHeader from "../../component/SearchHeader"
+import SearchBarSet from "../../component/SearchBarSet"
 import { getUserSearchCategory } from "../../Types/Search"
 // Pages
 import EditPage from "./EditPage"
@@ -118,7 +118,6 @@ function UserManagement() {
     setSelectedRow(row)
     // 로그 페이지로 이동
     navigate('/user/log', {state: {userId: row.userId, username: row.username} })
-    
   }
 
   const columns = getColumns({ handleEditOpen, handleDeleteOpen, handleShowLogOpen });
@@ -128,13 +127,20 @@ function UserManagement() {
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           유저관리
         </Typography>
-        <SearchHeader
-          baseRows={baseRows}                 // 전체 데이터 원본
-          setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
-          getSearchCategory={getUserSearchCategory} // 검색 카테고리 목록
-          onClick={handleOpenReg}             // 등록 버튼 클릭 시 실행할 함수
-          btnName="유저 등록"
-        />
+        <Box sx={{padding: 2}}>
+          <SearchBarSet
+            baseRows={baseRows}
+            setFilteredRows={setFilteredRows}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={true}
+            getSearchCategory={getUserSearchCategory}
+            showButton={true}
+            buttonLabel="유저 등록"
+            onButtonClick={handleOpenReg}
+          />
+        </Box>
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>

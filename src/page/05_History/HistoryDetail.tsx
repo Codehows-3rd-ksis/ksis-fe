@@ -22,7 +22,6 @@ import CustomButton from "../../component/CustomButton";
 import Alert from "../../component/Alert";
 
 export default function HistoryDetail() {
-  //훅 → 상태 → 계산 → 함수 → 효과 → 렌더링(데이터 → UI상태 → 가공 → 계산 → API 순서)
   // 1. 라우터 훅
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -79,7 +78,7 @@ export default function HistoryDetail() {
     },
   ]); // 수집 데이터
 
-  const [collectionColumns, /*setCollectionColumns*/] = useState<GridColDef[]>([
+  const [collectionColumns /*setCollectionColumns*/] = useState<GridColDef[]>([
     {
       field: "progressNo",
       headerName: "진행번호",

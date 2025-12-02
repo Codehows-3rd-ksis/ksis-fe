@@ -7,7 +7,6 @@ import {
   RadioGroup,
   FormControl,
   FormControlLabel,
-  InputAdornment,
   Menu,
   MenuItem,
   ListItemText,
@@ -17,11 +16,9 @@ import {
   getColumns,
   type HistoryTableRows,
 } from "../../Types/TableHeaders/HistoryHeader";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Dayjs } from "dayjs";
-import CustomTextField from "../../component/CustomTextField";
-import CustomIconButton from "../../component/CustomIconButton";
+import SearchBarSet, {
+  type SearchConditions,
+} from "../../component/SearchBarSet";
 
 export default function History() {
   const navigate = useNavigate();
@@ -29,10 +26,11 @@ export default function History() {
   const [filteredRows, setFilteredRows] = useState<HistoryTableRows[]>([]);
 
   const [filterType, setFilterType] = useState("all"); // 라디오 선택값 상태
-  const [searchStartAt, setSearchStartAt] = useState<Dayjs | null>(null);
-  const [searchEndAt, setSearchEndAt] = useState<Dayjs | null>(null);
-  const [searchName, setSearchName] = useState("");
-  const [searchCount, setSearchCount] = useState(0);
+  const [searchConditions, setSearchConditions] = useState<SearchConditions>({
+    startDate: null,
+    endDate: null,
+    keyword: "",
+  });
 
   // 메뉴 anchor
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
@@ -224,60 +222,52 @@ export default function History() {
 
   const columns = getColumns({ handleDetailView, handleExport });
 
-  const handleInputChange = (value: string) => {
-    setSearchName(value);
-  };
-
-  const handleSearch = (forceType?: string) => {
+  // 공통 필터링 함수
+  const applyFilters = (
+    conditions: SearchConditions,
+    typeFilter: string = filterType
+  ) => {
     let filtered = [...baseRows];
 
-    const typeToUse = forceType ?? filterType;
-
-    if (searchStartAt && searchEndAt === null) {
+    // 날짜 범위 필터링 (startAt 기준)
+    if (conditions.startDate && !conditions.endDate) {
       filtered = filtered.filter((row) => {
-        const startDate = searchStartAt?.format("YYYY-MM-DD");
         const rowStartDate = row.startAt.slice(0, 10);
-        return rowStartDate >= startDate;
+        return rowStartDate >= conditions.startDate!;
       });
-    } else if (searchEndAt && searchStartAt === null) {
+    } else if (!conditions.startDate && conditions.endDate) {
       filtered = filtered.filter((row) => {
-        const endDate = searchEndAt?.format("YYYY-MM-DD");
-        const rowEndDate = row.endAt ? row.endAt.slice(0, 10) : null;
-        if (rowEndDate) return rowEndDate <= endDate;
-      });
-    } else if (searchStartAt && searchEndAt) {
-      filtered = filtered.filter((row) => {
-        const startDate = searchStartAt?.format("YYYY-MM-DD");
         const rowStartDate = row.startAt.slice(0, 10);
-        const endDate = searchEndAt?.format("YYYY-MM-DD");
-        const rowEndDate = row.endAt ? row.endAt.slice(0, 10) : null;
-
-        if (rowEndDate) {
-          return rowStartDate >= startDate && rowEndDate <= endDate;
-        }
+        return rowStartDate <= conditions.endDate!;
+      });
+    } else if (conditions.startDate && conditions.endDate) {
+      filtered = filtered.filter((row) => {
+        const rowStartDate = row.startAt.slice(0, 10);
+        return (
+          rowStartDate >= conditions.startDate! &&
+          rowStartDate <= conditions.endDate!
+        );
       });
     }
 
-    if (searchName.trim() !== "") {
+    // 키워드 필터링 (settingName으로 검색)
+    if (conditions.keyword && conditions.keyword.trim() !== "") {
       filtered = filtered.filter((row) =>
-        row.settingName?.includes(searchName.trimEnd())
+        row.settingName?.toLowerCase().includes(conditions.keyword!.toLowerCase())
       );
     }
 
-    if (typeToUse !== "all") {
-      filtered = filtered.filter((row) => row.type === typeToUse);
+    // 라디오 타입 필터링
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((row) => row.type === typeFilter);
     }
 
     setFilteredRows(filtered);
-    setSearchCount(filtered.length);
   };
-  const handleReset = () => {
-    setSearchStartAt(null);
-    setSearchEndAt(null);
-    setSearchName("");
-    setFilteredRows(baseRows);
-    setFilterType("all");
-    setSearchCount(0);
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setSearchConditions(conditions); // 검색 조건 저장
+    applyFilters(conditions);
   };
 
   // 라디오 선택 변경시 호출될 함수
@@ -285,7 +275,8 @@ export default function History() {
     const value = event.target.value;
     setFilterType(value);
 
-    handleSearch(value);
+    // 현재 검색 조건을 유지하면서 타입만 변경하여 재검색
+    applyFilters(searchConditions, value);
   };
 
   const handleExport_Excel = () => {
@@ -314,68 +305,14 @@ export default function History() {
         데이터 수집이력
       </Typography>
 
-      <Box
-        sx={{
-          bgcolor: "#f0f0f0",
-          display: "flex",
-          justifyContent: "space-between",
-          height: 80,
-        }}
-      >
-        {/* Search Count */}
-        <Box sx={{ display: "flex", alignItems: "center", padding: 2 }}>
-          {searchCount > 0 ? (
-            <Typography sx={{ color: "black", fontWeight: 700 }}>
-              검색결과 : {searchCount} 건 입니다.
-            </Typography>
-          ) : (
-            <></>
-          )}
-        </Box>
-        {/* Search */}
-        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              label="시작일자"
-              format="YYYY-MM-DD"
-              value={searchStartAt}
-              onChange={(newValue) => setSearchStartAt(newValue)}
-            />
-            <DatePicker
-              label="종료일자"
-              format="YYYY-MM-DD"
-              value={searchEndAt}
-              onChange={(newValue) => setSearchEndAt(newValue)}
-            />
-          </LocalizationProvider>
-          <CustomTextField
-            value={searchName}
-            height="56px"
-            inputWidth="300px"
-            placeholder="수집명"
-            type="text"
-            onChange={(e) => handleInputChange(e.target.value)}
-            endAdornment={
-              <InputAdornment position="end">
-                <CustomIconButton
-                  icon="search"
-                  width="20px"
-                  height="20px"
-                  color="gray"
-                  onClick={() => handleSearch()}
-                />
-                <CustomIconButton
-                  icon="reset"
-                  width="20px"
-                  height="20px"
-                  color="gray"
-                  onClick={handleReset}
-                />
-              </InputAdornment>
-            }
-          />
-        </Box>
-      </Box>
+      {/* SearchBarSet */}
+      <SearchBarSet
+        showDateRange={true}
+        showKeyword={true}
+        showCount={true}
+        count={filteredRows.length}
+        onSearch={handleSearch}
+      />
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         {/* RadioBtn */}
         <Box

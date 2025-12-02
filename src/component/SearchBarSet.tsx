@@ -20,7 +20,13 @@ export type SearchConditions = {
   count?: number;
 };
 
-interface SearchBarSetProps {
+interface SearchBarSetProps<T = any> {
+  // 검색 데이터
+  baseRows?: T[];
+  setFilteredRows?: React.Dispatch<React.SetStateAction<T[]>>;
+  dateField?: keyof T; // 날짜 필터링할 필드명 (예: "startAt")
+
+  // UI 표시 옵션
   showDateRange?: boolean;
   showKeyword?: boolean;
   showSearchType?: boolean;
@@ -32,10 +38,15 @@ interface SearchBarSetProps {
   buttonLabel?: string;
   buttonWidth?: string;
   onButtonClick?: () => void;
-  onSearch: (conditions: SearchConditions) => void;
+
+  // 커스텀 검색 (선택사항)
+  onSearch?: (conditions: SearchConditions) => void;
 }
 
-export default function SearchBarSet({
+export default function SearchBarSet<T = any>({
+  baseRows,
+  setFilteredRows,
+  dateField,
   showDateRange,
   showKeyword,
   showSearchType,
@@ -48,7 +59,7 @@ export default function SearchBarSet({
   buttonWidth,
   onButtonClick,
   onSearch,
-}: SearchBarSetProps) {
+}: SearchBarSetProps<T>) {
   const [conditions, setConditions] = useState<SearchConditions>({
     startDate: null,
     endDate: null,
@@ -60,6 +71,7 @@ export default function SearchBarSet({
   const [categoryOptions, setCategoryOptions] = useState<SearchCategory<any>[]>(
     []
   );
+  const [internalCount, setInternalCount] = useState(0);
 
   // getSearchCategory가 있으면 "전체" 옵션 추가
   useEffect(() => {
@@ -74,33 +86,96 @@ export default function SearchBarSet({
 
   // count prop이 변경되면 conditions에도 반영
   useEffect(() => {
-    setConditions((prev) => ({ ...prev, count: count ?? 0 }));
-  }, [count]);
+    setConditions((prev) => ({ ...prev, count: count ?? internalCount }));
+  }, [count, internalCount]);
 
   // 내부 세부 컴포넌트들이 값을 변경할 때 호출
   const updateConditions = (key: keyof SearchConditions, value: any) => {
     setConditions((prev) => ({ ...prev, [key]: value }));
   };
 
+  // 내부 검색 로직
+  const performInternalSearch = (searchConditions: SearchConditions) => {
+    if (!baseRows || !setFilteredRows) return;
+
+    let filtered = [...baseRows];
+
+    // 날짜 범위 필터링
+    if (dateField && (searchConditions.startDate || searchConditions.endDate)) {
+      if (searchConditions.startDate && !searchConditions.endDate) {
+        filtered = filtered.filter((row) => {
+          const rowDate = String(row[dateField]).split(" ")[0];
+          return rowDate >= searchConditions.startDate!;
+        });
+      } else if (!searchConditions.startDate && searchConditions.endDate) {
+        filtered = filtered.filter((row) => {
+          const rowDate = String(row[dateField]).split(" ")[0];
+          return rowDate <= searchConditions.endDate!;
+        });
+      } else if (searchConditions.startDate && searchConditions.endDate) {
+        filtered = filtered.filter((row) => {
+          const rowDate = String(row[dateField]).split(" ")[0];
+          return (
+            rowDate >= searchConditions.startDate! &&
+            rowDate <= searchConditions.endDate!
+          );
+        });
+      }
+    }
+
+    // 키워드 필터링
+    if (searchConditions.keyword && searchConditions.keyword.trim() !== "") {
+      const keyword = searchConditions.keyword.toLowerCase();
+      const searchType = searchConditions.type || "all";
+
+      if (searchType === "all") {
+        // 전체 검색: 모든 필드에서 검색
+        filtered = filtered.filter((row) =>
+          Object.values(row as Record<string, unknown>).some(
+            (value) =>
+              typeof value === "string" && value.toLowerCase().includes(keyword)
+          )
+        );
+      } else {
+        // 특정 필드만 검색
+        filtered = filtered.filter((row) => {
+          const value = (row as Record<string, unknown>)[searchType];
+          return (
+            typeof value === "string" && value.toLowerCase().includes(keyword)
+          );
+        });
+      }
+    }
+
+    setFilteredRows(filtered);
+    setInternalCount(filtered.length);
+  };
+
   const handleSearch = () => {
-    onSearch(conditions);
+    if (onSearch) {
+      // 커스텀 검색 함수가 있으면 사용
+      onSearch(conditions);
+    } else {
+      // 없으면 내부 검색 로직 사용
+      performInternalSearch(conditions);
+    }
   };
 
   const handleReset = () => {
-    setConditions({
+    const resetConditions = {
       startDate: null,
       endDate: null,
       keyword: "",
       type: "all",
       count: 0,
-    });
-    onSearch({
-      startDate: null,
-      endDate: null,
-      keyword: "",
-      type: "all",
-      count: 0,
-    });
+    };
+    setConditions(resetConditions);
+
+    if (onSearch) {
+      onSearch(resetConditions);
+    } else {
+      performInternalSearch(resetConditions);
+    }
   };
 
   return (
@@ -116,7 +191,7 @@ export default function SearchBarSet({
           gap: 2,
         }}
       >
-        {showCount && <CountSection count={conditions.count} />}
+        {showCount && <CountSection count={count ?? internalCount} />}
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {showDateRange && (
