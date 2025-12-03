@@ -10,6 +10,8 @@ import SearchHeader from "../../component/SearchHeader"
 import { getSettingSearchCategory } from "../../Types/Search"
 // Comp
 import Alert from "../../component/Alert"
+// API
+import { getSetting } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
@@ -23,19 +25,35 @@ function Setting() {
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false)
   const [openRunAlert, setOpenRunAlert] = useState(false)
   const [openRunDoneAlert, setOpenRunDoneAlert] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [alertMsg, setAlertMsg] = useState("")
 
   useEffect(()=> {
-    const data = [
-      { id: 1, settingName: '창원시청 공지사항 수집', url: 'https://...', userAgent: 'Windows / Edge', rate: 10  },
-      { id: 2, settingName: '경상남도 보도자료 수집', url: 'https://...', userAgent: 'Windows / Chrome', rate: 10 },
-      { id: 3, settingName: '창원관광 관광지자료 수집', url: 'https://...', userAgent: 'Windows / Chrome', rate: 10 },
-    ];
-
-    setBaseRows(data)
-    setFilteredRows(data)
+    BoardRefresh();
   }, [])
 
   /**  Table  =========================================== */
+  const getTableDatas = async () => {
+    try {
+        const data = await getSetting()
+        
+        const result = data.map((row: SettingTableRows, i: number) => ({
+            ...row,
+            id: row.settingId,
+            index: i+1,
+        }))
+        setBaseRows(result)
+        setFilteredRows(result)
+    }
+    catch(err) {
+        console.error(err)
+        setAlertMsg("설정데이터 조회 실패")
+        setOpenErrorAlert(true)
+    }
+  }
+  const BoardRefresh = () => {
+        getTableDatas();
+  }
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
       navigate('/setting/reg')
@@ -130,6 +148,15 @@ function Setting() {
             type='success'
             onConfirm={() => {
               setOpenRunDoneAlert(false);
+            }}
+        />
+        {/* 에러 */}
+        <Alert
+            open={openErrorAlert}
+            text={alertMsg}
+            type='error'
+            onConfirm={() => {
+              setOpenErrorAlert(false);
             }}
         />
     </Box>
