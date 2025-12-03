@@ -9,9 +9,11 @@ import {
   FormControlLabel,
   FormGroup,
 } from "@mui/material";
+import type { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CustomButton from "../../component/CustomButton";
 import CustomTextField from "../../component/CustomTextField";
 import CustomSelect from "../../component/CustomSelect";
+import CommonTable from "../../component/CommonTable";
 import Alert from "../../component/Alert";
 import {
   generateCronExpression,
@@ -22,6 +24,8 @@ import {
 } from "./utils/cronUtils";
 import { createSchedule } from "../../API/04_SchedulerApi";
 import type { CreateScheduleRequest } from "../../API/04_SchedulerApi";
+import SearchBarSet from "../../component/SearchBarSet";
+import { getSchedulerSearchCategory } from "../../Types/Search";
 
 interface Setting {
   id: number;
@@ -49,10 +53,44 @@ export default function RegPage() {
     { id: 2, settingName: "경상남도 보도자료 수집" },
     { id: 3, settingName: "창원관광 관광지자료 수집" },
   ]);
+  const [filteredRows, setFilteredRows] = useState<SchedulerTableRows[]>([]);
 
   useEffect(() => {
-    // TODO: fetch setting list from API
+    // TODO: 팀원에게 API 파일 받으면 아래 함수로 설정 목록 조회
+    // fetchSettingList();
   }, []);
+
+  // const fetchSettingList = async () => {
+  //   try {
+  //     const response = await getSettingList(); // API 함수는 팀원에게 받을 예정
+  //     setSettingList(response.data);
+  //   } catch (error) {
+  //     console.error("Failed to fetch setting list:", error);
+  //   }
+  // };
+
+  // 데이터 설정 테이블 컬럼 정의
+  const settingColumns: GridColDef[] = [
+    {
+      field: "id",
+      headerName: "ID",
+      width: 100,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "settingName",
+      headerName: "설정명",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+    },
+  ];
+
+  // 행 클릭 시 해당 설정 선택
+  const handleSettingRowClick = (params: GridRowParams) => {
+    setSettingId(params.row.id);
+  };
 
   const scheduleTypeList = [
     { value: "weekly", name: "매주" },
@@ -83,7 +121,7 @@ export default function RegPage() {
   }));
 
   const minuteList = [
-    { value: 0, name: "0분" },
+    { value: 0, name: "00분" },
     { value: 10, name: "10분" },
     { value: 20, name: "20분" },
     { value: 30, name: "30분" },
@@ -203,6 +241,7 @@ export default function RegPage() {
             boxSizing: "border-box", // Ensure padding is included in total width/height
           }}
         >
+          {/* 수집기간 */}
           <Box
             className="수집기간"
             sx={{
@@ -236,6 +275,7 @@ export default function RegPage() {
             </Box>
           </Box>
 
+          {/* 수집주기 */}
           <Box
             className="수집주기"
             sx={{
@@ -302,18 +342,20 @@ export default function RegPage() {
 
           {/* 수집 시간 */}
           <Box
-            className="수집시간"
             sx={{
               display: "flex",
               alignItems: "center",
-              flexDirection: "row", // Corrected typo
+              flexDirection: "row",
               justifyContent: "space-between",
               gap: 2,
               color: "black",
               width: "100%",
             }}
           >
-            <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+            <Box
+              className="수집시간"
+              sx={{ display: "flex", flexDirection: "row", gap: 2 }}
+            >
               <Typography
                 sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
               >
@@ -337,8 +379,10 @@ export default function RegPage() {
                 />
               </Box>
             </Box>
+
             {/* 미리보기 */}
             <Box
+              className="미리보기"
               sx={{
                 bgcolor: "#f0f0f0",
                 padding: 2,
@@ -353,9 +397,50 @@ export default function RegPage() {
           </Box>
         </Box>
 
-        {/* 데이터 설정 테이블 불러오기 */}
-      
-
+        {/* 데이터 설정 테이블 */}
+        <Box
+          sx={{
+            marginLeft: "20px",
+            marginRight: "20px",
+            marginTop: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 25,
+                fontWeight: "bold",
+                color: "black",
+              }}
+            >
+              데이터 수집 설정 목록
+            </Typography>
+            <SearchBarSet
+              baseRows={settingList}
+              setFilteredRows={setFilteredRows}
+              showSearchType={true}
+              getSearchCategory={getSchedulerSearchCategory}
+              showKeyword={true}
+            ></SearchBarSet>
+          </Box>
+          <CommonTable
+            columns={settingColumns}
+            rows={settingList}
+            onRowClick={handleSettingRowClick}
+            height={300}
+          />
+        </Box>
+      </Box>
       {/* 하단 버튼 */}
       <Box
         sx={{
