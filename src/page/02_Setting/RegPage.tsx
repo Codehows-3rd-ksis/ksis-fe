@@ -202,6 +202,11 @@ export default function RegPage() {
     const handleSelectChange = (key: keyof typeof newData) => 
     (event: SelectChangeEvent<string | number>) => {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
+
+      if(key === "type") {
+        setCondition([])
+      }
+      
       setIsAble(false)
     };
 
@@ -415,6 +420,8 @@ export default function RegPage() {
         console.error(err)
         setAlertMsg('상세영역 미리보기 불러오기 실패')
         setOpenErrorAlert(true)
+        setIsDetail(false)
+        setLoading(false)
       }
     }
 

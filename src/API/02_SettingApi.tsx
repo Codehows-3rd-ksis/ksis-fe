@@ -47,8 +47,19 @@ export const registSetting = async (data: Partial<{
   return response.data;
 };
 
+// 수정할 때 추출조건 조회
+export const getCondtions = async (settingId:number) => {
+  const response = await instance.get(`/setting/conditions/${settingId}`);
+  return response.data;
+};
+
+interface Condition {
+    conditionsKey: string;
+    attr: string;
+    conditionsValue: string;
+}
 // 수정
-export const updateSetting = async (id:number, data: Partial<{
+export const updateSetting = async (settingId:number, data: Partial<{
   userId: number;
   settingName: string; // 수집명
   url: string; // URL
@@ -61,15 +72,9 @@ export const updateSetting = async (id:number, data: Partial<{
   pagingNextbtn?: string; // 페이지네이션 다음버튼 영역 (다중)
   maxPage?: number; // 최대페이지 (다중)
   linkArea?: string; // 상세링크 영역 (다중)
-  conditions?: [ // 추출영역, 속성, 명칭
-    {
-      conditions_key: string,
-      attr: string
-      conditions_value: string,
-    }
-  ];
+  conditions?: Condition[];
 }>) => {
-  const response = await instance.put(`/setting/${id}`,data);
+  const response = await instance.put(`/setting/${settingId}`,data);
   return response.data;
 };
 
