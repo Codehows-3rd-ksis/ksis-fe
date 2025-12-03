@@ -49,8 +49,6 @@ function UserManagement() {
               id: row.userId,
               index: i+1,
           }))
-
-          console.log('result', result)
           setBaseRows(result)
           setFilteredRows(result)
       }

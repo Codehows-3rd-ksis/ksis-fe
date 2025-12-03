@@ -1,154 +1,457 @@
-import {useEffect, useState, useRef} from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
     Box, Typography, InputAdornment, type SelectChangeEvent, Stepper, Step, StepLabel, 
-    Breadcrumbs, Link,
+    Breadcrumbs, Link, Dialog
 } from '@mui/material'
 import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from "../../component/Alert"
+// import CommonTable from '../../component/CommonTable';
 import ScrollTable from '../../component/ScrollTable';
+import CustomIconButton from '../../component/CustomIconButton';
+import { getColumns as getConditionColumns, type ConditionTableRows } from '../../Types/TableHeaders/SettingConditionHeader';
+import { getColumns as getRobotsColumns } from '../../Types/TableHeaders/SettingRobotsHeader';
+import { type RobotsTableRows} from '../../Types/TableHeaders/SettingRobotsHeader'
+import { getRobots, getPreview, getHighlight, registSetting } from '../../API/02_SettingApi';
+import HtmlInspector from "../../component/HTMLInspector"
+import LoadingProgress from '../../component/LoadingProgress';
 
-
-let idCounter = 0;
-// dummy
-const dummyData = Array.from({ length: 100 }, () => {
-    idCounter += 1;
-    return {
-      id: idCounter,
-      area: `영역 위치 ${idCounter}`,
-      attr: `속성 ${idCounter}`,
-      naming: `명칭 데이터 ${idCounter}`,
-    };
-  });
+interface PreviewData {
+  image?: string;   // base64 이미지 형태
+  html: string;   // 페이지 전체 HTML 문자열
+}
+interface HighlightPos {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export default function RegPage() {
     const navigate = useNavigate();
-    const loadingRef = useRef(false); // 로딩 상태 직접 관리
-
-    const [openCloseAlert, setOpenCloseAlert] = useState(false)
-    const [openRegAlert, setOpenRegAlert] = useState(false)
-    const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
+    // 0. 공통
+    const [loading, setLoading] = useState(false)
     const [activeStep, setActiveStep] = useState(0);
+    const steps = ['기본 정보', '영역지정', '검토'];
+    // 1. 기본설정
     const [newData, setNewData] = useState({
         settingName: '',
         userAgent: '',
-        rate: '',
+        rate: '0',
         url: '',
         type: '',
         listArea: '',
+        pagingType: '',
         pagingArea: '',
-        maxPage: 1,
+        pagingNextbtn: '',
+        maxPage: '1',
         linkArea: '',
     })
-    // const [nextIndex, setNextIndex] = useState(0);
-    const [rows, setRows] = useState<{id: number, area: string, attr: string, naming: string}[]>([])
-    const columns = [
-        { field: 'area', headerName: '추출영역', flex: 2 },
+    const userAgentList = useMemo(() => [
+        { value: 
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/120.0.0.0 Safari/537.36", 
+          name: 'Windows / Edge' 
+        },
+        { value: 
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", 
+          name: 'Windows / Chrome' 
+        },
+        {
+          value:
+            "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0",
+          name: "Linux / Firefox",
+        },
+        {
+          value:
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          name: "Linux / Chrome",
+        },
+        { value: 
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          name: 'Mac / Chrome' 
+        },
+    ], [])
+    const typeList = useMemo(() => [
+        { value: '단일', name: '단일' },
+        { value: '다중', name: '다중' },
+    ], [])
+    const pagingTypeList = useMemo(() => [
+        { value: 'Numeric', name: '페이지 형식' },
+        { value: 'Next_Btn', name: '다음버튼 형식' },
+        { value: 'AJAX', name: 'AJAX' },
+    ], [])
+    const [robotsRows, setRobotsRows] = useState<RobotsTableRows[]>([]) // Robots 테이블 데이터
+    const [isAble, setIsAble] = useState(false)
+    // 2. 영역지정
+    const [mainPreview, setMainPreview] = useState<PreviewData>(
+      {
+        image: undefined,
+        html: ''
+      }
+    )
+    const [detailPreview, setDetailPreview] = useState<PreviewData>(
+      {
+        image: undefined,
+        html: ''
+      }
+    )
+    const [highlightNodes, setHighlightNodes] = useState<(Element | null)[]>([]); // HTML highlight
+    const [highlightPositions, setHighlightPositions] = useState<HighlightPos[]>([]); // Preview highlight
+    const [selectTarget, setSelectTarget] = useState<any>(null); // 영역선택 포커스
+    const [detailUrl, setDetailUrl] = useState<any>(null);
+    const [condition, setCondition] = useState<ConditionTableRows[]>([]) // 추출조건 테이블 데이터
+    const [isDetail, setIsDetail] = useState(false) // 상세영역 on/off 여부
+    // 3. 검토
+    // Alert
+    const [openCloseAlert, setOpenCloseAlert] = useState(false)
+    const [openRegAlert, setOpenRegAlert] = useState(false)
+    const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
+    const [openRobotsAlert, setOpenRobotsAlert] = useState(false)
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [alertMsg, setAlertMsg] = useState("")
+    // 검토 테이블 컬럼
+    const reviewColumns = [
+        { field: 'conditionsValue', headerName: '추출영역', flex: 2 },
         { field: 'attr', headerName: '추출속성', flex: 1 },
-        { field: 'naming', headerName: '추출값 명칭 지정', flex: 1 },
+        { field: 'conditionsKey', headerName: '추출값 명칭 지정', flex: 1 },
     ]
-    // const [loading, setLoading] = useState(false);
 
+    /** 공통 기능 */
     const handleClose = () => {
         navigate('/setting')
     }
-
     // Stepper
-    const steps = ['기본 정보', '영역지정', '검토'];
-
     const handleNext = () => {
         setActiveStep((prevActiveStep) => prevActiveStep + 1);
     };
     const handleBack = () => {
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
     };
+    const handleValidate = () => {
+        const errMsg = []
+        if(newData.settingName === '') {
+            errMsg.push('데이터 수집명을 입력해주세요.')     
+        }
+        if(Number(newData.rate) < 0) {
+            errMsg.push('수집간격의 값이 잘못되었습니다.')
+        }
+        if(Number(newData.maxPage) <= 0) {
+            errMsg.push('수집할 페이지 수 는 최소 1을 입력해야합니다.')
+        }
+        if(condition.length <= 0) {
+            errMsg.push('추출조건은 최소 1개 입력해야합니다.')
+        }
+        const invalidRows = condition.filter(
+          (row) => !row.conditionsValue || !row.attr || !row.conditionsKey
+        );
+        if(invalidRows.length > 0) {
+          errMsg.push('추출조건 중 입력되지 않은 값이 존재합니다.')
+        }
 
-    // 🔹 robots.txt 상태 관리
-    // const [robotsUrl, setRobotsUrl] = useState('');
-    // const [robotsTxt, setRobotsTxt] = useState('');
-    // const [robotsLoading, setRobotsLoading] = useState(false);
-    // const [robotsError, setRobotsError] = useState('');
+        if(newData.type === '다중') {
+          if(newData.listArea === '') errMsg.push('게시물 영역을 입력해주세요.')
+          if(newData.pagingArea === '') errMsg.push('페이지네이션 영역을 입력해주세요.')
+          if(newData.pagingNextbtn === '') errMsg.push('페이지네이션 다음버튼 영역을 입력해주세요.')
+          if(newData.linkArea === '') errMsg.push('페이지네이션 다음버튼 영역을 입력해주세요.')
+        }
 
-    const userAgentList = [
-        { value: 'Windows / Edge', name: 'Windows / Edge' },
-        { value: 'Windows / Chrome', name: 'Windows / Chrome' },
-        { value: 'Mac / Chrome', name: 'Mac / Chrome' },
-    ];
-    const typeList = [
-        { value: '단일', name: '단일' },
-        { value: '다중', name: '다중' },
-    ];
-
-    const handleInputChange = (key: keyof typeof newData, value: string) => {
-        setNewData((prev) => {
-            if(key === 'rate') {
-                value = Number(value) < 0 ? '0' : value
-            }
-            
-            const updated = { ...prev, [key]: value };
-
-            return updated;
-        });
+        if(errMsg.length !== 0) {
+            setAlertMsg(errMsg.join('\n'));
+            setOpenErrorAlert(true)
+        } else {
+            handleRegist()
+        }
+    }
+    const handleRegist = async () => {
+        const data = {
+          ...newData,
+          rate: Number(newData.rate),
+          maxPage: Number(newData.maxPage),
+          conditions: condition
+        }
+        try {
+          await registSetting(data)
+          setOpenRegDoneAlert(true)
+        }
+        catch(err) {
+          console.error(err)
+          setAlertMsg('세팅 등록을 실패하였습니다.')
+          setOpenErrorAlert(true)
+          return;
+        }
     }
 
+    /** 1. 기본정보 */
+    const robotsColumns = getRobotsColumns()
+    const handleInputChange = (key: keyof typeof newData, value: string) => {
+        setNewData((prev) => {
+            if (key === 'rate' || key === 'maxPage') {
+              if (value === '' || Number(value) < 0) value = '0';
+            }
+            if (prev[key] === value) return prev; // 값이 같으면 상태 변경 안함
+          
+            if(key === 'url') {
+              setIsAble(false)
+            }
+          
+            return { ...prev, [key]: value };
+        });
+    }
     const handleSelectChange = (key: keyof typeof newData) => 
     (event: SelectChangeEvent<string | number>) => {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
+      setIsAble(false)
     };
 
-    const handleRegist = () => {
-        // 설정 등록 API 호출
-        setOpenRegDoneAlert(true)
+    const parseRobotsTxt = (robotsTxt: string) => {
+      const lines = robotsTxt.split(/\r?\n/);
+      const result: any[] = [];
+
+      let currentUA: string | null = null;
+      let allowList: string[] = [];
+      let disallowList: string[] = [];
+
+      const pushCurrent = () => {
+        if (currentUA) {
+          result.push({
+            userAgent: currentUA,
+            allow: allowList,
+            disallow: disallowList,
+          });
+        }
+      };
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue; // 빈 줄/주석 제외
+      
+        if (trimmed.toLowerCase().startsWith("user-agent")) {
+          // UA 블록이 새로 시작하면 이전거 push
+          if (currentUA !== null) pushCurrent();
+        
+          currentUA = trimmed.split(":")[1].trim();
+          allowList = [];
+          disallowList = [];
+        } 
+        else if (trimmed.toLowerCase().startsWith("allow")) {
+          const path = trimmed.split(":")[1].trim();
+          if (path) allowList.push(path);
+        } 
+        else if (trimmed.toLowerCase().startsWith("disallow")) {
+          const path = trimmed.split(":")[1].trim();
+          if (path) disallowList.push(path);
+        }
+      }
+
+      // 마지막 UA push
+      pushCurrent();
+
+      return result;
     }
 
     /** ✅ robots.txt 확인 */
     const handleRobots = async () => {
         if (!newData.url) {
-          alert('URL을 입력해주세요.');
+          setAlertMsg('URL을 입력해주세요.')
+          setOpenErrorAlert(true)
           return;
         }
+        try {
+          const resRobots = await getRobots(newData.url, newData.userAgent)
+          const resPreview = await getPreview(newData.url)
+          setMainPreview(resPreview)
+          const robotsTableData = parseRobotsTxt(resRobots.robotsTxt)
+          
+          setIsAble(resRobots.allow)
+          setAlertMsg(resRobots.message)
+          if(resRobots.allow === true) setOpenRobotsAlert(true)
+          else setOpenErrorAlert(true)
+          
+          setRobotsRows(
+            robotsTableData.map((item, index) => ({
+              id: index + 1,
+              userAgent: item.userAgent,
+              disallow: item.disallow,
+              allow: item.allow,
+            }))
+          );
+          setLoading(false)
+        }
+        catch(err) {
+          console.error(err)
+          setAlertMsg('Robots 검출 실패')
+          setOpenErrorAlert(true)
+        }
+    }
+    /** 2. 영역지정 */
+    const handleAddCondition = () => {
+      setCondition(prev => [
+        ...prev,
+        {
+          id: prev.length + 1,
+          conditionsValue: String(prev.length + 1),
+          attr: "",
+          conditionsKey: ""
+        }
+      ]);
+    };
+    const handleAreaSelect = (target: any) => {
+      setSelectTarget(target);
+    };
+    const handleAreaSelectTable = (rowId: number) => {
+      setSelectTarget(rowId);
+    };
 
-        // setRobotsTxt('');
-        // setRobotsError('');
-        // setRobotsLoading(true);
+    const getCssSelector = (el:any) => {
+      if (!el || !(el instanceof Element)) return null;
 
-        // 여기에 백엔드 api를 입력해야됨. 프론트에서 하려니 CORS정책때문에 불가능
+      const path = [];
         
+      while (el.nodeType === Node.ELEMENT_NODE) {
+        let selector = el.nodeName.toLowerCase();
+      
+        // id가 있으면 끝내기
+        if (el.id) {
+          selector += `#${el.id}`;
+          path.unshift(selector);
+          break;
+        }
+      
+        // 의미있는 클래스만 선택 (예: 't1', 'wrap1texts' 같은 자주 쓰이는 것 중 고유한 걸로 제한)
+        const meaningfulClasses = Array.from(el.classList as DOMTokenList).filter((c: string) =>
+          ['t1', 'wrap1texts', 'unique-class-name'].includes(c)
+        );
+      
+        if (meaningfulClasses.length > 0) {
+          selector += `.${meaningfulClasses.join('.')}`;
+          path.unshift(selector);
+          break; // 클래스가 충분히 고유하다면 여기서 끝내도 됨
+        }
+      
+        // 없으면 부모로 올라가기 전에 nth-of-type으로 유일성 확보
+        let sibling = el;
+        let nth = 1;
+      
+        while ((sibling = sibling.previousElementSibling)) {
+          if (sibling.nodeName === el.nodeName) nth++;
+        }
+        selector += `:nth-of-type(${nth})`;
+      
+        path.unshift(selector);
+        el = el.parentNode as Element;
+      }
+    
+      return path.join(' > ');
+    }
+    
+    // 다중페이지 영역선택 클릭시
+    const handleInspectorClick = (element: Element) => {
+      if (!selectTarget) return;
+      
+      const selector = getCssSelector(element);
+
+      setHighlightNodes((prev) => {
+        // 이미 있으면 빼고, 없으면 추가 (토글 기능)
+        if (prev.some((el) => el?.isSameNode(element))) {
+          return prev.filter((el) => !el?.isSameNode(element));
+        }
+        return [...prev, element];
+      });
+    
+      setNewData(prev => ({
+        ...prev,
+        [`${selectTarget}Selector`]: selector,
+        [`${selectTarget}`]: selector,
+      }));
+
+      if(selectTarget === 'linkArea') {
+        if (element.tagName.toLowerCase() === 'a') {
+          const hrefLink = element.getAttribute('href')
+          if(hrefLink) {
+            setDetailUrl(new URL(hrefLink, newData.url).href)
+          }
+        }
+      }
+
+      setSelectTarget(null)
+
+      
+    };
+    // 추출조건 테이블 내 영역선택 버튼 클릭시
+    const handleInspectorTableClick = (element: Element) => {
+      if (!selectTarget) return;
+
+      const selector = getCssSelector(element);
+
+      setHighlightNodes((prev) => {
+        // 이미 있으면 빼고, 없으면 추가 (토글 기능)
+        if (prev.some((el) => el?.isSameNode(element))) {
+          return prev.filter((el) => !el?.isSameNode(element));
+        }
+        return [...prev, element];
+      });
+    
+      setCondition((prev) =>
+        prev.map((row) =>
+          row.id === selectTarget
+            ? { ...row, conditionsValue: selector ?? "" } // 선택된 행에 css selector 업데이트
+            : row
+        )
+      );
+
+      setSelectTarget(null)
+    };
+
+    const handleDetailLoad = async () => {
+      try {
+        const resPreview = await getPreview(detailUrl) 
+        setDetailPreview(resPreview)
+        setIsDetail(true)
+        setLoading(false)
+      }
+      catch(err) {
+        console.error(err)
+        setAlertMsg('상세영역 미리보기 불러오기 실패')
+        setOpenErrorAlert(true)
+      }
     }
 
-    /** 테이블 무한스크롤 */
-    useEffect(() => {
-        setRows(dummyData.slice(0, 20));
-    }, []);
-    
-    useEffect(() => {
-      if (rows.length < dummyData.length) {
-        loadingRef.current = false;
-      } else {
-        // 모든 데이터를 불러왔으니 더 이상 로딩 막음
-        loadingRef.current = true;
-      }
-    }, [rows]);
-
-    const loadMore = () => {
-        if (loadingRef.current) return;
-        loadingRef.current = true;
-
-        setRows((prevRows) => {
-            const start = prevRows.length;
-            const newRows = dummyData.slice(start, start + 20);
-          if (newRows.length === 0) {
-            loadingRef.current = false;
-            console.log('No more rows to load');
-            return prevRows;
-          }
-
-          return [...prevRows, ...newRows];
-        });
+    // Conditions input 수정관련
+    const handleConditionChange = (id: number, key: keyof ConditionTableRows, value: string) => {
+      setCondition(prev =>
+        prev.map(item => (item.id === id ? { ...item, [key]: value } : item))
+      );
     };
-    
+
+    const handleConditionSelectChange = (row: ConditionTableRows, value: string) => {
+      handleConditionChange(row.id, 'attr', value);
+    };
+    const processRowUpdate = (newRow: ConditionTableRows, oldRow: ConditionTableRows) => {
+      // 변경된 행의 conditionsKey를 업데이트
+      if (newRow.conditionsKey !== oldRow.conditionsKey) {
+        handleConditionChange(newRow.id, 'conditionsKey', newRow.conditionsKey);
+      }
+      // 다른 변경 사항도 여기에 추가 가능
+      return newRow;
+    };
+    const handleCancel = (id: number) => {
+      setCondition(prev => prev.filter(item => item.id !== id));
+    }
+    const conditionColumns = getConditionColumns({
+        handleAreaSelect: handleAreaSelectTable,
+        handleSelectChange: handleConditionSelectChange,
+        handleCancel,
+    })
+
+    /** 3. 검토 */
+    const selectedUserAgentName = useMemo(() => {
+      return userAgentList.find(item => item.value === newData.userAgent)?.name || newData.userAgent;
+    }, [newData.userAgent, userAgentList])
+    const selectedPagingTypeName = useMemo(() => {
+      return pagingTypeList.find(item => item.value === newData.pagingType)?.name || newData.pagingType;
+    }, [newData.pagingType, pagingTypeList])
 
     return (
         <Box sx={{ height: '97%', display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -209,10 +512,11 @@ export default function RegPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
-                alignItems: activeStep === 0 ? 'center' : 'flex-start',
                 gap: 2,
-                paddingTop: 2
+                p:2,
+                overflowY: 'auto'
             }}>
+                {/* 1. 기본 정보 */}
                 {activeStep === 0 && (
                 <>
                     {/* 데이터 수집명 */}
@@ -249,7 +553,7 @@ export default function RegPage() {
                         inputWidth="600px"
                         disabled={false}
                         readOnly={false}
-                        placeholder="데이터 수집간격(ms)"
+                        placeholder="데이터 수집간격(s)"
                         type="number"
                         step={10}
                         onChange={(e) => handleInputChange('rate', e.target.value)}
@@ -283,46 +587,444 @@ export default function RegPage() {
                                     <CustomButton width='40px' height='50px' 
                                         text={'검증'}
                                         // text={robotsLoading ? '확인중' : '검증'}
-                                        onClick={handleRobots} 
+                                        onClick={()=>{
+                                          setLoading(true)
+                                          handleRobots()
+                                        }} 
                                         radius={1}
                                     />
                                 </InputAdornment>
                             }
                         />
                     </Box>
+                    <br/>
+                    <br/>
+                    <Typography sx={{width: '200px', textAlign:'left', fontSize: 25, color: 'black'}}>Crawl Rules</Typography>
                     <Box sx={{
-                        width: '816px',
+                        minWidth: 800,
                         height: 600,
                         // height: 'calc(97%-296px)',
-                        bgcolor: '#f0f0f0'
+                        bgcolor: '#f0f0f0',
                     }}>
-
+                        <Box sx={{padding: 2}}>
+                            <ScrollTable 
+                              columns={robotsColumns} 
+                              rows={robotsRows} 
+                              maxHeight={560}
+                            />
+                        </Box>
                     </Box>
                 </>)}
 
-                {/* 나중에 step 1, 2 단계 추가할 자리 */}
-                {activeStep === 1 && (
-                <Box sx={{ mx: 2, p: 3 }}>
-                    <Typography>영역 지정 단계 화면 구성 예정</Typography>
+                {/* 2. 영역지정 (단일) */}
+                {activeStep === 1 && newData.type === '단일' && (
+                <Box 
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "100%",
+                        height: "100%",
+                    }}
+                >
+                    {/* 상단 */}
+                    <Box
+                      sx={{
+                        flex: 7,
+                        display: "flex",
+                        gap: 2,
+                        borderBottom: "2px solid #ccc",
+                        pb: 2,
+                        overflow: 'auto'
+                      }}
+                    >
+                      {/* 스크린샷 */}
+                      <Box
+                        sx={{
+                          flex: 1,
+                          overflow: "auto",
+                          background: "#eaeaea",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          color: 'black',
+                          position: "relative",
+                          border: "1px solid #ccc",
+                        }}
+                      >
+                        {mainPreview.image ? (
+                          <img
+                            src={`data:image/png;base64,${mainPreview.image}`}
+                            alt="미리보기"
+                            style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                          />
+                        ) : (
+                          <Typography>스크린샷이 없습니다.</Typography>
+                        )}
+
+                        {/* 하이라이트 박스들 */}
+                        {highlightPositions.map((pos, idx) => (
+                          <Box
+                            key={idx}
+                            sx={{
+                              position: 'absolute',
+                              border: '2px solid red',
+                              pointerEvents: 'none',
+                              top: pos.y,
+                              left: pos.x,
+                              width: pos.width,
+                              height: pos.height,
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        ))}
+                      </Box>
+                      {/* HTML 태그 */}
+                      <HtmlInspector 
+                        html={mainPreview.html}
+                        onNodeClick={handleInspectorTableClick}
+                        highlightNodes={highlightNodes}
+                      />
+                    </Box>
+                    {/* 하단 */}
+                    <Box 
+                      sx={{
+                        flex: 3,
+                        mt: 2,
+                        background: "#f7f7f7",
+                        borderRadius: 2,
+                        p: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2
+                      }}
+                    >
+                        <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
+                            <Typography sx={{ fontSize: 22, fontWeight: "bold" }}>
+                                조건 행 추가
+                            </Typography>
+                            <CustomIconButton icon="add" backgroundColor='#f7f7f7' onClick={handleAddCondition}/>
+                        </Box>
+                        <ScrollTable
+                                rows={condition}
+                                columns={conditionColumns}
+                                processRowUpdate={processRowUpdate}
+                                maxHeight={320}
+                        />
+                    </Box>
                 </Box>
                 )}
-                {/* 검토 - 단일 */}
+                {/* 2. 영역지정 (다중) */}
+                {activeStep === 1 && newData.type === '다중' && (
+                    <Box 
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%",
+                            height: "100%",
+                        }}
+                    >
+                        <Box
+                          sx={{
+                            // flex: 7,
+                            height: 550,
+                            minHeight: 550,
+                            display: "flex",
+                            gap: 2,
+                            pb: 2,
+                            borderBottom: "2px solid #ccc",
+                          }}
+                        >
+                          {/* 스크린샷 */}
+                          <Box
+                            sx={{
+                              flex: 1,
+                              overflow: "auto",
+                              background: "#eaeaea",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              color: 'black',
+                              position: "relative",
+                              border: "1px solid #ccc",
+                            }}
+                          >
+                            {mainPreview.image ? (
+                              <img
+                                src={`data:image/png;base64,${mainPreview.image}`}
+                                alt="미리보기"
+                                style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                              />
+                            ) : (
+                              <Typography>스크린샷이 없습니다.</Typography>
+                            )}
+
+                            {/* 하이라이트 박스들 */}
+                            {highlightPositions.map((pos, idx) => (
+                              <Box
+                                key={idx}
+                                sx={{
+                                  position: 'absolute',
+                                  border: '2px solid red',
+                                  pointerEvents: 'none',
+                                  top: pos.y,
+                                  left: pos.x,
+                                  width: pos.width,
+                                  height: pos.height,
+                                  boxSizing: 'border-box',
+                                }}
+                              />
+                            ))}
+                          </Box>
+                          
+                          {/* HTML 태그 */}
+                          <HtmlInspector 
+                            html={mainPreview.html}
+                            onNodeClick={handleInspectorClick}
+                            highlightNodes={highlightNodes}
+                          />
+                        </Box>
+                        <Box 
+                          sx={{
+                            height: 350,
+                            minHeight: 350,
+                            mt: 2,
+                            background: "#f7f7f7",
+                            borderRadius: 2,
+                            p: 2,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6
+                          }}
+                        >
+                            <Box sx={{
+                                display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                            }}>
+                                <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>게시물 영역:</Typography>
+                                <CustomTextField 
+                                  inputWidth='800px' 
+                                  value={newData.listArea}
+                                  placeholder="게시물 영역"
+                                  readOnly={true}
+                                  type="text"
+                                  onChange={(e) => handleInputChange('listArea', e.target.value)}
+                                  startAdornment={
+                                    <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
+                                        <CustomButton
+                                            text='영역선택'
+                                            radius={1}
+                                            height="40px"
+                                            onClick={()=>handleAreaSelect('listArea')}
+                                        />
+                                    </InputAdornment>  
+                                  }
+                                />
+                            </Box>
+                            <Box sx={{
+                                display: 'flex', width: '100%', alignContent: 'center', color: 'black', gap:1
+                            }}>
+                                <Typography sx={{fontSize: 25, width: '210px', textAlign: 'right'}}>페이지네이션 영역:</Typography>
+                                <CustomSelect
+                                    height="40px"
+                                    inputWidth="160px"
+                                    value={newData.pagingType}
+                                    listItem={pagingTypeList}
+                                    onChange={handleSelectChange('pagingType')}
+                                />
+                                <CustomTextField 
+                                  inputWidth='630px' 
+                                  value={newData.pagingArea}
+                                  placeholder="페이지네이션 영역"
+                                  readOnly={true}
+                                  type="text"
+                                  onChange={(e) => handleInputChange('pagingArea', e.target.value)}
+                                  startAdornment={
+                                    <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
+                                        <CustomButton
+                                            text='영역선택'
+                                            radius={1}
+                                            height="40px"
+                                            onClick={()=>handleAreaSelect('pagingArea')}
+                                        />
+                                    </InputAdornment>  
+                                  }
+                                />
+                                <CustomTextField 
+                                  inputWidth='300px' 
+                                  value={newData.pagingNextbtn}
+                                  placeholder="다음버튼 영역"
+                                  readOnly={true}
+                                  type="text"
+                                  onChange={(e) => handleInputChange('pagingNextbtn', e.target.value)}
+                                  startAdornment={
+                                    <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
+                                        <CustomButton
+                                            text='버튼선택'
+                                            radius={1}
+                                            height="40px"
+                                            onClick={()=>handleAreaSelect('pagingNextbtn')}
+                                        />
+                                    </InputAdornment>  
+                                  }
+                                />
+                            </Box>
+                            <Box sx={{
+                                display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                            }}>
+                                <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>수집할 페이지 수:</Typography>
+                                <CustomTextField 
+                                  inputWidth='800px' 
+                                  value={newData.maxPage}
+                                  placeholder="수집할 페이지 수"
+                                  type="number"
+                                  onChange={(e) => handleInputChange('maxPage', e.target.value)}
+                                />
+                            </Box>
+                            <Box sx={{
+                                display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                            }}>
+                                <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>상세 링크 영역:</Typography>
+                                <CustomTextField 
+                                  inputWidth='1000px' 
+                                  value={newData.linkArea}
+                                  placeholder="상세 링크 영역"
+                                  readOnly={true}
+                                  type="text"
+                                  onChange={(e) => handleInputChange('linkArea', e.target.value)}
+                                  startAdornment={
+                                    <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
+                                        <CustomButton
+                                            text='영역선택'
+                                            radius={1}
+                                            height="40px"
+                                            onClick={()=>handleAreaSelect('linkArea')}
+                                        />
+                                    </InputAdornment>  
+                                  }
+                                  endAdornment={
+                                    <InputAdornment position="end" sx={{marginRight: '-14px'}}>
+                                        <CustomButton
+                                            text='상세페이지 불러오기'
+                                            radius={1}
+                                            height="40px"
+                                            onClick={()=>{
+                                              setLoading(true)
+                                              handleDetailLoad()
+                                            }}
+                                            backgroundColor='#BABABA'
+                                            width='200px'
+                                        />
+                                    </InputAdornment>  
+                                  }
+                                />
+                            </Box>
+                        </Box>
+                        {isDetail && (
+                          <>
+                          <br></br>
+                          <Box
+                            sx={{
+                                height: 550,
+                                minHeight: 550,
+                                display: "flex",
+                                gap: 2,
+                                pb: 2
+                              }}
+                          >
+                          {/* 스크린샷 */}
+                              <Box
+                                  sx={{
+                                    flex: 1,
+                                    overflow: "auto",
+                                    background: "#eaeaea",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    color: 'black',
+                                    border: "1px solid #ccc",
+                                  }}
+                              >
+                                  {detailPreview.image ? (
+                                    <img
+                                      src={`data:image/png;base64,${detailPreview.image}`}
+                                      alt="미리보기"
+                                      style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                                    />
+                                  ) : (
+                                    <Typography>스크린샷이 없습니다.</Typography>
+                                  )}
+
+                                  {/* 하이라이트 박스들 */}
+                                  {highlightPositions.map((pos, idx) => (
+                                    <Box
+                                      key={idx}
+                                      sx={{
+                                        position: 'absolute',
+                                        border: '2px solid red',
+                                        pointerEvents: 'none',
+                                        top: pos.y,
+                                        left: pos.x,
+                                        width: pos.width,
+                                        height: pos.height,
+                                        boxSizing: 'border-box',
+                                      }}
+                                    />
+                                  ))}
+                              </Box>
+                          
+                              {/* HTML 태그 */}
+                              <HtmlInspector 
+                                html={detailPreview.html}
+                                onNodeClick={handleInspectorTableClick}
+                                highlightNodes={highlightNodes}
+                              />
+                        </Box>
+                        <Box 
+                          sx={{
+                            height: 350,
+                            minHeight: 350,
+                            mt: 2,
+                            background: "#f7f7f7",
+                            borderRadius: 2,
+                            p: 2,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2
+                          }}
+                        >
+                            <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
+                                <Typography sx={{ fontSize: 22, fontWeight: "bold" }}>
+                                    조건 행 추가
+                                </Typography>
+                                <CustomIconButton icon="add" backgroundColor='#f7f7f7' onClick={handleAddCondition}/>
+                            </Box>
+                            <ScrollTable
+                                    rows={condition}
+                                    columns={conditionColumns}
+                                    processRowUpdate={processRowUpdate}
+                                    maxHeight={320}
+                            />
+                        </Box>
+                        </>
+                        )}
+                    </Box>
+                )}
+                {/* 3. 검토 (단일) */}
                 {activeStep === 2 && newData.type === '단일' &&  (
-                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10 }}>
                     <Box>
                         <Typography sx={{ fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
-                        <Box sx={{ display: 'flex', width:'50%'}}>
-                            <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                <Typography sx={{ fontSize: 20}}>데이터 수집명</Typography>
-                                <Typography sx={{ fontSize: 20}}>User-agent</Typography>
-                                <Typography sx={{ fontSize: 20}}>데이터 수집간격(s)</Typography>
-                                <Typography sx={{ fontSize: 20}}>URL</Typography>
+                        <Box sx={{ display: 'flex'}}>
+                            <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2, minWidth: '155px'}}>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집명</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>User-agent</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집간격(s)</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>URL</Typography>
                             </Box>
                             <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                <Typography sx={{ fontSize: 20}}>{newData.settingName}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.userAgent}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.rate}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.url}</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.settingName || "입력되지 않음"}</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{selectedUserAgentName}</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.rate}</Typography>
+                                <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.url}</Typography>
                             </Box>
                         </Box>
                     </Box>
@@ -330,47 +1032,48 @@ export default function RegPage() {
                         <Typography sx={{ fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
                         <Box sx={{ paddingRight: 4}}>
                             <ScrollTable
-                                rows={rows}
-                                columns={columns}
-                                height={630}
-                                onLoadMore={loadMore}
+                                rows={condition}
+                                columns={reviewColumns}
+                                maxHeight={320}
                             />
                         </Box>
                     </Box>
                   </Box>
                 )}
-                {/* 검토 - 다중 */}
+                {/* 3. 검토 (다중) */}
                 {activeStep === 2 && newData.type === '다중' &&  (
-                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10 }}>
                     <Box>
                         <Typography sx={{ fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
                         <Box sx={{ display: 'flex', justifyContent:'space-around'}}>
-                            <Box sx={{ display: 'flex', width:'50%'}}>
-                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>데이터 수집명</Typography>
-                                    <Typography sx={{ fontSize: 20}}>User-agent</Typography>
-                                    <Typography sx={{ fontSize: 20}}>데이터 수집간격(s)</Typography>
-                                    <Typography sx={{ fontSize: 20}}>URL</Typography>
+                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2, minWidth: '155px'}}>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집명</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>User-agent</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집간격(s)</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>URL</Typography>
                                 </Box>
                                 <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>{newData.settingName}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.userAgent}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.rate}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.url}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.settingName || "입력되지 않음"}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{selectedUserAgentName}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.rate}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.url}</Typography>
                                 </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', width:'50%'}}>
-                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>게시물 영역</Typography>
-                                    <Typography sx={{ fontSize: 20}}>페이지네이션 영역</Typography>
-                                    <Typography sx={{ fontSize: 20}}>수집할 페이지 수</Typography>
-                                    <Typography sx={{ fontSize: 20}}>상세 링크 영역</Typography>
+                            <Box sx={{ display: 'flex'}}>
+                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2, minWidth: '155px'}}>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>게시물 영역</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>페이지네이션 타입</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>페이지네이션 영역</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>다음버튼 영역</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>수집할 페이지 수</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>상세 링크 영역</Typography>
                                 </Box>
                                 <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>{newData.listArea}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.pagingArea}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.maxPage}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.linkArea}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.listArea || "입력되지 않음"}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{selectedPagingTypeName}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.pagingArea || "입력되지 않음"}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.pagingNextbtn || "입력되지 않음"}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.maxPage}</Typography>
+                                    <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.linkArea || "입력되지 않음"}</Typography>
                                 </Box>
                             </Box>
 
@@ -380,10 +1083,9 @@ export default function RegPage() {
                         <Typography sx={{ fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
                         <Box sx={{ paddingRight: 4}}>
                             <ScrollTable
-                                rows={rows}
-                                columns={columns}
-                                height={630}
-                                onLoadMore={loadMore}
+                                rows={condition}
+                                columns={reviewColumns}
+                                maxHeight={320}
                             />
                         </Box>
                     </Box>
@@ -392,18 +1094,23 @@ export default function RegPage() {
             </Box>
 
 
-            <Box sx={{display: 'flex', justifyContent: 'space-between', paddingLeft: 2.5, paddingRight: 2.5 }}>
+            <Box sx={{display: 'flex', justifyContent: 'space-between', paddingLeft: 2.5, paddingRight: 2.5, marginTop: 2 }}>
                 <CustomButton text="닫기" radius={2} backgroundColor='#BABABA' onClick={()=>setOpenCloseAlert(true)} />
                 <Box sx={{display: 'flex', gap: 2}}>
                     {activeStep > 0 && <CustomButton text="◀ 이전" onClick={handleBack} radius={2} backgroundColor='#BABABA'/>}
                     {activeStep < steps.length - 1 ? (
                         <>
-                            <CustomButton text="다음 ▶" onClick={handleNext} radius={2} />
+                            <CustomButton text="다음 ▶" onClick={handleNext} radius={2} 
+                              disabled={
+                                activeStep === 0 ? 
+                                  ( isAble === false ? true : false)
+                                  : false
+                              }
+                            />
                         </>
                     ) : (
                         <>
                             <CustomButton text="등록" onClick={()=>setOpenRegAlert(true)} radius={2} />
-                            {/* <CustomButton text="닫기" onClick={handleCancle} /> */}
                         </>
                     )}
                 </Box>
@@ -426,7 +1133,7 @@ export default function RegPage() {
               type="question"
               onConfirm={() => {
                 setOpenRegAlert(false);
-                handleRegist()
+                handleValidate()
               }}
               onCancel={() => {
                 setOpenRegAlert(false);
@@ -441,6 +1148,47 @@ export default function RegPage() {
                   navigate('/setting')
                 }}
             />
+            <Alert
+                open={openRobotsAlert}
+                text={alertMsg}
+                type='success'
+                onConfirm={() => {
+                  setOpenRobotsAlert(false);
+                }}
+            />
+            <Alert
+                open={openErrorAlert}
+                text={alertMsg}
+                type='error'
+                onConfirm={() => {
+                  setOpenErrorAlert(false);
+                }}
+            />
+            <Dialog 
+                open={loading}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      backgroundColor: 'transparent',
+                      boxShadow: 'none',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: '100vh',
+                      width: '100vw',
+                    }
+                  },
+                  backdrop: {
+                    sx: {
+                      backgroundColor: 'rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(2px)', 
+                    }
+                  }
+                }}
+            >
+                <LoadingProgress />
+            </Dialog>
         </Box>
     )
 }

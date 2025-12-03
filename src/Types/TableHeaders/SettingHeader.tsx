@@ -5,18 +5,17 @@ export interface SettingTableRows {
     id: number,
     settingId?: number,
     userId?: string,
-    // index?: number,
     settingName?: string,
     url?: string,
     type?: string,
     userAgent?: string,
     rate?: number,
-    // state?: string,
     listArea?: string,
+    pagingType?: string,
     pagingArea?: string,
+    pagingNextBtn?: string,
     maxPage?: number,
     linkArea?: string,
-    // condition?: JSON,
 }
 
 // 외부에서 받을 핸들러들을 타입으로 정의
