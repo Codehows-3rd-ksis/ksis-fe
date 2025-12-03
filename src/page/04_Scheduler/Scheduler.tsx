@@ -31,20 +31,32 @@ export default function Scheduler() {
         startAt: "09:00",
         period: "2025-10-23 ~ 2025-11-23",
         cycle: "매주 월,수,금",
+        settingId: 1,
+        startDate: "2025-10-23",
+        endDate: "2025-11-23",
+        cronExpression: "0 0 9 ? * MON,WED,FRI",
       },
       {
         id: 2,
         settingName: "정기 뉴스레터 발송",
         startAt: "10:00",
         period: "2025-11-01 ~ 2025-12-31",
-        cycle: "매월 1일",
+        cycle: "첫번째 금요일",
+        settingId: 2,
+        startDate: "2025-11-01",
+        endDate: "2025-12-31",
+        cronExpression: "0 0 10 1 * ?",
       },
       {
         id: 3,
         settingName: "데이터베이스 백업",
         startAt: "02:00",
         period: "2025-09-01 ~ 2025-12-01",
-        cycle: "매일 02시",
+        cycle: "마지막 월요일, 목요일",
+        settingId: 3,
+        startDate: "2025-09-01",
+        endDate: "2025-12-01",
+        cronExpression: "0 0 2 ? * *",
       },
     ];
     setBaseRows(data);
@@ -60,7 +72,7 @@ export default function Scheduler() {
   /**  수정 페이지  =========================================== */
   const handleEditOpen = (row: SchedulerTableRows) => {
     console.log("Edit scheduler with ID:", row.id);
-    navigate(`/scheduler/edit/${row.id}`);
+    navigate("/scheduler/edit", { state: { row } });
   };
 
   /**  삭제 팝업  =========================================== */

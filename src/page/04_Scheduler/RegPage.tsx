@@ -19,7 +19,6 @@ import {
   generateCronExpression,
   formatCronToKorean,
   type ScheduleType,
-  type WeekNumber,
   type DayOfWeek,
 } from "./utils/cronUtils";
 import { createSchedule } from "../../API/04_SchedulerApi";
@@ -43,7 +42,6 @@ export default function RegPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [scheduleType, setScheduleType] = useState<ScheduleType>("weekly");
-  const [weekNumber, setWeekNumber] = useState<WeekNumber>(1);
   const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([1]);
   const [hour, setHour] = useState(9);
   const [minute, setMinute] = useState(0);
@@ -53,11 +51,12 @@ export default function RegPage() {
     { id: 2, settingName: "경상남도 보도자료 수집" },
     { id: 3, settingName: "창원관광 관광지자료 수집" },
   ]);
-  const [filteredRows, setFilteredRows] = useState<SchedulerTableRows[]>([]);
+  const [filteredRows, setFilteredRows] = useState<Setting[]>([]);
 
   useEffect(() => {
     // TODO: 팀원에게 API 파일 받으면 아래 함수로 설정 목록 조회
     // fetchSettingList();
+    setFilteredRows(settingList);
   }, []);
 
   // const fetchSettingList = async () => {
@@ -87,22 +86,26 @@ export default function RegPage() {
     },
   ];
 
-  // 행 클릭 시 해당 설정 선택
+  // 행 클릭 시 해당 설정 선택/취소
   const handleSettingRowClick = (params: GridRowParams) => {
-    setSettingId(params.row.id);
+    const clickedId = params.row.id;
+
+    // 이미 선택된 행이면 취소
+    if (settingId === clickedId) {
+      setSettingId("");
+    } else {
+      // 새로 선택
+      setSettingId(clickedId);
+    }
   };
 
   const scheduleTypeList = [
     { value: "weekly", name: "매주" },
-    { value: "nth-week", name: "N번째 주" },
+    { value: "1st-week", name: "첫번째 주" },
+    { value: "2nd-week", name: "두번째 주" },
+    { value: "3rd-week", name: "세번째 주" },
+    { value: "4th-week", name: "네번째 주" },
     { value: "last-week", name: "마지막 주" },
-  ];
-
-  const weekNumberList = [
-    { value: 1, name: "첫번째" },
-    { value: 2, name: "두번째" },
-    { value: 3, name: "세번째" },
-    { value: 4, name: "네번째" },
   ];
 
   const dayOfWeekNames = [
@@ -130,13 +133,9 @@ export default function RegPage() {
   ];
 
   const handleDayToggle = (day: DayOfWeek) => {
-    if (scheduleType === "weekly") {
-      setSelectedDays((prev) =>
-        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-      );
-    } else {
-      setSelectedDays([day]);
-    }
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
   };
 
   const previewCron = () => {
@@ -146,7 +145,6 @@ export default function RegPage() {
         hour,
         minute,
         daysOfWeek: selectedDays,
-        weekNumber: scheduleType === "nth-week" ? weekNumber : undefined,
       });
       return `${formatCronToKorean(cronExpression)} ${hour}시 ${minute}분`;
     } catch {
@@ -161,7 +159,6 @@ export default function RegPage() {
         hour,
         minute,
         daysOfWeek: selectedDays,
-        weekNumber: scheduleType === "nth-week" ? weekNumber : undefined,
       });
 
       const requestData: CreateScheduleRequest = {
@@ -222,14 +219,23 @@ export default function RegPage() {
         sx={{
           height: "calc(97% - 96px)",
           border: "2px solid #abababff",
-          marginLeft: "20px",
-          marginRight: "20px",
+          mx: 2.5,
           display: "flex",
           flexDirection: "column", // Set parent to column flex
           boxSizing: "border-box", // Ensure padding is included in total width/height
           padding: 3, // Apply padding to the border box
         }}
       >
+        <Typography
+          sx={{
+            fontSize: 25,
+            fontWeight: "bold",
+            color: "black",
+            mt: 1,
+          }}
+        >
+          스케줄 설정
+        </Typography>
         <Box
           sx={{
             width: "100%", // Occupy full width of parent
@@ -237,8 +243,9 @@ export default function RegPage() {
             display: "flex", // Make this the flex container for form elements
             flexDirection: "column", // Arrange form elements in a column
             gap: 3, // Space between form elements
-            padding: 5, // Internal padding for content within this lightgrey box
+            padding: 4, // Internal padding for content within this lightgrey box
             boxSizing: "border-box", // Ensure padding is included in total width/height
+            mt: 3,
           }}
         >
           {/* 수집기간 */}
@@ -261,6 +268,7 @@ export default function RegPage() {
                 height="50px"
                 value={startDate}
                 inputWidth="280px"
+                boxMinWidth="280px"
                 type="date"
                 onChange={(e) => setStartDate(e.target.value)}
               />
@@ -269,6 +277,7 @@ export default function RegPage() {
                 height="50px"
                 value={endDate}
                 inputWidth="280px"
+                boxMinWidth="280px"
                 type="date"
                 onChange={(e) => setEndDate(e.target.value)}
               />
@@ -291,29 +300,16 @@ export default function RegPage() {
               수집 주기 :
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                <CustomSelect
-                  inputWidth="150px"
-                  height="50px"
-                  value={scheduleType}
-                  listItem={scheduleTypeList}
-                  onChange={(e) => {
-                    setScheduleType(e.target.value as ScheduleType);
-                    setSelectedDays([1]);
-                  }}
-                />
-                {scheduleType === "nth-week" && (
-                  <CustomSelect
-                    inputWidth="150px"
-                    height="50px"
-                    value={weekNumber}
-                    listItem={weekNumberList}
-                    onChange={(e) =>
-                      setWeekNumber(e.target.value as WeekNumber)
-                    }
-                  />
-                )}
-              </Box>
+              <CustomSelect
+                inputWidth="150px"
+                height="50px"
+                value={scheduleType}
+                listItem={scheduleTypeList}
+                onChange={(e) => {
+                  setScheduleType(e.target.value as ScheduleType);
+                  setSelectedDays([1]);
+                }}
+              />
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <FormGroup row>
@@ -384,7 +380,6 @@ export default function RegPage() {
             <Box
               className="미리보기"
               sx={{
-                bgcolor: "#f0f0f0",
                 padding: 2,
                 borderRadius: 1,
                 maxWidth: "800px",
@@ -400,9 +395,7 @@ export default function RegPage() {
         {/* 데이터 설정 테이블 */}
         <Box
           sx={{
-            marginLeft: "20px",
-            marginRight: "20px",
-            marginTop: "auto",
+            mt: "auto",
             display: "flex",
             flexDirection: "column",
             gap: 2,
@@ -435,8 +428,9 @@ export default function RegPage() {
           </Box>
           <CommonTable
             columns={settingColumns}
-            rows={settingList}
+            rows={filteredRows}
             onRowClick={handleSettingRowClick}
+            selectedRows={settingId ? [{ id: settingId }] : []}
             height={300}
           />
         </Box>
@@ -446,8 +440,7 @@ export default function RegPage() {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          paddingLeft: 2.5,
-          paddingRight: 2.5,
+          px: 2.5,
         }}
       >
         <CustomButton

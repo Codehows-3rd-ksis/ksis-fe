@@ -7,6 +7,11 @@ export interface SchedulerTableRows {
   startAt: string; // "수집시간"
   period: string; // "기간"
   cycle: string; // "주기"
+  // 수정 페이지에서 필요한 원본 데이터
+  settingId: number;
+  startDate: string;
+  endDate: string;
+  cronExpression: string;
 }
 
 export interface SchedulerTableColumnHandlers {
