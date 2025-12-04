@@ -23,7 +23,7 @@ import {
 } from "./utils/cronUtils";
 import { createSchedule } from "../../API/04_SchedulerApi";
 import type { CreateScheduleRequest } from "../../API/04_SchedulerApi";
-import { getSettings, type Setting } from "../../API/03_SettingApi";
+import { getSettings, type Setting } from "./03_SettingApi";
 import SearchBarSet from "../../component/SearchBarSet";
 import { getSettingSearchCategory } from "../../Types/Search";
 
