@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
     Box, Typography, InputAdornment, type SelectChangeEvent, Stepper, Step, StepLabel, 
@@ -28,6 +28,12 @@ interface HighlightPos {
   width: number;
   height: number;
 }
+const colors = [
+  "rgba(255, 235, 59, 0.8)",   // 노란색
+  "rgba(100, 181, 246, 0.8)",  // 파란색
+  "rgba(129, 199, 132, 0.8)",  // 초록색
+  "rgba(244, 143, 177, 0.8)",  // 핑크색
+];
 
 export default function RegPage() {
     const navigate = useNavigate();
@@ -98,7 +104,23 @@ export default function RegPage() {
       }
     )
     const [highlightNodes, setHighlightNodes] = useState<(Element | null)[]>([]); // HTML highlight
-    const [highlightPositions, setHighlightPositions] = useState<HighlightPos[]>([]); // Preview highlight
+    const [mainRects, setMainRects] = useState<HighlightPos[]>([]); // Preview highlight
+    const [detailRects, setDetailRects] = useState<HighlightPos[]>([]); // Preview highlight
+    const [mainImageSize, setMainImageSize] = useState({
+      naturalWidth: 0,
+      naturalHeight: 0,
+      displayWidth: 0,
+      displayHeight: 0
+    });
+
+    const [detailImageSize, setDetailImageSize] = useState({
+      naturalWidth: 0,
+      naturalHeight: 0,
+      displayWidth: 0,
+      displayHeight: 0
+    });
+    const mainImgRef = useRef<HTMLImageElement>(null);
+    const detailImgRef = useRef<HTMLImageElement>(null);
     const [selectTarget, setSelectTarget] = useState<any>(null); // 영역선택 포커스
     const [detailUrl, setDetailUrl] = useState<any>(null);
     const [condition, setCondition] = useState<ConditionTableRows[]>([]) // 추출조건 테이블 데이터
@@ -352,61 +374,109 @@ export default function RegPage() {
     }
     
     // 다중페이지 영역선택 클릭시
-    const handleInspectorClick = (element: Element) => {
-      if (!selectTarget) return;
+    const handleInspectorClick = async (element: Element) => {
+      try {
+        if (!selectTarget) return;
       
-      const selector = getCssSelector(element);
+        const selector = getCssSelector(element);
+        if(selector === null) return;
 
-      setHighlightNodes((prev) => {
-        // 이미 있으면 빼고, 없으면 추가 (토글 기능)
-        if (prev.some((el) => el?.isSameNode(element))) {
-          return prev.filter((el) => !el?.isSameNode(element));
-        }
-        return [...prev, element];
-      });
-    
-      setNewData(prev => ({
-        ...prev,
-        [`${selectTarget}Selector`]: selector,
-        [`${selectTarget}`]: selector,
-      }));
+        const rect = await getHighlight(newData.url, selector)
+        setMainRects(prev => [
+          ...prev,
+          {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          }
+        ]);
 
-      if(selectTarget === 'linkArea') {
-        if (element.tagName.toLowerCase() === 'a') {
-          const hrefLink = element.getAttribute('href')
-          if(hrefLink) {
-            setDetailUrl(new URL(hrefLink, newData.url).href)
+        setHighlightNodes((prev) => {
+          // 이미 있으면 빼고, 없으면 추가 (토글 기능)
+          if (prev.some((el) => el?.isSameNode(element))) {
+            return prev.filter((el) => !el?.isSameNode(element));
+          }
+          return [...prev, element];
+        });
+      
+        setNewData(prev => ({
+          ...prev,
+          [`${selectTarget}Selector`]: selector,
+          [`${selectTarget}`]: selector,
+        }));
+
+        if(selectTarget === 'linkArea') {
+          if (element.tagName.toLowerCase() === 'a') {
+            const hrefLink = element.getAttribute('href')
+            if(hrefLink) {
+              setDetailUrl(new URL(hrefLink, newData.url).href)
+            }
           }
         }
+
+        setSelectTarget(null)
       }
-
-      setSelectTarget(null)
-
-      
+      catch(err) {
+        console.error(err)
+      }
     };
     // 추출조건 테이블 내 영역선택 버튼 클릭시
-    const handleInspectorTableClick = (element: Element) => {
-      if (!selectTarget) return;
+    const handleInspectorTableClick = async (element: Element) => {
+      try {
+        if (!selectTarget) return;
 
-      const selector = getCssSelector(element);
+        const selector = getCssSelector(element);
+        if(selector === null) return;
 
-      setHighlightNodes((prev) => {
-        // 이미 있으면 빼고, 없으면 추가 (토글 기능)
-        if (prev.some((el) => el?.isSameNode(element))) {
-          return prev.filter((el) => !el?.isSameNode(element));
+        if(newData.type === "단일") {
+          console.log('단일', newData.url, selector)
+          const rect = await getHighlight(newData.url, selector) 
+          setMainRects(prev => [
+            ...prev,
+            {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            }
+          ]);
+        } else {
+          const rect = await getHighlight(detailUrl, selector) 
+          setDetailRects(prev => [
+            ...prev,
+            {
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            }
+          ]);
         }
-        return [...prev, element];
-      });
-    
-      setCondition((prev) =>
-        prev.map((row) =>
-          row.id === selectTarget
-            ? { ...row, conditionsValue: selector ?? "" } // 선택된 행에 css selector 업데이트
-            : row
-        )
-      );
 
-      setSelectTarget(null)
+        
+        setHighlightNodes((prev) => {
+          // 이미 있으면 빼고, 없으면 추가 (토글 기능)
+          if (prev.some((el) => el?.isSameNode(element))) {
+            return prev.filter((el) => !el?.isSameNode(element));
+          }
+          return [...prev, element];
+        });
+        
+        setCondition((prev) =>
+          prev.map((row) =>
+            row.id === selectTarget
+              ? { ...row, conditionsValue: selector ?? "" } // 선택된 행에 css selector 업데이트
+              : row
+          )
+        );
+
+        setSelectTarget(null)
+      }
+      catch(err) {
+        console.error(err)
+      }
+      
     };
 
     const handleDetailLoad = async () => {
@@ -649,10 +719,12 @@ export default function RegPage() {
                         sx={{
                           flex: 1,
                           overflow: "auto",
+                          maxHeight: 640,
                           background: "#eaeaea",
                           display: "flex",
                           justifyContent: "center",
-                          alignItems: "center",
+                          // alignItems: "center",
+                          alignItems: "flex-start",
                           color: 'black',
                           position: "relative",
                           border: "1px solid #ccc",
@@ -660,30 +732,48 @@ export default function RegPage() {
                       >
                         {mainPreview.image ? (
                           <img
+                            ref={mainImgRef}
                             src={`data:image/png;base64,${mainPreview.image}`}
                             alt="미리보기"
                             style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                            onLoad={() => {
+                              const img = mainImgRef.current;
+                              if (!img) return;
+
+                              setMainImageSize({
+                                naturalWidth: img.naturalWidth,
+                                naturalHeight: img.naturalHeight,
+                                displayWidth: img.clientWidth,
+                                displayHeight: img.clientHeight
+                              });
+                            }}
                           />
                         ) : (
                           <Typography>스크린샷이 없습니다.</Typography>
                         )}
 
                         {/* 하이라이트 박스들 */}
-                        {highlightPositions.map((pos, idx) => (
-                          <Box
-                            key={idx}
-                            sx={{
-                              position: 'absolute',
-                              border: '2px solid red',
-                              pointerEvents: 'none',
-                              top: pos.y,
-                              left: pos.x,
-                              width: pos.width,
-                              height: pos.height,
-                              boxSizing: 'border-box',
-                            }}
-                          />
-                        ))}
+                        {mainRects.map((pos, idx) => {
+                          const scaleX = mainImageSize.displayWidth / mainImageSize.naturalWidth;
+                          const scaleY = mainImageSize.displayHeight / mainImageSize.naturalHeight;
+
+                          return (
+                            <Box
+                              key={idx}
+                              sx={{
+                                position: "absolute",
+                                border: `2px solid ${colors[idx % colors.length]}`,
+                                backgroundColor: `${colors[idx % colors.length].replace("0.8", "0.25")}`, // 살짝 투명하게
+                                pointerEvents: "none",
+                                top: pos.y * scaleY,
+                                left: pos.x * scaleX,
+                                width: pos.width * scaleX,
+                                height: pos.height * scaleY,
+                                boxSizing: "border-box",
+                              }}
+                            />
+                          );
+                        })}
                       </Box>
                       {/* HTML 태그 */}
                       <HtmlInspector 
@@ -757,30 +847,48 @@ export default function RegPage() {
                           >
                             {mainPreview.image ? (
                               <img
+                                ref={mainImgRef}
                                 src={`data:image/png;base64,${mainPreview.image}`}
                                 alt="미리보기"
                                 style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                                onLoad={() => {
+                                  const img = mainImgRef.current;
+                                  if (!img) return;
+
+                                  setMainImageSize({
+                                    naturalWidth: img.naturalWidth,
+                                    naturalHeight: img.naturalHeight,
+                                    displayWidth: img.clientWidth,
+                                    displayHeight: img.clientHeight
+                                  });
+                                }}
                               />
                             ) : (
                               <Typography>스크린샷이 없습니다.</Typography>
                             )}
 
                             {/* 하이라이트 박스들 */}
-                            {highlightPositions.map((pos, idx) => (
-                              <Box
-                                key={idx}
-                                sx={{
-                                  position: 'absolute',
-                                  border: '2px solid red',
-                                  pointerEvents: 'none',
-                                  top: pos.y,
-                                  left: pos.x,
-                                  width: pos.width,
-                                  height: pos.height,
-                                  boxSizing: 'border-box',
-                                }}
-                              />
-                            ))}
+                            {mainRects.map((pos, idx) => {
+                              const scaleX = mainImageSize.displayWidth / mainImageSize.naturalWidth;
+                              const scaleY = mainImageSize.displayHeight / mainImageSize.naturalHeight;
+
+                              return (
+                                <Box
+                                  key={idx}
+                                  sx={{
+                                    position: "absolute",
+                                    border: `2px solid ${colors[idx % colors.length]}`,
+                                    backgroundColor: `${colors[idx % colors.length].replace("0.8", "0.25")}`, // 살짝 투명하게
+                                    pointerEvents: "none",
+                                    top: pos.y * scaleY,
+                                    left: pos.x * scaleX,
+                                    width: pos.width * scaleX,
+                                    height: pos.height * scaleY,
+                                    boxSizing: "border-box",
+                                  }}
+                                />
+                              );
+                            })}
                           </Box>
                           
                           {/* HTML 태그 */}
@@ -952,30 +1060,46 @@ export default function RegPage() {
                               >
                                   {detailPreview.image ? (
                                     <img
+                                      ref={detailImgRef}
                                       src={`data:image/png;base64,${detailPreview.image}`}
                                       alt="미리보기"
                                       style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                                      onLoad={() => {
+                                        const img = detailImgRef.current;
+                                        if (!img) return;
+
+                                        setDetailImageSize({
+                                          naturalWidth: img.naturalWidth,
+                                          naturalHeight: img.naturalHeight,
+                                          displayWidth: img.clientWidth,
+                                          displayHeight: img.clientHeight
+                                        });
+                                      }}
                                     />
                                   ) : (
                                     <Typography>스크린샷이 없습니다.</Typography>
                                   )}
 
                                   {/* 하이라이트 박스들 */}
-                                  {highlightPositions.map((pos, idx) => (
-                                    <Box
-                                      key={idx}
-                                      sx={{
-                                        position: 'absolute',
-                                        border: '2px solid red',
-                                        pointerEvents: 'none',
-                                        top: pos.y,
-                                        left: pos.x,
-                                        width: pos.width,
-                                        height: pos.height,
-                                        boxSizing: 'border-box',
-                                      }}
-                                    />
-                                  ))}
+                                  {detailRects.map((pos, idx) => {
+                                    const scaleX = detailImageSize.displayWidth / detailImageSize.naturalWidth;
+                                    const scaleY = detailImageSize.displayHeight / detailImageSize.naturalHeight;
+
+                                    return (
+                                      <Box
+                                        key={idx}
+                                        sx={{
+                                          position: 'absolute',
+                                          border: '2px solid red',
+                                          pointerEvents: 'none',
+                                          top: pos.y * scaleY,
+                                          left: pos.x * scaleX,
+                                          width: pos.width * scaleX,
+                                          height: pos.height * scaleY,
+                                        }}
+                                      />
+                                    );
+                                  })}
                               </Box>
                           
                               {/* HTML 태그 */}

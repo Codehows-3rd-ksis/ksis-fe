@@ -12,7 +12,7 @@ export const getPreview = async (url: string) => {
 };
 // 특정 selector에 대한 하이라이트 좌표 요청
 export const getHighlight = async (url: string, selector: string) => {
-  const response = await instance.post(`/crawl/highlight`, {url, selector});
+  const response = await instance.post(`/highlight`, {url, cssSelector: selector});
   return response.data;
 };
 
@@ -79,7 +79,7 @@ export const updateSetting = async (settingId:number, data: Partial<{
 };
 
 // 삭제
-export const deleteSetting = async (id: number) => {
-  const response = await instance.delete(`/setting/${id}`);
+export const deleteSetting = async (settingId: number) => {
+  const response = await instance.delete(`/setting/${settingId}`);
   return response.data;
 };

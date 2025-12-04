@@ -11,7 +11,7 @@ import { getSettingSearchCategory } from "../../Types/Search"
 // Comp
 import Alert from "../../component/Alert"
 // API
-import { getSetting } from "../../API/02_SettingApi"
+import { getSetting, deleteSetting } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
@@ -67,12 +67,22 @@ function Setting() {
     setSelectedRow(row)
     setOpenDeleteAlert(true)
   }
-  const handleDelete = () => {
-    console.log('Row', selectedRow)
-    // delete api 연결
+  const handleDelete = async () => {
+    try {
+      if(selectedRow === null) {
+        setAlertMsg('잘못된 접근입니다.')
+        setOpenErrorAlert(true)
+        return;
+      }
+      await deleteSetting(Number(selectedRow.settingId))
 
-    // 삭제완료 팝업
-    setOpenDelDoneAlert(true);
+      setOpenDelDoneAlert(true);
+    }
+    catch(err) {
+      console.error(err)
+      setAlertMsg('데이터 삭제 실패.')
+      setOpenErrorAlert(true)
+    }
   }
   /**  수동실행  =========================================== */
   const handleRunCrawl = (row: SettingTableRows) => { // 수동실행 버튼 클릭시 팝업
@@ -126,7 +136,7 @@ function Setting() {
             type='success'
             onConfirm={() => {
               setOpenDelDoneAlert(false);
-              // 테이블 Refresh 함수 추가해야함
+              BoardRefresh()
             }}
         />
         {/* 수동 실행 */}
