@@ -11,7 +11,7 @@ import { getSettingSearchCategory } from "../../Types/Search"
 // Comp
 import Alert from "../../component/Alert"
 // API
-import { getSetting, deleteSetting } from "../../API/02_SettingApi"
+import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
@@ -69,13 +69,7 @@ function Setting() {
   }
   const handleDelete = async () => {
     try {
-      if(selectedRow === null) {
-        setAlertMsg('잘못된 접근입니다.')
-        setOpenErrorAlert(true)
-        return;
-      }
-      await deleteSetting(Number(selectedRow.settingId))
-
+      await deleteSetting(Number(selectedRow?.settingId))
       setOpenDelDoneAlert(true);
     }
     catch(err) {
@@ -89,13 +83,16 @@ function Setting() {
     setSelectedRow(row)
     setOpenRunAlert(true)
   }
-  const handleCrawl = () => {
-    console.log('Row', selectedRow)
-    // 수동실행 크롤링 API 호출
-
-    // 실행완료 팝업
-    setOpenRunDoneAlert(true);
-    
+  const handleCrawl = async () => {
+    try {
+      await runCrawl(Number(selectedRow?.settingId))
+      setOpenRunDoneAlert(true);
+    }
+    catch(err) {
+      console.error(err)
+      setAlertMsg("수동 실행 실패")
+      setOpenErrorAlert(true)
+    }
   }
   const columns = getColumns({ handleEditOpen, handleDeleteOpen, handleRunCrawl });
 
