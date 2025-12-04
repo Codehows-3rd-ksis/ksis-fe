@@ -56,7 +56,7 @@ const colors = [
 //     </div>
 //   );
 // };
-const DomNode: React.FC<DomNodeProps> = ({ node, onNodeClick, highlightNodes }) => {
+const DomNode: React.FC<DomNodeProps> = React.memo(({ node, onNodeClick, highlightNodes }) => {
     const highlightIndex = highlightNodes.findIndex(
         (highlightNode) => highlightNode?.isSameNode(node)
     );
@@ -104,7 +104,7 @@ const DomNode: React.FC<DomNodeProps> = ({ node, onNodeClick, highlightNodes }) 
         ))}
       </div>
     );
-};
+});
 
 // ----------------------
 // 3) Inspector 전체 박스

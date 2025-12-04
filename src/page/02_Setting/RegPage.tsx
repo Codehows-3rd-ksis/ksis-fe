@@ -23,6 +23,7 @@ interface PreviewData {
   html: string;   // 페이지 전체 HTML 문자열
 }
 interface HighlightPos {
+  target: string;
   x: number;
   y: number;
   width: number;
@@ -103,7 +104,7 @@ export default function RegPage() {
         html: ''
       }
     )
-    const [highlightNodes, setHighlightNodes] = useState<(Element | null)[]>([]); // HTML highlight
+    const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, (Element | null)[]>>({});
     const [mainRects, setMainRects] = useState<HighlightPos[]>([]); // Preview highlight
     const [detailRects, setDetailRects] = useState<HighlightPos[]>([]); // Preview highlight
     const [mainImageSize, setMainImageSize] = useState({
@@ -310,6 +311,7 @@ export default function RegPage() {
           console.error(err)
           setAlertMsg('Robots 검출 실패')
           setOpenErrorAlert(true)
+          setLoading(false)
         }
     }
     /** 2. 영역지정 */
@@ -318,7 +320,7 @@ export default function RegPage() {
         ...prev,
         {
           id: prev.length + 1,
-          conditionsValue: String(prev.length + 1),
+          conditionsValue: "",
           attr: "",
           conditionsKey: ""
         }
@@ -376,28 +378,47 @@ export default function RegPage() {
     // 다중페이지 영역선택 클릭시
     const handleInspectorClick = async (element: Element) => {
       try {
-        if (!selectTarget) return;
+        setLoading(true)
+        if (selectTarget === null) {
+          setLoading(false)
+          return;
+        }
       
         const selector = getCssSelector(element);
-        if(selector === null) return;
+        if(selector === null) {
+          setLoading(false)
+          return;
+        }
 
         const rect = await getHighlight(newData.url, selector)
-        setMainRects(prev => [
-          ...prev,
-          {
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-          }
-        ]);
+        setMainRects(prev => {
+          // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
+          const filtered = prev.filter(r => r.target !== selectTarget);
+          return [
+            ...filtered,
+            {
+              target: selectTarget,
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+            }
+          ];
+        });
 
-        setHighlightNodes((prev) => {
-          // 이미 있으면 빼고, 없으면 추가 (토글 기능)
-          if (prev.some((el) => el?.isSameNode(element))) {
-            return prev.filter((el) => !el?.isSameNode(element));
+        setHighlightNodesMap(prev => {
+          const newMap = { ...prev };
+          const currentNodes = newMap[selectTarget] || [];
+
+          if (currentNodes.some(el => el?.isSameNode(element))) {
+            // 이미 있으면 제거 (토글 off)
+            newMap[selectTarget] = currentNodes.filter(el => !el?.isSameNode(element));
+          } else {
+            // 없으면 추가 (토글 on)
+            newMap[selectTarget] = [...currentNodes, element];
           }
-          return [...prev, element];
+        
+          return newMap;
         });
       
         setNewData(prev => ({
@@ -416,51 +437,77 @@ export default function RegPage() {
         }
 
         setSelectTarget(null)
+        setLoading(false)
       }
       catch(err) {
         console.error(err)
+        setLoading(false)
+        setAlertMsg("하이라이트 관련 오류가 발생하였습니다.")
+        setOpenErrorAlert(true)
       }
     };
     // 추출조건 테이블 내 영역선택 버튼 클릭시
     const handleInspectorTableClick = async (element: Element) => {
       try {
-        if (!selectTarget) return;
-
-        const selector = getCssSelector(element);
-        if(selector === null) return;
-
-        if(newData.type === "단일") {
-          console.log('단일', newData.url, selector)
-          const rect = await getHighlight(newData.url, selector) 
-          setMainRects(prev => [
-            ...prev,
-            {
-              x: rect.x,
-              y: rect.y,
-              width: rect.width,
-              height: rect.height,
-            }
-          ]);
-        } else {
-          const rect = await getHighlight(detailUrl, selector) 
-          setDetailRects(prev => [
-            ...prev,
-            {
-              x: rect.x,
-              y: rect.y,
-              width: rect.width,
-              height: rect.height,
-            }
-          ]);
+        setLoading(true)
+        if (selectTarget === null) {
+          setLoading(false)
+          return;
         }
 
-        
-        setHighlightNodes((prev) => {
-          // 이미 있으면 빼고, 없으면 추가 (토글 기능)
-          if (prev.some((el) => el?.isSameNode(element))) {
-            return prev.filter((el) => !el?.isSameNode(element));
+        const selector = getCssSelector(element);
+        if(selector === null) {
+          setLoading(false)
+          return;
+        }
+
+        if(newData.type === "단일") {
+          const rect = await getHighlight(newData.url, selector) 
+          setMainRects(prev => {
+            // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
+            const filtered = prev.filter(r => r.target !== selectTarget);
+            return [
+              ...filtered,
+              {
+                target: selectTarget,
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+              }
+            ];
+          });
+        } else {
+          const rect = await getHighlight(detailUrl, selector) 
+          setDetailRects(prev => {
+            // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
+            const filtered = prev.filter(r => r.target !== selectTarget);
+            return [
+              ...filtered,
+              {
+                target: selectTarget,
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+              }
+            ];
+          });
+        }
+
+        setHighlightNodesMap(prev => {
+          const newMap = { ...prev };
+          const currentNodes = newMap[selectTarget] || [];
+
+          if (currentNodes.some(el => el?.isSameNode(element))) {
+            // 이미 있으면 제거 (토글 off)
+            newMap[selectTarget] = currentNodes.filter(el => !el?.isSameNode(element));
+          } else {
+            // 없으면 추가 (토글 on)
+            newMap[selectTarget] = [...currentNodes, element];
           }
-          return [...prev, element];
+        
+          return newMap;
         });
         
         setCondition((prev) =>
@@ -472,9 +519,13 @@ export default function RegPage() {
         );
 
         setSelectTarget(null)
+        setLoading(false)
       }
       catch(err) {
         console.error(err)
+        setLoading(false)
+        setAlertMsg("하이라이트 관련 오류가 발생하였습니다.")
+        setOpenErrorAlert(true)
       }
       
     };
@@ -723,7 +774,6 @@ export default function RegPage() {
                           background: "#eaeaea",
                           display: "flex",
                           justifyContent: "center",
-                          // alignItems: "center",
                           alignItems: "flex-start",
                           color: 'black',
                           position: "relative",
@@ -779,7 +829,7 @@ export default function RegPage() {
                       <HtmlInspector 
                         html={mainPreview.html}
                         onNodeClick={handleInspectorTableClick}
-                        highlightNodes={highlightNodes}
+                        highlightNodes={highlightNodesMap[selectTarget] || []}
                       />
                     </Box>
                     {/* 하단 */}
@@ -836,10 +886,11 @@ export default function RegPage() {
                             sx={{
                               flex: 1,
                               overflow: "auto",
+                              maxHeight: 640,
                               background: "#eaeaea",
                               display: "flex",
                               justifyContent: "center",
-                              alignItems: "center",
+                              alignItems: "flex-start",
                               color: 'black',
                               position: "relative",
                               border: "1px solid #ccc",
@@ -895,7 +946,7 @@ export default function RegPage() {
                           <HtmlInspector 
                             html={mainPreview.html}
                             onNodeClick={handleInspectorClick}
-                            highlightNodes={highlightNodes}
+                            highlightNodes={highlightNodesMap[selectTarget] || []}
                           />
                         </Box>
                         <Box 
@@ -1050,11 +1101,13 @@ export default function RegPage() {
                                   sx={{
                                     flex: 1,
                                     overflow: "auto",
+                                    maxHeight: 640,
                                     background: "#eaeaea",
                                     display: "flex",
                                     justifyContent: "center",
-                                    alignItems: "center",
+                                    alignItems: "flex-start",
                                     color: 'black',
+                                    position: "relative",
                                     border: "1px solid #ccc",
                                   }}
                               >
@@ -1106,7 +1159,7 @@ export default function RegPage() {
                               <HtmlInspector 
                                 html={detailPreview.html}
                                 onNodeClick={handleInspectorTableClick}
-                                highlightNodes={highlightNodes}
+                                highlightNodes={highlightNodesMap[selectTarget] || []}
                               />
                         </Box>
                         <Box 
