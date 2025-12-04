@@ -93,7 +93,7 @@ function CommonTable(props: CommonTableProps) {
           },
           // 짝수행 색변경
           "& .even-row": {
-            backgroundColor: "#FCF7F2",
+            backgroundColor: "#f9f9f9",
           },
           // 마우스오버 색변경
           "& .MuiDataGrid-row:hover": {
@@ -111,11 +111,6 @@ function CommonTable(props: CommonTableProps) {
           "& .MuiDataGrid-row.Mui-selected": {
             backgroundColor: "#FFE4B5 !important",
           },
-
-          // // 선택된 행에 마우스오버
-          // "& .MuiDataGrid-row.Mui-selected:hover": {
-          //   backgroundColor: "#f9cc7dff !important",
-          // },
         }}
       />
     </Paper>
