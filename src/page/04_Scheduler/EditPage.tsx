@@ -26,14 +26,10 @@ import {
   updateSchedule,
   type CreateScheduleRequest,
 } from "../../API/04_SchedulerApi";
+import { getSettings, type Setting } from "../../API/03_SettingApi";
 import SearchBarSet from "../../component/SearchBarSet";
-import { getSchedulerSearchCategory } from "../../Types/Search";
+import { getSettingSearchCategory } from "../../Types/Search";
 import type { SchedulerTableRows } from "../../Types/TableHeaders/SchedulerHeader";
-
-interface Setting {
-  id: number;
-  settingName: string;
-}
 
 export default function EditPage() {
   const navigate = useNavigate();
@@ -52,17 +48,11 @@ export default function EditPage() {
   const [hour, setHour] = useState(9);
   const [minute, setMinute] = useState(0);
 
-  const [settingList, setSettingList] = useState<Setting[]>([
-    { id: 1, settingName: "창원시청 공지사항 수집" },
-    { id: 2, settingName: "경상남도 보도자료 수집" },
-    { id: 3, settingName: "창원관광 관광지자료 수집" },
-  ]);
+  const [settingList, setSettingList] = useState<Setting[]>([]);
   const [filteredRows, setFilteredRows] = useState<Setting[]>([]);
 
   useEffect(() => {
-    // TODO: 팀원에게 API 파일 받으면 아래 함수로 설정 목록 조회
-    // fetchSettingList();
-    setFilteredRows(settingList);
+    fetchSettingList();
 
     // 전달받은 데이터로 폼 초기화
     if (row) {
@@ -81,14 +71,15 @@ export default function EditPage() {
     }
   }, [row]);
 
-  // const fetchSettingList = async () => {
-  //   try {
-  //     const response = await getSettingList(); // API 함수는 팀원에게 받을 예정
-  //     setSettingList(response.data);
-  //   } catch (error) {
-  //     console.error("Failed to fetch setting list:", error);
-  //   }
-  // };
+  const fetchSettingList = async () => {
+    try {
+      const data = await getSettings();
+      setSettingList(data);
+      setFilteredRows(data);
+    } catch (error) {
+      console.error("Failed to fetch setting list:", error);
+    }
+  };
 
   // 데이터 설정 테이블 컬럼 정의
   const settingColumns: GridColDef[] = [
@@ -101,7 +92,21 @@ export default function EditPage() {
     },
     {
       field: "settingName",
-      headerName: "설정명",
+      headerName: "데이터수집명",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "url",
+      headerName: "URL",
+      flex: 1,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
+      field: "userAgent",
+      headerName: "USER-AGENT",
       flex: 1,
       align: "center",
       headerAlign: "center",
@@ -419,7 +424,6 @@ export default function EditPage() {
             <Box
               className="미리보기"
               sx={{
-                bgcolor: "#f0f0f0",
                 padding: 2,
                 borderRadius: 1,
                 maxWidth: "800px",
@@ -462,7 +466,7 @@ export default function EditPage() {
               baseRows={settingList}
               setFilteredRows={setFilteredRows}
               showSearchType={true}
-              getSearchCategory={getSchedulerSearchCategory}
+              getSearchCategory={getSettingSearchCategory}
               showKeyword={true}
             ></SearchBarSet>
           </Box>
