@@ -84,7 +84,7 @@ function Setting() {
             showKeyword={true}
             showSearchType={true}
             showCount={true}
-            getSearchCategory={getSettingSearchCategory}
+            searchCategories={getSettingSearchCategory()}
             showButton={true}
             buttonLabel="설정 등록"
             onButtonClick={handleOpenReg}

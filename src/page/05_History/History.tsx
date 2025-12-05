@@ -24,13 +24,11 @@ export default function History() {
   const navigate = useNavigate();
   const [baseRows, setBaseRows] = useState<HistoryTableRows[]>([]);
   const [filteredRows, setFilteredRows] = useState<HistoryTableRows[]>([]);
+  const [radioFilteredRows, setRadioFilteredRows] = useState<
+    HistoryTableRows[]
+  >([]);
 
   const [filterType, setFilterType] = useState("all"); // 라디오 선택값 상태
-  const [searchConditions, setSearchConditions] = useState<SearchConditions>({
-    startDate: null,
-    endDate: null,
-    keyword: "",
-  });
 
   // 메뉴 anchor
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
@@ -40,6 +38,15 @@ export default function History() {
   useEffect(() => {
     getTableDatas();
   }, []);
+
+  // baseRows 또는 filterType이 변경되면 radioFilteredRows를 업데이트
+  useEffect(() => {
+    let currentRows = [...baseRows];
+    if (filterType !== "all") {
+      currentRows = currentRows.filter((row) => row.type === filterType);
+    }
+    setRadioFilteredRows(currentRows);
+  }, [baseRows, filterType]);
 
   const DAY_MAP: any = {
     MON: "월요일",
@@ -178,7 +185,6 @@ export default function History() {
     });
 
     setBaseRows(res);
-    setFilteredRows(res);
   };
 
   //  /**  Table Handlers */
@@ -222,61 +228,10 @@ export default function History() {
 
   const columns = getColumns({ handleDetailView, handleExport });
 
-  // 공통 필터링 함수
-  const applyFilters = (
-    conditions: SearchConditions,
-    typeFilter: string = filterType
-  ) => {
-    let filtered = [...baseRows];
-
-    // 날짜 범위 필터링 (startAt 기준)
-    if (conditions.startDate && !conditions.endDate) {
-      filtered = filtered.filter((row) => {
-        const rowStartDate = row.startAt.slice(0, 10);
-        return rowStartDate >= conditions.startDate!;
-      });
-    } else if (!conditions.startDate && conditions.endDate) {
-      filtered = filtered.filter((row) => {
-        const rowStartDate = row.startAt.slice(0, 10);
-        return rowStartDate <= conditions.endDate!;
-      });
-    } else if (conditions.startDate && conditions.endDate) {
-      filtered = filtered.filter((row) => {
-        const rowStartDate = row.startAt.slice(0, 10);
-        return (
-          rowStartDate >= conditions.startDate! &&
-          rowStartDate <= conditions.endDate!
-        );
-      });
-    }
-
-    // 키워드 필터링 (settingName으로 검색)
-    if (conditions.keyword && conditions.keyword.trim() !== "") {
-      filtered = filtered.filter((row) =>
-        row.settingName?.toLowerCase().includes(conditions.keyword!.toLowerCase())
-      );
-    }
-
-    // 라디오 타입 필터링
-    if (typeFilter !== "all") {
-      filtered = filtered.filter((row) => row.type === typeFilter);
-    }
-
-    setFilteredRows(filtered);
-  };
-
-  const handleSearch = (conditions: SearchConditions) => {
-    setSearchConditions(conditions); // 검색 조건 저장
-    applyFilters(conditions);
-  };
-
   // 라디오 선택 변경시 호출될 함수
   const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setFilterType(value);
-
-    // 현재 검색 조건을 유지하면서 타입만 변경하여 재검색
-    applyFilters(searchConditions, value);
   };
 
   const handleExport_Excel = () => {
@@ -307,11 +262,12 @@ export default function History() {
 
       {/* SearchBarSet */}
       <SearchBarSet
+        baseRows={radioFilteredRows}
+        setFilteredRows={setFilteredRows}
+        dateField="startAt" //수동실행, 스케줄링 공통
         showDateRange={true}
         showKeyword={true}
         showCount={true}
-        count={filteredRows.length}
-        onSearch={handleSearch}
       />
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         {/* RadioBtn */}

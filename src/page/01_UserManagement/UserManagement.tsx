@@ -135,7 +135,7 @@ function UserManagement() {
             showKeyword={true}
             showSearchType={true}
             showCount={true}
-            getSearchCategory={getUserSearchCategory}
+            searchCategories={getUserSearchCategory()}
             showButton={true}
             buttonLabel="유저 등록"
             onButtonClick={handleOpenReg}
