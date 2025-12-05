@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import React, {useMemo} from "react";
+import React, { useMemo } from "react";
 
 // ----------------------
 // 1) HTML 문자열 → DOM 객체 변환
@@ -10,60 +10,38 @@ const parseHtmlString = (html: string) => {
 };
 
 // ----------------------
-// 2) 하나의 노드를 재귀적으로 그리는 컴포넌트
+// 2) 재귀 DOM 렌더링 컴포넌트
 // ----------------------
 interface DomNodeProps {
   node: Element;
   onNodeClick: (el: Element) => void;
-  highlightNodes: (Element | null)[];
+  highlightNodes: {
+    [target: string]: Element | undefined;
+  };
 }
+
 const colors = [
-  "rgba(255, 235, 59, 0.8)",   // 노란색
-  "rgba(100, 181, 246, 0.8)",  // 파란색
-  "rgba(129, 199, 132, 0.8)",  // 초록색
-  "rgba(244, 143, 177, 0.8)",  // 핑크색
-//   "rgba(255, 204, 128, 0.8)",  // 주황색
+  "rgba(255, 235, 59, 0.8)",
+  "rgba(100, 181, 246, 0.8)",
+  "rgba(129, 199, 132, 0.8)",
+  "rgba(244, 143, 177, 0.8)",
 ];
 
-// const DomNode: React.FC<DomNodeProps> = ({ node, onNodeClick }) => {
-//   return (
-//     <div style={{ marginLeft: 12 }}>
-//       <span
-//         style={{
-//           cursor: "pointer",
-//           color: "#007acc",
-//           fontFamily: "monospace",
-//         }}
-//         onClick={(e) => {
-//           e.stopPropagation();
-//           onNodeClick(node);
-//         }}
-//       >
-//         {"<"}
-//         {node.tagName.toLowerCase()}
-//         {Array.from(node.attributes).map((attr) => (
-//           <span key={attr.name} style={{ color: "#b5651d" }}>
-//             {" "}
-//             {attr.name}="{attr.value}"
-//           </span>
-//         ))}
-//         {">"}
-//       </span>
+const DomNode: React.FC<DomNodeProps> = React.memo(
+  ({ node, onNodeClick, highlightNodes }) => {
+    const entries = Object.entries(highlightNodes);
 
-//       {Array.from(node.children).map((child, index) => (
-//         <DomNode key={index} node={child} onNodeClick={onNodeClick} />
-//       ))}
-//     </div>
-//   );
-// };
-const DomNode: React.FC<DomNodeProps> = React.memo(({ node, onNodeClick, highlightNodes }) => {
-    const highlightIndex = highlightNodes.findIndex(
-        (highlightNode) => highlightNode?.isSameNode(node)
-    );
-    const backgroundColor = highlightIndex >= 0 ? colors[highlightIndex % colors.length] : "transparent";
+    let isHighlighted = false;
+    let highlightColor = "transparent";
 
-    const isHighlighted = highlightIndex >= 0;
-
+    for (let i = 0; i < entries.length; i++) {
+      const [, el] = entries[i];
+      if (el?.isSameNode(node)) {
+        isHighlighted = true;
+        highlightColor = colors[i % colors.length];
+        break;
+      }
+    }
 
     return (
       <div style={{ marginLeft: 12 }}>
@@ -71,12 +49,14 @@ const DomNode: React.FC<DomNodeProps> = React.memo(({ node, onNodeClick, highlig
           style={{
             cursor: "pointer",
             fontFamily: "monospace",
-            background: backgroundColor,
+            background: highlightColor,
             color: isHighlighted ? "#000" : "#007acc",
             padding: isHighlighted ? "4px 6px" : "0",
             borderRadius: "6px",
             fontWeight: isHighlighted ? "bold" : "normal",
-            boxShadow: isHighlighted ? `0 0 5px 2px ${backgroundColor}` : "none",
+            boxShadow: isHighlighted
+              ? `0 0 5px 2px ${highlightColor}`
+              : "none",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -104,7 +84,8 @@ const DomNode: React.FC<DomNodeProps> = React.memo(({ node, onNodeClick, highlig
         ))}
       </div>
     );
-});
+  }
+);
 
 // ----------------------
 // 3) Inspector 전체 박스
@@ -116,7 +97,7 @@ const HtmlInspector = ({
 }: {
   html: string;
   onNodeClick: (el: Element) => void;
-  highlightNodes: (Element | null)[];
+  highlightNodes: { [target: string]: Element | undefined };
 }) => {
   const dom = useMemo(() => parseHtmlString(html), [html]);
 
@@ -134,12 +115,12 @@ const HtmlInspector = ({
         fontFamily: "monospace",
       }}
     >
-      {Array.from(dom.body.children).map((child: any, i) => (
-        <DomNode 
-        key={i} 
-        node={child} 
-        onNodeClick={onNodeClick} 
-        highlightNodes={highlightNodes}
+      {Array.from(dom.body.children).map((child, i) => (
+        <DomNode
+          key={i}
+          node={child}
+          onNodeClick={onNodeClick}
+          highlightNodes={highlightNodes}
         />
       ))}
     </Box>

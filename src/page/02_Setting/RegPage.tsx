@@ -104,7 +104,7 @@ export default function RegPage() {
         html: ''
       }
     )
-    const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, (Element | null)[]>>({});
+    const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, Element | undefined>>({});
     const [mainRects, setMainRects] = useState<HighlightPos[]>([]); // Preview highlight
     const [detailRects, setDetailRects] = useState<HighlightPos[]>([]); // Preview highlight
     const [mainImageSize, setMainImageSize] = useState({
@@ -408,33 +408,46 @@ export default function RegPage() {
 
         setHighlightNodesMap(prev => {
           const newMap = { ...prev };
-          const currentNodes = newMap[selectTarget] || [];
+          const currentNode = newMap[selectTarget];
 
-          if (currentNodes.some(el => el?.isSameNode(element))) {
-            // 이미 있으면 제거 (토글 off)
-            newMap[selectTarget] = currentNodes.filter(el => !el?.isSameNode(element));
+          const isToggleOff = currentNode?.isSameNode(element);
+
+          if (isToggleOff) {
+            delete newMap[selectTarget];   // 하이라이트 해제
           } else {
-            // 없으면 추가 (토글 on)
-            newMap[selectTarget] = [...currentNodes, element];
+            newMap[selectTarget] = element; // 새 노드 저장
+          }
+        
+          // ★ newData도 토글 ON/OFF에 따라 동기화
+          setNewData(prev => ({
+            ...prev,
+            [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
+            [`${selectTarget}`]: isToggleOff ? "" : selector,
+          }));
+        
+          // linkArea: 토글 ON → 링크 업데이트, 토글 OFF → URL 제거
+          if (selectTarget === 'linkArea') {
+            if (isToggleOff) {
+              // 동일 노드를 다시 눌러서 해제할 경우
+              setDetailUrl("");
+            } else {
+              // 태그 이름 확인
+              const tag = element.tagName.toLowerCase();
+              // href 속성이 존재하는지 확인
+              const hrefLink = element.getAttribute("href");
+
+              // <a> 또는 <area> + href가 있는 경우만 "진짜 링크"로 인정
+              if ((tag === "a" || tag === "area") && hrefLink) {
+                setDetailUrl(new URL(hrefLink, newData.url).href);
+              } else {
+                // 링크가 아니라고 판단 → 초기화
+                setDetailUrl("");
+              }
+            }
           }
         
           return newMap;
         });
-      
-        setNewData(prev => ({
-          ...prev,
-          [`${selectTarget}Selector`]: selector,
-          [`${selectTarget}`]: selector,
-        }));
-
-        if(selectTarget === 'linkArea') {
-          if (element.tagName.toLowerCase() === 'a') {
-            const hrefLink = element.getAttribute('href')
-            if(hrefLink) {
-              setDetailUrl(new URL(hrefLink, newData.url).href)
-            }
-          }
-        }
 
         setSelectTarget(null)
         setLoading(false)
@@ -497,26 +510,36 @@ export default function RegPage() {
 
         setHighlightNodesMap(prev => {
           const newMap = { ...prev };
-          const currentNodes = newMap[selectTarget] || [];
+          const currentNode = newMap[selectTarget];
+          const isToggleOff = currentNode?.isSameNode(element);
 
-          if (currentNodes.some(el => el?.isSameNode(element))) {
-            // 이미 있으면 제거 (토글 off)
-            newMap[selectTarget] = currentNodes.filter(el => !el?.isSameNode(element));
+          if (isToggleOff) {
+            delete newMap[selectTarget]; // 하이라이트 해제
           } else {
-            // 없으면 추가 (토글 on)
-            newMap[selectTarget] = [...currentNodes, element];
+            newMap[selectTarget] = element; // 새 노드 저장
           }
+        
+          setCondition((prev) =>
+            prev.map((row) =>
+              row.id === selectTarget
+                ? {
+                    ...row,
+                    conditionsValue: isToggleOff ? "" : (selector ?? ""),
+                  }
+                : row
+            )
+          );
         
           return newMap;
         });
-        
-        setCondition((prev) =>
-          prev.map((row) =>
-            row.id === selectTarget
-              ? { ...row, conditionsValue: selector ?? "" } // 선택된 행에 css selector 업데이트
-              : row
-          )
-        );
+
+        // setCondition((prev) =>
+        //   prev.map((row) =>
+        //     row.id === selectTarget
+        //       ? { ...row, conditionsValue: selector ?? "" } // 선택된 행에 css selector 업데이트
+        //       : row
+        //   )
+        // );
 
         setSelectTarget(null)
         setLoading(false)
@@ -566,6 +589,22 @@ export default function RegPage() {
     };
     const handleCancel = (id: number) => {
       setCondition(prev => prev.filter(item => item.id !== id));
+
+      setHighlightNodesMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[id];   // 특정 target(rowId)만 OFF
+        return newMap;
+      });
+
+      if(newData.type === "단일") {
+        setMainRects(prev =>
+          prev.filter(rect => String(rect.target) !== String(id))
+        );
+      } else { // 다중
+        setDetailRects(prev =>
+          prev.filter(rect => String(rect.target) !== String(id))
+        );
+      }
     }
     const conditionColumns = getConditionColumns({
         handleAreaSelect: handleAreaSelectTable,
@@ -829,7 +868,7 @@ export default function RegPage() {
                       <HtmlInspector 
                         html={mainPreview.html}
                         onNodeClick={handleInspectorTableClick}
-                        highlightNodes={highlightNodesMap[selectTarget] || []}
+                        highlightNodes={highlightNodesMap}
                       />
                     </Box>
                     {/* 하단 */}
@@ -946,7 +985,7 @@ export default function RegPage() {
                           <HtmlInspector 
                             html={mainPreview.html}
                             onNodeClick={handleInspectorClick}
-                            highlightNodes={highlightNodesMap[selectTarget] || []}
+                            highlightNodes={highlightNodesMap}
                           />
                         </Box>
                         <Box 
@@ -1143,12 +1182,14 @@ export default function RegPage() {
                                         key={idx}
                                         sx={{
                                           position: 'absolute',
-                                          border: '2px solid red',
+                                          border: `2px solid ${colors[idx % colors.length]}`,
+                                          backgroundColor: `${colors[idx % colors.length].replace("0.8", "0.25")}`, // 살짝 투명하게
                                           pointerEvents: 'none',
                                           top: pos.y * scaleY,
                                           left: pos.x * scaleX,
                                           width: pos.width * scaleX,
                                           height: pos.height * scaleY,
+                                          boxSizing: "border-box",
                                         }}
                                       />
                                     );
@@ -1159,7 +1200,7 @@ export default function RegPage() {
                               <HtmlInspector 
                                 html={detailPreview.html}
                                 onNodeClick={handleInspectorTableClick}
-                                highlightNodes={highlightNodesMap[selectTarget] || []}
+                                highlightNodes={highlightNodesMap}
                               />
                         </Box>
                         <Box 
