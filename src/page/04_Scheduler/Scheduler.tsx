@@ -126,12 +126,12 @@ export default function Scheduler() {
         <SearchBarSet
           baseRows={baseRows}
           setFilteredRows={setFilteredRows}
-          dateField="startAt"
+          dateField="startDate"
           showDateRange={true}
           showKeyword={true}
           showSearchType={true}
           showCount={true}
-          getSearchCategory={getSchedulerSearchCategory}
+          searchCategories={getSchedulerSearchCategory()}
           showButton={true}
           buttonLabel="스케줄 등록"
           buttonWidth="100px"

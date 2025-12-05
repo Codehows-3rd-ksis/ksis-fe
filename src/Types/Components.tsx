@@ -14,7 +14,7 @@ export interface TextField_Type {
   // required?: boolean;
   placeholder?: string;
   readOnly?: boolean;
-  type?: "text" | "number" | "password";
+  type?: "text" | "number" | "password" | "date";
   step?: number;
     onChange?: React.ChangeEventHandler<HTMLInputElement>;
     startAdornment?: React.ReactNode; 
@@ -83,6 +83,7 @@ export interface SearchResultBox_Type {
 }
 
 export interface SelectItem {
+  id?: number;
   value: string | number;
   name: string;
 }
