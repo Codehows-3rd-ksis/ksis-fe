@@ -17,7 +17,7 @@ export const getHighlight = async (url: string, selector: string) => {
 };
 // 세팅된 설정에 따른 크롤링 수동실행
 export const runCrawl = async (settingId: number) => {
-  const response = await instance.post(`/start/${settingId}`);
+  const response = await instance.post(`/start`, {settingId});
   return response.data;
 };
 

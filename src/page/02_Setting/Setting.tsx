@@ -85,7 +85,6 @@ function Setting() {
   }
   const handleCrawl = async () => {
     try {
-      // console.log('selectedRow?.settingId', selectedRow?.settingId)
       await runCrawl(Number(selectedRow?.settingId))
       setOpenRunDoneAlert(true);
     }
