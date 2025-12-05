@@ -8,6 +8,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  Paper,
 } from "@mui/material";
 import type { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import CustomButton from "../../component/CustomButton";
@@ -220,17 +221,16 @@ export default function RegPage() {
       </Box>
 
       {/* 폼 영역 */}
-      <Box
-        sx={{
-          height: "calc(97% - 96px)",
-          border: "2px solid #abababff",
-          mx: 2.5,
-          display: "flex",
-          flexDirection: "column", // Set parent to column flex
-          boxSizing: "border-box", // Ensure padding is included in total width/height
-          padding: 3, // Apply padding to the border box
-        }}
-      >
+      <Box sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}>
+        <Paper
+          elevation={3}
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: 4,
+          }}
+        >
         <Typography
           sx={{
             fontSize: 25,
@@ -427,7 +427,7 @@ export default function RegPage() {
               baseRows={settingList}
               setFilteredRows={setFilteredRows}
               showSearchType={true}
-              getSearchCategory={getSettingSearchCategory}
+              searchCategories={getSettingSearchCategory()}
               showKeyword={true}
             ></SearchBarSet>
           </Box>
@@ -439,6 +439,7 @@ export default function RegPage() {
             height={300}
           />
         </Box>
+        </Paper>
       </Box>
       {/* 하단 버튼 */}
       <Box
