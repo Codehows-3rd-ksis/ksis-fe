@@ -3,6 +3,7 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
 import { Box, LinearProgress } from "@mui/material";
+
 export interface StatusTableRows {
   // 기본 정보
   id: number;
@@ -74,8 +75,8 @@ export const getColumns = ({
     headerAlign: "center",
     align: "center",
     valueGetter: (value, row) => {
-      console.log('value', value)
-      return `${row.startDate || ""} ~ ${row.endDate || ""}`
+      console.log("value", value);
+      return `${row.startDate || ""} ~ ${row.endDate || ""}`;
     },
     renderCell: (params) => {
       const startDate = params.row.startDate || "";
@@ -109,14 +110,14 @@ export const getColumns = ({
       let progressValue: number;
       let progressLabel: string;
 
-      if (typeof params.value === 'number') {
+      if (typeof params.value === "number") {
         progressValue = params.value;
         if (progressValue === 100) {
           progressLabel = "완료";
         } else {
           progressLabel = `${Math.floor(progressValue)}%`;
         }
-      } else if (typeof params.value === 'string') {
+      } else if (typeof params.value === "string") {
         progressLabel = params.value;
         progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
       } else {

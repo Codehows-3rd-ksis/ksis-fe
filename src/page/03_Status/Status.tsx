@@ -7,52 +7,52 @@ import {
   type StatusTableRows,
 } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
-import { getStatusList, stopCrawl } from "./Api";
+import { getStatusList, stopCrawl } from "./03_StatusApi";
 import type { Subscription } from "stompjs";
 
-import useWebSocketStore, {
-  ReadyState,
-  type CrawlingMessage,
-} from "../../Store/WebSocketStore";
+import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
+import { type CrawlingMessage } from "../../Types/Crawling";
 import { useAuthStore } from "../../Store/authStore";
-import useCrawlingData from "../../hooks/useCrawling";
+import useCrawlingProgress from "../../hooks/useCrawlingProgress";
 
 function Status() {
-  // ========== 1. 훅 선언 ==========
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.user?.userId);
   const { readyState, connect, subscribe } = useWebSocketStore();
-  const { progressMap, handleWebSocketMessage } = useCrawlingData();
+  const { progressMap, handleWebSocketMessage } = useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
-  // ========== 2. State 선언 (데이터) ==========
+  // 데이터 State
   const [baseRows, setBaseRows] = useState<StatusTableRows[]>([]);
 
-  // ========== 3. State 선언 (UI 상태) ==========
+  // UI State
   const [alertOpen, setAlertOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
-  // ========== 4. API 함수 ==========
-  const handleStopCrawl = async (row: StatusTableRows) => {
-    try {
-      await stopCrawl(row.workId);
-      console.log("수집 중지 성공:", row.settingName);
-      fetchStatusList(); // 목록 새로고침
-    } catch (error) {
-      console.error("수집 중지 요청 중 오류:", error);
-    }
-  };
-
-  const fetchStatusList = useCallback(async () => {
+  // 현황 목록 조회 API
+  const fetchStatusList = async () => {
     try {
       const data = await getStatusList();
       setBaseRows(data);
     } catch (error) {
+      alert("수집 현황 목록을 불러오는 데 실패했습니다.");
       console.error("수집 현황 목록 조회 실패:", error);
     }
-  }, []);
+  };
 
-  // ========== 5. 이벤트 핸들러 ==========
+  // 수집 중지 API
+  const handleStopCrawl = async (row: StatusTableRows) => {
+    try {
+      await stopCrawl(row.workId);
+      alert(`"${row.settingName}" 수집이 중지되었습니다.`);
+      await fetchStatusList();
+    } catch (error) {
+      alert("수집 중지 요청에 실패했습니다.");
+      console.error("수집 중지 요청 실패:", error);
+    }
+  };
+
+  // 이벤트 핸들러
   const handleDetailOpen = (row: StatusTableRows) => {
     navigate(`/status/detail/${row.workId}`);
   };
@@ -74,30 +74,26 @@ function Status() {
     setSelectedRow(null);
   };
 
-  // ========== 6. 파생 데이터 ==========
+  // 컬럼 정의 및 데이터 가공 (실시간 진행률 병합)
   const columns = getColumns({ handleDetailOpen, handleStopClick });
 
-  const displayRows = useMemo(() => {
-    return baseRows.map((row) => {
-      const progressInfo = progressMap.get(row.workId);
-      if (progressInfo) {
-        return {
-          ...row,
-          progress: progressInfo.progress, // 숫자형 진행률
-          state: progressInfo.state, // 웹소켓에서 받은 최신 상태
-        };
-      }
-      return row;
-    });
-  }, [baseRows, progressMap]);
+  const displayRows = baseRows.map((row) => {
+    const progressInfo = progressMap.get(row.workId);
+    if (!progressInfo) return row;
 
-  // ========== 7. useEffect ==========
-  // API를 통해 기본 목록 데이터 로드
+    return {
+      ...row,
+      progress: progressInfo.progress,
+      state: progressInfo.state,
+    };
+  });
+
+  // 초기 데이터 로드
   useEffect(() => {
     fetchStatusList();
-  }, [fetchStatusList]);
+  }, []);
 
-  // WebSocket 연결 설정
+  // WebSocket 연결
   const setupWebSocketConnection = useCallback(() => {
     if (
       userId &&
@@ -113,17 +109,29 @@ function Status() {
     setupWebSocketConnection();
   }, [setupWebSocketConnection]);
 
-  // WebSocket 구독 설정
+  // WebSocket 구독 (크롤링 진행 상태)
   useEffect(() => {
     if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
       const destination = `/user/queue/crawling-progress`;
       subscriptionRef.current = subscribe(destination, (message) => {
         const parsedMessage: CrawlingMessage = JSON.parse(message.body);
         handleWebSocketMessage(parsedMessage);
+
+        // 신규 작업 감지 시 목록 갱신
+        const { workId } = parsedMessage;
+        setBaseRows((prevRows) => {
+          const exists = prevRows.some((row) => row.workId === workId);
+          if (!exists) {
+            console.log(
+              `[Status] 신규 작업 감지 (ID: ${workId}) -> 목록 갱신 요청`
+            );
+            fetchStatusList();
+          }
+          return prevRows;
+        });
       });
     }
 
-    // 클린업 함수에서 구독 해제
     return () => {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
@@ -133,7 +141,6 @@ function Status() {
     };
   }, [readyState, userId, subscribe, handleWebSocketMessage]);
 
-  // ========== 8. JSX ==========
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
       <Typography
