@@ -8,19 +8,19 @@ import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from "../../component/Alert"
-// import CommonTable from '../../component/CommonTable';
 import ScrollTable from '../../component/ScrollTable';
 import CustomIconButton from '../../component/CustomIconButton';
 import { getColumns as getConditionColumns, type ConditionTableRows } from '../../Types/TableHeaders/SettingConditionHeader';
 import { getColumns as getRobotsColumns } from '../../Types/TableHeaders/SettingRobotsHeader';
 import { type RobotsTableRows} from '../../Types/TableHeaders/SettingRobotsHeader'
-import { getRobots, getPreview, getHighlight, updateSetting, getCondtions } from '../../API/02_SettingApi';
+import { getRobots, getPreview2, updateSetting, getCondtions } from '../../API/02_SettingApi';
 import HtmlInspector from "../../component/HTMLInspector"
 import LoadingProgress from '../../component/LoadingProgress';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
   html: string;   // 페이지 전체 HTML 문자열
+  domRects: Array<{ selector: string; x:number; y:number; width:number; height:number }>;
 }
 interface HighlightPos {
   target: string;
@@ -97,13 +97,15 @@ export default function RegPage() {
     const [mainPreview, setMainPreview] = useState<PreviewData>(
       {
         image: undefined,
-        html: ''
+        html: '',
+        domRects: []
       }
     )
     const [detailPreview, setDetailPreview] = useState<PreviewData>(
       {
         image: undefined,
-        html: ''
+        html: '',
+        domRects: []
       }
     )
     const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, Element | undefined>>({});
@@ -316,7 +318,7 @@ export default function RegPage() {
         }
         try {
           const resRobots = await getRobots(newData.url, newData.userAgent)
-          const resPreview = await getPreview(newData.url)
+          const resPreview = await getPreview2(newData.url)
           setMainPreview(resPreview)
           const robotsTableData = parseRobotsTxt(resRobots.robotsTxt)
           
@@ -402,23 +404,40 @@ export default function RegPage() {
     
       return path.join(' > ');
     }
+
+    const findRectFromLocal = (
+      selector: string,
+      preview: PreviewData
+    ) => {
+      if (!selector || !preview?.domRects?.length) return null;
+      // 정확히 일치
+      const exact = preview.domRects.find(r => 
+        r.selector && r.selector === selector
+      );
+      if (exact) return exact;
+    
+      // 부분매칭 — 빈 selector 제외
+      const contains = preview.domRects.find(r =>
+        r.selector &&
+        r.selector.trim() !== "" &&
+        (selector.includes(r.selector) || r.selector.includes(selector))
+      );
+      if (contains) return contains;
+    
+      return null;
+    };
     
     // 다중페이지 영역선택 클릭시
-    const handleInspectorClick = async (element: Element) => {
+    const handleInspectorClick = (element: Element) => {
       try {
-        setLoading(true)
-        if (selectTarget === null) {
-          setLoading(false)
-          return;
-        }
-      
         const selector = getCssSelector(element);
-        if(selector === null) {
-          setLoading(false)
+        if(selector === null) return;
+
+        const rect = findRectFromLocal(selector, mainPreview);
+        if (!rect) {
+          console.warn("Rect not found for selector", selector);
           return;
         }
-
-        const rect = await getHighlight(newData.url, selector)
         setMainRects(prev => {
           // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
           const filtered = prev.filter(r => r.target !== selectTarget);
@@ -489,22 +508,17 @@ export default function RegPage() {
       
     };
     // 추출조건 테이블 내 영역선택 버튼 클릭시
-    const handleInspectorTableClick = async (element: Element) => {
+    const handleInspectorTableClick = (element: Element) => {
       try {
-        setLoading(true)
-        if (selectTarget === null) {
-          setLoading(false)
-          return;
-        }
-
         const selector = getCssSelector(element);
-        if(selector === null) {
-          setLoading(false)
-          return;
-        }
+        if(selector === null) return;
 
         if(newData.type === "단일") {
-          const rect = await getHighlight(newData.url, selector) 
+          const rect = findRectFromLocal(selector, mainPreview);
+          if (!rect) {
+            console.warn("Rect not found for selector", selector);
+            return;
+          }
           setMainRects(prev => {
             // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
             const filtered = prev.filter(r => r.target !== selectTarget);
@@ -520,7 +534,11 @@ export default function RegPage() {
             ];
           });
         } else {
-          const rect = await getHighlight(detailUrl, selector) 
+          const rect = findRectFromLocal(selector, detailPreview);
+          if (!rect) {
+            console.warn("Rect not found for selector", selector);
+            return;
+          }
           setDetailRects(prev => {
             // 같은 selectTarget 영역이 있으면 교체, 없으면 추가
             const filtered = prev.filter(r => r.target !== selectTarget);
@@ -583,7 +601,7 @@ export default function RegPage() {
       }
 
       try {
-        const resPreview = await getPreview(detailUrl) 
+        const resPreview = await getPreview2(detailUrl) 
         setDetailPreview(resPreview)
         setIsDetail(true)
         setLoading(false)

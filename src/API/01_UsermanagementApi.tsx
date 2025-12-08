@@ -45,7 +45,7 @@ export const deleteUser = async (id: number) => {
 };
 
 // 유저관리 - 특정 유저의 로그 조회
-export const getUserLog = async (id: number) => {
-  const response = await instance.get(`/user/log/${id}`);
+export const getUserLog = async (userId: number) => {
+  const response = await instance.post(`/user/log/`, { userId });
   return response.data;
 };
