@@ -19,7 +19,8 @@ function Status() {
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.user?.userId);
   const { readyState, connect, subscribe } = useWebSocketStore();
-  const { progressMap, handleWebSocketMessage } = useCrawlingProgress();
+  const { progressMap, handleWebSocketMessage, resetCrawlingState } =
+    useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
   // 데이터 State
@@ -30,15 +31,23 @@ function Status() {
   const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
   // 현황 목록 조회 API
-  const fetchStatusList = async () => {
+  const fetchStatusList = useCallback(async () => {
     try {
       const data = await getStatusList();
       setBaseRows(data);
+
+      // baseRows에 없는 작업을 progressMap에서 제거
+      const validWorkIds = new Set(data.map((row) => row.workId));
+      progressMap.forEach((_, workId) => {
+        if (!validWorkIds.has(workId)) {
+          resetCrawlingState(workId);
+        }
+      });
     } catch (error) {
       alert("수집 현황 목록을 불러오는 데 실패했습니다.");
       console.error("수집 현황 목록 조회 실패:", error);
     }
-  };
+  }, [progressMap, resetCrawlingState]);
 
   // 수집 중지 API
   const handleStopCrawl = async (row: StatusTableRows) => {
@@ -91,7 +100,7 @@ function Status() {
   // 초기 데이터 로드
   useEffect(() => {
     fetchStatusList();
-  }, []);
+  }, [fetchStatusList]);
 
   // WebSocket 연결
   useEffect(() => {
@@ -130,7 +139,20 @@ function Status() {
         console.log("[WebSocket] 구독 해제: Status Page");
       }
     };
-  }, [readyState, userId, subscribe, handleWebSocketMessage]);
+  }, [
+    readyState,
+    userId,
+    subscribe,
+    handleWebSocketMessage,
+    fetchStatusList,
+  ]);
+
+  // 컴포넌트 언마운트 시 progressMap 전체 초기화
+  useEffect(() => {
+    return () => {
+      resetCrawlingState();
+    };
+  }, [resetCrawlingState]);
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>

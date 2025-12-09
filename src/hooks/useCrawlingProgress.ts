@@ -16,7 +16,7 @@ export interface CrawlingProgress {
   estimatedTime: string;
 }
 
-// 작업 ID별 진행 상태 Map
+// workId로 여러 개의 크롤링 작업 동시 관리(workId:number)
 export type ProgressMap = Map<number, CrawlingProgress>;
 
 const useCrawlingProgress = () => {
@@ -53,12 +53,13 @@ const useCrawlingProgress = () => {
         case "COLLECTION": {
           const addedCount = message.row ? 1 : 0;
           const collectionCount = currentProgress.collectionCount + addedCount;
-          
+
           // 진행률 = (성공 + 실패) / 전체
           const totalProcessed = collectionCount + currentProgress.failureCount;
-          const rawProgress = currentProgress.totalCount > 0 
-            ? (totalProcessed / currentProgress.totalCount) * 100 
-            : 0;
+          const rawProgress =
+            currentProgress.totalCount > 0
+              ? (totalProcessed / currentProgress.totalCount) * 100
+              : 0;
 
           newMap.set(workId, {
             ...currentProgress,
@@ -76,9 +77,10 @@ const useCrawlingProgress = () => {
 
           // 진행률 = (성공 + 실패) / 전체
           const totalProcessed = currentProgress.collectionCount + failureCount;
-          const rawProgress = currentProgress.totalCount > 0 
-            ? (totalProcessed / currentProgress.totalCount) * 100 
-            : 0;
+          const rawProgress =
+            currentProgress.totalCount > 0
+              ? (totalProcessed / currentProgress.totalCount) * 100
+              : 0;
 
           newMap.set(workId, {
             ...currentProgress,
@@ -106,7 +108,7 @@ const useCrawlingProgress = () => {
   // 상태 초기화 (workId 지정 시 해당 작업만, 미지정 시 전체)
   const resetCrawlingState = useCallback((workId?: number) => {
     if (workId) {
-      setProgressMap(prevMap => {
+      setProgressMap((prevMap) => {
         const newMap = new Map(prevMap);
         newMap.delete(workId);
         return newMap;

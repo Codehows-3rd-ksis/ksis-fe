@@ -40,7 +40,8 @@ function StatusDetail() {
   // WebSocket
   const userId = useAuthStore((state) => state.user?.userId);
   const { connect, subscribe, readyState } = useWebSocketStore();
-  const { progressMap, handleWebSocketMessage } = useCrawlingProgress();
+  const { progressMap, handleWebSocketMessage, resetCrawlingState } =
+    useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
   // 데이터 상태
@@ -85,44 +86,47 @@ function StatusDetail() {
     collectionIdSet.current.clear();
   }, [workId]);
 
+  const fetchDetailData = useCallback(async () => {
+    if (!workId) return;
+    try {
+      const data = await getStatusDetail(workId);
+
+      // 기본 정보 설정
+      setDetailData(data.basicInfo);
+
+      // 실패 목록 설정
+      setFailureRows(data.failureList);
+
+      // 수집 데이터 설정
+      setCollectionRows(data.collectionData.rows);
+      data.collectionData.rows.forEach((row) =>
+        collectionIdSet.current.add(row.id)
+      );
+
+      // 컬럼 정의 설정
+      setCollectionColumns(
+        createCollectionColumns(data.collectionData.columns)
+      );
+
+      // 진행률 정보 초기화 (WebSocket 메시지 형식으로 전달)
+      handleWebSocketMessage({
+        type: "PROGRESS",
+        workId,
+        totalCount: data.progress.totalCount,
+        estimatedTime: data.progress.estimatedTime,
+      });
+    } catch (error) {
+      console.error("상세 정보 조회 실패:", error);
+      alert("상세 정보를 불러오는 데 실패했습니다.");
+      navigate("/status");
+    }
+  }, [workId, navigate, handleWebSocketMessage]);
+
   useEffect(() => {
-    const fetchDetailData = async () => {
-      if (!workId || readyState !== ReadyState.OPEN) return;
-      try {
-        const data = await getStatusDetail(workId);
-
-        // 기본 정보 설정
-        setDetailData(data.basicInfo);
-
-        // 실패 목록 설정
-        setFailureRows(data.failureList);
-
-        // 수집 데이터 설정
-        setCollectionRows(data.collectionData.rows);
-        data.collectionData.rows.forEach((row) =>
-          collectionIdSet.current.add(row.id)
-        );
-
-        // 컬럼 정의 설정
-        setCollectionColumns(
-          createCollectionColumns(data.collectionData.columns)
-        );
-
-        // 진행률 정보 초기화 (WebSocket 메시지 형식으로 전달)
-        handleWebSocketMessage({
-          type: "PROGRESS",
-          workId,
-          totalCount: data.progress.totalCount,
-          estimatedTime: data.progress.estimatedTime,
-        });
-      } catch (error) {
-        console.error("상세 정보 조회 실패:", error);
-        alert("상세 정보를 불러오는 데 실패했습니다.");
-        navigate("/status");
-      }
-    };
-    fetchDetailData();
-  }, [workId, readyState, handleWebSocketMessage]);
+    if (readyState === ReadyState.OPEN) {
+      fetchDetailData();
+    }
+  }, [readyState, fetchDetailData]);
 
   // WebSocket 연결
   useEffect(() => {
@@ -132,7 +136,7 @@ function StatusDetail() {
   }, [userId, connect]);
 
   useEffect(() => {
-    if (readyState === ReadyState.OPEN) {
+    if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
       const destination = `/user/queue/crawling-progress/${workId}`;
       subscriptionRef.current = subscribe(destination, (message) => {
         const data: CrawlingMessage = JSON.parse(message.body);
@@ -190,6 +194,13 @@ function StatusDetail() {
       }
     };
   }, [workId, readyState, subscribe, handleWebSocketMessage]);
+
+  // 컴포넌트 언마운트 시 progressMap 전체 초기화
+  useEffect(() => {
+    return () => {
+      resetCrawlingState();
+    };
+  }, [resetCrawlingState]);
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
