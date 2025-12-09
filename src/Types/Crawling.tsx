@@ -30,13 +30,11 @@ export type CrawlingMessage =
       type: "COLLECTION";
       workId: number;
       row?: CollectionRow;
-      rows?: CollectionRow[];
     }
   | {
       type: "FAILURE";
       workId: number;
       row?: FailureRow;
-      rows?: FailureRow[];
     }
   | {
       type: "COMPLETE";

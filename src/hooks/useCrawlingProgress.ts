@@ -51,7 +51,7 @@ const useCrawlingProgress = () => {
 
         // 수집 성공 (카운트 증가, 진행률 재계산)
         case "COLLECTION": {
-          const addedCount = message.row ? 1 : (message.rows?.length || 0);
+          const addedCount = message.row ? 1 : 0;
           const collectionCount = currentProgress.collectionCount + addedCount;
           
           // 진행률 = (성공 + 실패) / 전체
@@ -71,7 +71,7 @@ const useCrawlingProgress = () => {
 
         // 수집 실패 (실패 카운트 증가, 진행률 재계산)
         case "FAILURE": {
-          const addedFailure = message.row ? 1 : (message.rows?.length || 0);
+          const addedFailure = message.row ? 1 : 0;
           const failureCount = currentProgress.failureCount + addedFailure;
 
           // 진행률 = (성공 + 실패) / 전체
