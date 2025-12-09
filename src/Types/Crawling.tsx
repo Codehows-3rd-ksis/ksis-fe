@@ -35,7 +35,7 @@ export type CrawlingMessage =
   | {
       type: "FAILURE";
       workId: number;
-      failure?: FailureRow;
+      row?: FailureRow;
       rows?: FailureRow[];
     }
   | {

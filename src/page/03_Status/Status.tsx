@@ -94,20 +94,11 @@ function Status() {
   }, []);
 
   // WebSocket 연결
-  const setupWebSocketConnection = useCallback(() => {
-    if (
-      userId &&
-      (readyState === ReadyState.UNINSTANTIATED ||
-        readyState === ReadyState.CLOSED)
-    ) {
-      const wsUrl = import.meta.env.VITE_WS_URL || `http://localhost:8080/ws`;
-      connect(wsUrl);
-    }
-  }, [userId, connect, readyState]);
-
   useEffect(() => {
-    setupWebSocketConnection();
-  }, [setupWebSocketConnection]);
+    if (userId) {
+      connect(import.meta.env.VITE_WS_URL || "http://localhost:8080/ws");
+    }
+  }, [userId, connect]);
 
   // WebSocket 구독 (크롤링 진행 상태)
   useEffect(() => {

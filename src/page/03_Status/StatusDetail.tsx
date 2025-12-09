@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
@@ -11,7 +11,12 @@ import {
 } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
-import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
+import {
+  type StatusTableRows,
+  DETAIL_SETTING_COLUMNS,
+  FAILURE_COLUMNS,
+  createCollectionColumns,
+} from "../../Types/TableHeaders/StatusHeader";
 import { getStatusDetail } from "./03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/Crawling";
@@ -19,151 +24,49 @@ import useCrawlingProgress from "../../hooks/useCrawlingProgress";
 import { useAuthStore } from "../../Store/authStore";
 import type { Subscription } from "stompjs";
 
-const DETAIL_SETTING_COLUMNS: GridColDef[] = [
-  {
-    field: "settingName",
-    headerName: "데이터수집명",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "state",
-    headerName: "진행상태",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "startAt",
-    headerName: "수집시작",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "endAt",
-    headerName: "수집완료",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "type",
-    headerName: "실행타입",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "period",
-    headerName: "수집기간",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "cycle",
-    headerName: "수집주기",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "userId",
-    headerName: "유저ID",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-];
-
-const FAILURE_COLUMNS: GridColDef[] = [
-  {
-    field: "progressNo",
-    headerName: "진행번호",
-    flex: 1,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
-    field: "url",
-    headerName: "URL",
-    flex: 7,
-    headerAlign: "center",
-    align: "left",
-  },
-];
-
-const createCollectionColumns = (
-  source: Array<{ field: string; headerName: string }> | Record<string, any>
-): GridColDef[] => {
-  const fields = Array.isArray(source)
-    ? source
-    : Object.keys(source)
-        .filter((k) => k !== "id" && k !== "progressNo")
-        .map((key) => ({ field: key, headerName: key }));
-
-  return [
-    {
-      field: "progressNo",
-      headerName: "진행번호",
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    ...fields.map(
-      ({ field, headerName }): GridColDef => ({
-        field,
-        headerName,
-        flex: field === "context" ? 4 : 1,
-        headerAlign: "center",
-        align: field === "context" ? "left" : "center",
-      })
-    ),
-  ];
-};
-
 function StatusDetail() {
-  const { workId: workIdParam } = useParams<{ workId: string }>();
-  const workId = workIdParam ? Number(workIdParam) : undefined;
+  // 라우팅
+  const workId = Number(useParams().workId);
   const navigate = useNavigate();
 
+  // workId 검증
+  useEffect(() => {
+    if (!workId || isNaN(workId) || workId <= 0) {
+      alert("잘못된 접근입니다.");
+      navigate("/status");
+    }
+  }, [workId, navigate]);
+
+  // WebSocket
   const userId = useAuthStore((state) => state.user?.userId);
   const { connect, subscribe, readyState } = useWebSocketStore();
   const { progressMap, handleWebSocketMessage } = useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
+  // 데이터 상태
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
   const [failureRows, setFailureRows] = useState<
     Array<{ id: number; progressNo: string; url: string }>
   >([]);
   const [collectionRows, setCollectionRows] = useState<
-    Array<{ id: number; progressNo: string; [key: string]: any }>
+    Array<{ id: number; progressNo: string; [key: string]: string | number }>
   >([]);
   const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([]);
 
-  // 성능 최적화: Set으로 ID 관리
+  // 중복 체크용 ID
   const collectionIdSet = useRef(new Set<number>());
-  const failureIdSet = useRef(new Set<number>());
 
-  const currentProgress = useMemo(() => {
-    if (!workId) return null;
-    return progressMap.get(workId) || null;
-  }, [workId, progressMap]);
+  // 진행도 정보
+  const currentProgress = progressMap.get(workId) ?? null;
 
-  const failureProgressNos = useMemo(
-    () => new Set(failureRows.map((row) => row.progressNo)),
-    [failureRows]
-  );
+  // 실패 여부가 포함된 수집 데이터
+  const failureNos = failureRows.map((row) => row.progressNo);
+  const collectionRowsWithFailure = collectionRows.map((row) => ({
+    ...row,
+    isFailure: failureNos.includes(row.progressNo),
+  }));
 
-  const collectionRowsWithFailure = useMemo(() => {
-    return collectionRows.map((row) => ({
-      ...row,
-      isFailure: failureProgressNos.has(row.progressNo),
-    }));
-  }, [collectionRows, failureProgressNos]);
-
+  // UI 표시용 값
   const totalCount = currentProgress?.totalCount ?? 0;
   const collectionCount =
     currentProgress?.collectionCount ?? collectionRows.length;
@@ -180,12 +83,11 @@ function StatusDetail() {
     setCollectionRows([]);
     setCollectionColumns([]);
     collectionIdSet.current.clear();
-    failureIdSet.current.clear();
   }, [workId]);
 
   useEffect(() => {
     const fetchDetailData = async () => {
-      if (!workId) return;
+      if (!workId || readyState !== ReadyState.OPEN) return;
       try {
         const data = await getStatusDetail(workId);
 
@@ -194,7 +96,6 @@ function StatusDetail() {
 
         // 실패 목록 설정
         setFailureRows(data.failureList);
-        data.failureList.forEach((row) => failureIdSet.current.add(row.id));
 
         // 수집 데이터 설정
         setCollectionRows(data.collectionData.rows);
@@ -203,11 +104,9 @@ function StatusDetail() {
         );
 
         // 컬럼 정의 설정
-        if (data.collectionData.columns.length > 0) {
-          setCollectionColumns(
-            createCollectionColumns(data.collectionData.columns)
-          );
-        }
+        setCollectionColumns(
+          createCollectionColumns(data.collectionData.columns)
+        );
 
         // 진행률 정보 초기화 (WebSocket 메시지 형식으로 전달)
         handleWebSocketMessage({
@@ -218,96 +117,62 @@ function StatusDetail() {
         });
       } catch (error) {
         console.error("상세 정보 조회 실패:", error);
+        alert("상세 정보를 불러오는 데 실패했습니다.");
+        navigate("/status");
       }
     };
     fetchDetailData();
-  }, [workId, handleWebSocketMessage]);
+  }, [workId, readyState, handleWebSocketMessage]);
 
-  const setupWebSocketConnection = useCallback(() => {
-    if (
-      userId &&
-      (readyState === ReadyState.UNINSTANTIATED ||
-        readyState === ReadyState.CLOSED)
-    ) {
-      const wsUrl = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
-      connect(wsUrl);
+  // WebSocket 연결
+  useEffect(() => {
+    if (userId) {
+      connect(import.meta.env.VITE_WS_URL || "http://localhost:8080/ws");
     }
-  }, [userId, connect, readyState]);
+  }, [userId, connect]);
 
   useEffect(() => {
-    setupWebSocketConnection();
-  }, [setupWebSocketConnection]);
-
-  useEffect(() => {
-    if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
-      const destination = `/user/queue/crawling-progress`;
+    if (readyState === ReadyState.OPEN) {
+      const destination = `/user/queue/crawling-progress/${workId}`;
       subscriptionRef.current = subscribe(destination, (message) => {
         const data: CrawlingMessage = JSON.parse(message.body);
-        if (data.workId !== workId) return;
 
-        // 1. 진행도 업데이트
+        // 진행도 업데이트
         handleWebSocketMessage(data);
 
-        // 2. 실제 크롤링 데이터 처리 (성공/실패)
+        // 실제 크롤링 데이터 처리 (성공/실패)
         switch (data.type) {
           case "COLLECTION":
             if (data.row && typeof data.row === "object" && "id" in data.row) {
               const newRow = data.row;
 
-              // Set으로 O(1) 중복 체크
+              // 중복 체크
               if (collectionIdSet.current.has(newRow.id)) break;
 
+              // 데이터 추가
               collectionIdSet.current.add(newRow.id);
               setCollectionRows((prev) => {
                 const newRows = [...prev, newRow];
-                // 1000개 제한 (메모리 관리)
+
+                // 브라우저 메모리 관리 (최대 1000개)
                 if (newRows.length > 1000) {
-                  const removed = newRows.shift();
-                  if (removed) collectionIdSet.current.delete(removed.id);
+                  collectionIdSet.current.delete(newRows[0].id);
+                  return newRows.slice(1);
                 }
                 return newRows;
-              });
-
-              // 동적 컬럼 추가
-              setCollectionColumns((prevCols) => {
-                const existingFields = new Set(
-                  prevCols.map((col) => col.field)
-                );
-                const newKeys = Object.keys(newRow).filter(
-                  (key) =>
-                    key !== "id" &&
-                    key !== "progressNo" &&
-                    !existingFields.has(key)
-                );
-
-                if (newKeys.length === 0) return prevCols;
-
-                const newColDefs: GridColDef[] = newKeys.map((key) => ({
-                  field: key,
-                  headerName: key,
-                  flex: key === "context" ? 4 : 1,
-                  headerAlign: "center",
-                  align: key === "context" ? "left" : "center",
-                }));
-
-                return [...prevCols, ...newColDefs];
               });
             }
             break;
 
           case "FAILURE":
-            if (
-              data.failure &&
-              typeof data.failure === "object" &&
-              "id" in data.failure
-            ) {
-              const newFailure = data.failure;
+            if (data.row && typeof data.row === "object" && "id" in data.row) {
+              const newFailure = data.row;
 
-              // Set으로 O(1) 중복 체크
-              if (failureIdSet.current.has(newFailure.id)) break;
-
-              failureIdSet.current.add(newFailure.id);
-              setFailureRows((prev) => [...prev, newFailure]);
+              // 중복 체크 및 추가
+              setFailureRows((prev) => {
+                if (prev.some((row) => row.id === newFailure.id)) return prev;
+                return [...prev, newFailure];
+              });
             }
             break;
 
@@ -324,7 +189,7 @@ function StatusDetail() {
         console.log("[WebSocket] 구독 해제: Status Detail Page");
       }
     };
-  }, [workId, readyState, userId, subscribe, handleWebSocketMessage]);
+  }, [workId, readyState, subscribe, handleWebSocketMessage]);
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>

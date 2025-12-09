@@ -168,3 +168,104 @@ export const getColumns = ({
     },
   },
 ];
+
+// StatusDetail 페이지 컬럼 정의
+export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
+  {
+    field: "settingName",
+    headerName: "데이터수집명",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "state",
+    headerName: "진행상태",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "startAt",
+    headerName: "수집시작",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "endAt",
+    headerName: "수집완료",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "type",
+    headerName: "실행타입",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "period",
+    headerName: "수집기간",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "cycle",
+    headerName: "수집주기",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "userId",
+    headerName: "유저ID",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+];
+
+export const FAILURE_COLUMNS: GridColDef[] = [
+  {
+    field: "progressNo",
+    headerName: "진행번호",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
+  },
+  {
+    field: "url",
+    headerName: "URL",
+    flex: 7,
+    headerAlign: "center",
+    align: "left",
+  },
+];
+
+// 수집 데이터 컬럼 생성 함수
+export const createCollectionColumns = (
+  columns: Array<{ field: string; headerName: string }>
+): GridColDef[] => {
+  return [
+    {
+      field: "progressNo",
+      headerName: "진행번호",
+      flex: 1,
+      headerAlign: "center",
+      align: "center",
+    },
+    ...columns.map(
+      ({ field, headerName }): GridColDef => ({
+        field,
+        headerName,
+        flex: field === "context" ? 4 : 1,
+        headerAlign: "center",
+        align: field === "context" ? "left" : "center",
+      })
+    ),
+  ];
+};
