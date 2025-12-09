@@ -46,6 +46,6 @@ export const deleteUser = async (id: number) => {
 
 // 유저관리 - 특정 유저의 로그 조회
 export const getUserLog = async (userId: number) => {
-  const response = await instance.post(`/user/log/`, { userId });
+  const response = await instance.get(`/history/${userId}`);
   return response.data;
 };

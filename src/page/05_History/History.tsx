@@ -22,9 +22,11 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Dayjs } from "dayjs";
 import CustomTextField from "../../component/CustomTextField";
 import CustomIconButton from "../../component/CustomIconButton";
-import { getHistoryAll, getHistoryResult } from "../../API/05_HistoryApi";
+import { getHistoryAll, getHistoryUser, getHistoryResult } from "../../API/05_HistoryApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useAuthStore } from "../../Store/authStore";
+import Alert from '../../component/Alert';
 
 export default function History() {
   const navigate = useNavigate();
@@ -42,6 +44,10 @@ export default function History() {
   // 내보내기 대상 row
   const [exportRow, setExportRow] = useState<HistoryTableRows | null>(null);
 
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  const { user, fetchUserProfile } = useAuthStore()
   useEffect(() => {
     getTableDatas();
   }, []);
@@ -123,71 +129,51 @@ export default function History() {
   }
 
   const getTableDatas = async () => {
-    // const data = [
-    //   {
-    //     id: 1,
-    //     index: 1,
-    //     settingId: 1,
-    //     settingName: "창원시청 공지사항 수집",
-    //     state: "진행중",
-    //     startAt: "2025-10-24 09:00",
-    //     startDate: "2025-10-23",
-    //     endDate: "2025-11-23",
-    //     cronExpression: "0 0 9 ? * MON,TUE,WED",
-    //     type: "스케줄링",
-    //   },
-    //   {
-    //     id: 2,
-    //     index: 2,
-    //     settingId: 1,
-    //     settingName: "창원시청 공지사항 수집",
-    //     state: "수집완료(수집실패: 5건)",
-    //     startAt: "2025-10-24 09:00",
-    //     endAt: "2025-10-24 09:43",
-    //     startDate: "2025-10-23",
-    //     endDate: "2025-11-23",
-    //     cronExpression: "0 0 9 ? * LTHU",
-    //     type: "스케줄링",
-    //   },
-    //   {
-    //     id: 3,
-    //     index: 3,
-    //     settingId: 3,
-    //     settingName: "경상남도 보도자료 수집",
-    //     userId: 1,
-    //     loginId: "ksis1",
-    //     state: "수집완료",
-    //     startAt: "2025-10-22 15:23",
-    //     endAt: "2025-10-22 16:00",
-    //     type: "수동실행",
-    //   },
-    // ];
-
-    const data = await getHistoryAll()
-
-    const res = data.map((row: HistoryTableRows, i: number) => {
-      let cycle = "";
-      if (row.cronExpression) {
-        const { week, day } = parseCronWeekDay(row.cronExpression);
-        cycle = `${week} ${day}`.trim();
+    try {
+      await fetchUserProfile()
+      
+      if(!user) {
+        setErrorMsg('UserProfile 조회실패')
+        setOpenErrorAlert(true)
+        return;
       }
 
-      const period =
-        row.startDate && row.endDate
-          ? `${row.startDate} ~ ${row.endDate}`
-          : "";
+      let data;
 
-      return {
-        ...row,
-        cycle,
-        period,
-        index: i+1,
-        id: row.workId,
-      };
-    });
+      if(user.role === "ROLE_ADMIN") {
+        data = await getHistoryAll()
+      } else {
+        data = await getHistoryUser(user.userId)
+      }
 
-    setBaseRows(res);
-    setFilteredRows(res);
+      const res = data.map((row: HistoryTableRows, i: number) => {
+        let cycle = "";
+        if (row.cronExpression) {
+          const { week, day } = parseCronWeekDay(row.cronExpression);
+          cycle = `${week} ${day}`.trim();
+        }
+
+        const period =
+          row.startDate && row.endDate
+            ? `${row.startDate} ~ ${row.endDate}`
+            : "";
+
+        return {
+          ...row,
+          cycle,
+          period,
+          index: i+1,
+          id: row.workId,
+        };
+      });
+
+      setBaseRows(res);
+      setFilteredRows(res);
+    }
+    catch(err) {
+      console.error(err)
+    }
+    
   };
 
   //  /**  Table Handlers */
@@ -592,6 +578,16 @@ export default function History() {
           <ListItemText>JSON</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   );
 }

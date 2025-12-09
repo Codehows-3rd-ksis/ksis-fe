@@ -76,12 +76,7 @@ export const getColumns = ({
       return dayjs(params.value).format('YY-MM-DD HH:mm');           
     }
   },
-  { field: 'type',   headerName: '실행타입',       flex: 1,    headerAlign: 'center',  align: 'center',
-    renderCell: (params) => {
-      if (!params.row.scheduleId) return '수동실행';
-      else return '스케쥴링'
-    }
-  },
+  { field: 'type',   headerName: '수집타입',       flex: 1,    headerAlign: 'center',  align: 'center' },
   { field: 'period',   headerName: '수집기간',       flex: 1,    headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
       if (!params.row.scheduleId) return '-';
