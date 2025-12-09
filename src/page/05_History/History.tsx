@@ -22,10 +22,9 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Dayjs } from "dayjs";
 import CustomTextField from "../../component/CustomTextField";
 import CustomIconButton from "../../component/CustomIconButton";
-import { getHistoryAll, getHistoryUser, getHistoryResult } from "../../API/05_HistoryApi";
+import { getHistory, getHistoryResult } from "../../API/05_HistoryApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { useAuthStore } from "../../Store/authStore";
 import Alert from '../../component/Alert';
 
 export default function History() {
@@ -47,7 +46,6 @@ export default function History() {
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const { user, fetchUserProfile } = useAuthStore()
   useEffect(() => {
     getTableDatas();
   }, []);
@@ -130,21 +128,7 @@ export default function History() {
 
   const getTableDatas = async () => {
     try {
-      await fetchUserProfile()
-      
-      if(!user) {
-        setErrorMsg('UserProfile 조회실패')
-        setOpenErrorAlert(true)
-        return;
-      }
-
-      let data;
-
-      if(user.role === "ROLE_ADMIN") {
-        data = await getHistoryAll()
-      } else {
-        data = await getHistoryUser(user.userId)
-      }
+      const data = await getHistory()
 
       const res = data.map((row: HistoryTableRows, i: number) => {
         let cycle = "";
@@ -172,6 +156,8 @@ export default function History() {
     }
     catch(err) {
       console.error(err)
+      setErrorMsg("유저이력 조회 실패")
+      setOpenErrorAlert(true)
     }
     
   };
