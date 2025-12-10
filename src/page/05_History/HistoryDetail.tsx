@@ -62,20 +62,7 @@ export default function HistoryDetail() {
   const failureProgressNos = useMemo(
     () => new Set(failureRows.map((row) => row.progressNo)),
     [failureRows]
-  ); // failureRows가 바뀔 때만 다시 계산
-
-  // - 빈 값으로 설정: 실패 = 데이터 없음을 명확히 표현
-  // - 값 유지: 부분 수집된 데이터가 있을 수 있는 경우
-  // 일반적으로는 실패 시 빈 값이 자연스럽지만, 실제 백엔드에서 데이터를 받을 때는 서버가 보내주는 대로 표시
-
-  // collectionRows에 isFailure 플래그만 추가
-  // const collectionRowsWithFailure = useMemo(() =>
-  //   collectionRows.map(row => ({
-  //     ...row, //기존 row의 모든 필드 복사
-  //     isFailure: failureProgressNos.has(row.progressNo) //해당 progressNo가 실패 Set에 있으면 true
-  //   })),
-  //   [collectionRows, failureProgressNos]
-  // )
+  );
 
   //실패한 row의 데이터 비우기
   const collectionRowsWithFailure = useMemo(
