@@ -10,111 +10,40 @@ import {
   Typography,
   Button,
   Paper,
-  IconButton,
   Breadcrumbs,
   Link,
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
+import {
+  getDetailSettingColumns,
+  getFailureColumns,
+  getCollectionColumns,
+} from "../../Types/TableHeaders/HistoryHeader";
 import CustomButton from "../../component/CustomButton";
 import Alert from "../../component/Alert";
+import {
+  getHistoryDetail,
+  recollectItem,
+  recollectWork,
+} from "../../API/05_HistoryApi";
 
 export default function HistoryDetail() {
   // 1. 라우터 훅
-  const { id } = useParams<{ id: string }>();
+  const { workId } = useParams<{ workId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
   // 2. State 선언 (데이터) -서버/API에서 받아오는 실제 데이터
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null); // 기본 정보
   const [failureRows, setFailureRows] = useState<
-    Array<{ id: number; progressNo: string; url: string }>
-  >([{ id: 1, progressNo: "4", url: "https://example.com/failed-page" }]); // 실패 목록
+    Array<{ id: number; itemId: string; progressNo: string; url: string }>
+  >([]); // 실패 목록
 
   const [collectionRows, setCollectionRows] = useState<
     Array<{ id: number; progressNo: string; [key: string]: any }>
-  >([
-    {
-      id: 1,
-      progressNo: "1",
-      title: "2025년 4분기",
-      writer: "항만물류정책과",
-      date: "2025-11-24 14:00",
-      context: "올해 국토부의",
-    },
-    {
-      id: 2,
-      progressNo: "2",
-      title: "2025년 대한민국",
-      writer: "전략산업과",
-      date: "2025-11-11 13:00",
-      context: "창원특례시는 12일",
-    },
-    {
-      id: 3,
-      progressNo: "3",
-      title: "2025년 4분기",
-      writer: "농업정책과",
-      date: "2025-11-10 11:30",
-      context: "창원특례시는 2020년",
-    },
-    {
-      id: 4,
-      progressNo: "4",
-      title: "창원특례시",
-      writer: "투자유치단",
-      date: "2025-11-09 12:00",
-      context: "이번 행사는 해외 인사",
-    },
-    {
-      id: 5,
-      progressNo: "5",
-      title: "경상남도",
-      writer: "전략산업과",
-      date: "2025-11-23 09:10",
-      context: "경상남도는 2024년",
-    },
-  ]); // 수집 데이터
-
-  const [collectionColumns /*setCollectionColumns*/] = useState<GridColDef[]>([
-    {
-      field: "progressNo",
-      headerName: "진행번호",
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "title",
-      headerName: "제목",
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "writer",
-      headerName: "작성자",
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "date",
-      headerName: "작성일",
-      flex: 1,
-      headerAlign: "center",
-      align: "center",
-    },
-    {
-      field: "context",
-      headerName: "본문",
-      flex: 4,
-      headerAlign: "center",
-      align: "left",
-    },
-  ]);
+  >([]); // 수집 데이터
 
   // 전체 개수 state (또는 API에서 받아오기)
   const [totalCount, setTotalCount] = useState(10); //전체 개수
@@ -123,6 +52,7 @@ export default function HistoryDetail() {
   const [alertOpen, setAlertOpen] = useState(false); // Alert 열림 여부
   const [alertType, setAlertType] = useState<"single" | "batch">("single"); // 'single' or 'batch'
   const [selectedRecollect, setSelectedRecollect] = useState<{
+    itemId: string;
     progressNo: string;
     url: string;
   } | null>(null); // 선택된 row
@@ -168,68 +98,9 @@ export default function HistoryDetail() {
     [collectionRows, failureProgressNos]
   );
 
-  //기본정보테이블
-  const detailSettingColumns: GridColDef[] = useMemo(
-    () => [
-      {
-        field: "settingName",
-        headerName: "데이터수집명",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "state",
-        headerName: "진행상태",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "startAt",
-        headerName: "수집시작",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "endAt",
-        headerName: "수집완료",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "type",
-        headerName: "실행타입",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "period",
-        headerName: "수집기간",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "cycle",
-        headerName: "수집주기",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-      {
-        field: "userId",
-        headerName: "유저ID",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
-    ],
-    []
-  );
+  // 컬럼 정의
+  const detailSettingColumns = useMemo(() => getDetailSettingColumns(), []);
+  const collectionColumns = useMemo(() => getCollectionColumns(), []);
 
   const detailSettingRows = useMemo(() => {
     if (!detailData) return [];
@@ -248,44 +119,20 @@ export default function HistoryDetail() {
     ];
   }, [detailData]);
 
-  // 수집실패 테이블 컬럼 (고정)
-  const failureColumns: GridColDef[] = useMemo(
-    () => [
-      {
-        field: "progressNo",
-        headerName: "진행번호",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-      },
+  // 이벤트 핸들러 먼저 정의 (failureColumns에서 사용)
+  const handleRecollectClick = (
+    itemId: string,
+    progressNo: string,
+    url: string
+  ) => {
+    setSelectedRecollect({ itemId, progressNo, url });
+    setAlertType("single");
+    setAlertOpen(true);
+  };
 
-      {
-        field: "url",
-        headerName: "URL",
-        flex: 6,
-        headerAlign: "center",
-        align: "left",
-      },
-      {
-        field: "recollect",
-        headerName: "재수집",
-        flex: 1,
-        headerAlign: "center",
-        align: "center",
-        renderCell: (params) => (
-          <IconButton
-            color="primary"
-            size="small"
-            onClick={() =>
-              handleRecollectClick(params.row.progressNo, params.row.url)
-            }
-            title="재수집"
-          >
-            <RefreshIcon />
-          </IconButton>
-        ),
-      },
-    ],
+  // 수집실패 테이블 컬럼
+  const failureColumns = useMemo(
+    () => getFailureColumns({ handleRecollectClick }),
     []
   );
 
@@ -297,31 +144,35 @@ export default function HistoryDetail() {
 
   // 6. API 함수
   // API 호출 함수 -   서버와 통신하는 비동기 함수
-  const fetchHistoryDetail = async (historyId: string) => {
+  const fetchHistoryDetail = async (workId: string) => {
     try {
-      // TODO: 실제 API 엔드포인트로 변경
-      const response = await fetch(`/api/history/${historyId}`);
-
-      if (!response.ok) {
-        throw new Error("데이터 조회 실패");
-      }
-
-      const data = await response.json();
+      const data = await getHistoryDetail(workId);
 
       // 기본 정보 설정
       setDetailData(data.detailData);
 
       // 수집 실패 데이터 설정
-      setFailureRows(data.failures);
+      if (data.failures) {
+        // itemId 존재 여부 확인
+        const hasItemId = data.failures.every((item: any) => item.itemId);
+        if (!hasItemId) {
+          console.warn(
+            "⚠️ 실패 목록에 itemId가 없는 항목이 있습니다:",
+            data.failures
+          );
+        }
+        setFailureRows(data.failures);
+      }
 
       // 수집 데이터 설정
-      setCollectionRows(data.collections);
-
-      // 컬럼 설정 (동적 컬럼인 경우)
-      // setCollectionColumns(data.columns)
+      if (data.collections) {
+        setCollectionRows(data.collections);
+      }
 
       // 전체 개수 설정
-      setTotalCount(data.totalCount);
+      if (data.totalCount !== undefined) {
+        setTotalCount(data.totalCount);
+      }
     } catch (error) {
       console.error("이력 상세 조회 오류:", error);
       // TODO: 에러 처리 (토스트 메시지 등)
@@ -329,30 +180,12 @@ export default function HistoryDetail() {
   };
 
   // 재수집 버튼 클릭 핸들러
-  const handleRecollect = async (progressNo: string, url: string) => {
+  const handleRecollect = async (itemId: string) => {
     try {
-      // TODO: API 엔드포인트 URL을 실제 백엔드 주소로 변경
-      const response = await fetch("/api/recollect", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          settingId: id,
-          progressNo,
-          url,
-        }),
-      });
-
-      if (response.ok) {
-        console.log("재수집 요청 성공:", progressNo);
-        // 성공 메시지 표시 (옵션)
-        // alert('재수집 요청이 완료되었습니다.')
-      } else {
-        console.error("재수집 요청 실패");
-        // 에러 메시지 표시 (옵션)
-        // alert('재수집 요청에 실패했습니다.')
-      }
+      await recollectItem(itemId);
+      console.log("재수집 요청 성공:", itemId);
+      // 성공 메시지 표시 (옵션)
+      // alert('재수집 요청이 완료되었습니다.')
     } catch (error) {
       console.error("재수집 요청 중 오류:", error);
       // alert('재수집 요청 중 오류가 발생했습니다.')
@@ -362,30 +195,15 @@ export default function HistoryDetail() {
   //일괄재수집 버튼 클릭 핸들러
   const handleBatchRecollect = async () => {
     try {
-      // TODO: API 엔드포인트 URL을 실제 백엔드 주소로 변경
-      const response = await fetch("/api/recollect/batch", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          settingId: id,
-          items: failureRows.map((row) => ({
-            progressNo: row.progressNo,
-            url: row.url,
-          })),
-        }),
-      });
-
-      if (response.ok) {
-        console.log("일괄 재수집 요청 성공");
-        // 성공 메시지 표시 (옵션)
-        // alert('재수집 요청이 완료되었습니다.')
-      } else {
-        console.error("일괄 재수집 요청 실패");
-        // 에러 메시지 표시 (옵션)
-        // alert('재수집 요청에 실패했습니다.')
+      if (!workId) {
+        console.error("workId가 없습니다.");
+        return;
       }
+
+      await recollectWork(workId);
+      console.log("일괄 재수집 요청 성공");
+      // 성공 메시지 표시 (옵션)
+      // alert('재수집 요청이 완료되었습니다.')
     } catch (error) {
       console.error("일괄 재수집 요청 중 오류:", error);
       // alert('재수집 요청 중 오류가 발생했습니다.')
@@ -396,13 +214,6 @@ export default function HistoryDetail() {
 
   const handleBack = () => {
     navigate("/history");
-  };
-
-  //개별 재수집버튼 클릭
-  const handleRecollectClick = (progressNo: string, url: string) => {
-    setSelectedRecollect({ progressNo, url }); //클릭한 row 정보 저장
-    setAlertType("single"); //타입 'single' 설정
-    setAlertOpen(true); //Alert열기
   };
 
   //일괄 재수집버튼 클릭
@@ -417,10 +228,7 @@ export default function HistoryDetail() {
 
     if (alertType === "single" && selectedRecollect) {
       //개별 재수집 : 저장된 row 1개만 전송
-      await handleRecollect(
-        selectedRecollect.progressNo,
-        selectedRecollect.url
-      );
+      await handleRecollect(selectedRecollect.itemId);
     } else if (alertType == "batch") {
       //일괄재수집 : failureRows 전체 전송
       await handleBatchRecollect();
@@ -438,13 +246,13 @@ export default function HistoryDetail() {
     // location.state로 전달된 데이터가 있으면 사용
     if (location.state && location.state.rowData) {
       setDetailData(location.state.rowData);
-    } else if (id) {
-      // state가 없으면 id로 데이터를 가져옴 (API 호출 등)
+    } else if (workId) {
+      // state가 없으면 workId로 데이터를 가져옴 (API 호출 등)
       // API 호출로 데이터 가져오기
-      fetchHistoryDetail(id);
-      console.log("Fetching data for id:", id);
+      fetchHistoryDetail(workId);
+      console.log("Fetching data for workId:", workId);
     }
-  }, [id, location.state]);
+  }, [workId, location.state]);
 
   // 9. JSX 반환
   return (

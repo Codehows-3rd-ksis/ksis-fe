@@ -188,7 +188,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/history/detail/:id"
+                  path="/history/detail/:workId"
                   element={
                     <ProtectedRoute userInfo={user}>
                       <HistoryDetail />
