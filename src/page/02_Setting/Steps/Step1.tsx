@@ -51,7 +51,7 @@ const typeList = [
         { value: '다중', name: '다중' },
 ]
 
-export default function RegStep1({
+export default function Step1({
   newData, 
   setIsAble, 
   setNewData, 
@@ -85,10 +85,8 @@ export default function RegStep1({
   const handleSelectChange = (key: keyof typeof newData) => 
     (event: SelectChangeEvent<string | number>) => {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
-      if(key === "type") {
-        setCondition([])
-      }
       
+      setCondition([])
       setIsAble(false)
     };
   

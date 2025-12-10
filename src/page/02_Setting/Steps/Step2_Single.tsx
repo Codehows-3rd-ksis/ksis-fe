@@ -32,7 +32,7 @@ interface Props {
     setLoading: (v: boolean) => void;
 }
 
-export default React.memo(function RegStep2_Single({
+export default React.memo(function Step2_Single({
     previewData,
     conditionData,
     setCondition,
@@ -169,19 +169,21 @@ export default React.memo(function RegStep2_Single({
             newMap[selectTarget] = element; // 새 노드 저장
           }
         
-          setCondition((prev) =>
-            prev.map((row) =>
-              row.id === selectTarget
-                ? {
-                    ...row,
-                    conditionsValue: isToggleOff ? "" : (selector ?? ""),
-                  }
-                : row
-            )
-          );
-        
           return newMap;
         });
+        // ✔ highlight 업데이트 이후 따로 호출
+        const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
+
+        setCondition((prev) =>
+          prev.map((row) =>
+            row.id === selectTarget
+              ? {
+                  ...row,
+                  conditionsValue: isToggleOff ? "" : (selector ?? ""),
+                }
+              : row
+          )
+        );
 
         setSelectTarget(null)
         setLoading(false)

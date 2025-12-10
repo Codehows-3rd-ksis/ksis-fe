@@ -10,11 +10,11 @@ import { type ConditionTableRows } from '../../Types/TableHeaders/SettingConditi
 import { type RobotsTableRows} from '../../Types/TableHeaders/SettingRobotsHeader'
 import { getPreview2, registSetting } from '../../API/02_SettingApi';
 import LoadingProgress from '../../component/LoadingProgress';
-import RegStep1 from './RegSteps/RegStep1';
-import RegStep2_Single from './RegSteps/RegStep2_Single';
-import RegStep2_Multi from './RegSteps/RegStep2_Multi';
-import RegStep3_Single from './RegSteps/RegStep3_Single';
-import RegStep3_Multi from './RegSteps/RegStep3_Multi';
+import Step1 from './Steps/Step1';
+import Step2_Single from './Steps/Step2_Single';
+import Step2_Multi from './Steps/Step2_Multi';
+import Step3_Single from './Steps/Step3_Single';
+import Step3_Multi from './Steps/Step3_Multi';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
@@ -37,8 +37,8 @@ export interface NewData {
 }
 
 export default function RegPage() {
-    const navigate = useNavigate();
     // 0. 공통
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false)
     const [activeStep, setActiveStep] = useState(0);
     const steps = ['기본 정보', '영역지정', '검토'];
@@ -94,24 +94,24 @@ export default function RegPage() {
         // Step1 → Step2 진입할 때 최초 1회만 API 호출
         if (activeStep === 0 && previewLoaded === false) {
             setLoading(true);
-        try {
-            const res = await getPreview2(newData.url);
-            setMainPreview(res);
-            setDetailPreview(
-              {
-                image: undefined,
-                html: '',
-                domRects: []
-              }
-            )
-            setDetailUrl('')
-            setPreviewLoaded(true);
-        } catch(err) {
-            console.error(err);
+          try {
+              const res = await getPreview2(newData.url);
+              setMainPreview(res);
+              setDetailPreview(
+                {
+                  image: undefined,
+                  html: '',
+                  domRects: []
+                }
+              )
+              setDetailUrl('')
+              setPreviewLoaded(true);
+          } catch(err) {
+              console.error(err);
+          }
+          setLoading(false);
         }
-        setLoading(false);
-    }
-      setActiveStep(prev => prev + 1);
+        setActiveStep(prev => prev + 1);
     };
     const handleBack = () => {
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -236,7 +236,7 @@ export default function RegPage() {
                 {/* 1. 기본 정보 */}
                 {activeStep === 0 && (
                 <>
-                  <RegStep1 
+                  <Step1 
                     newData={newData}
                     setNewData={setNewData}
                     setIsAble={setIsAble}
@@ -252,7 +252,7 @@ export default function RegPage() {
                 {/* 2. 영역지정 (단일) */}
                 {activeStep === 1 && newData.type === '단일' && (
                 <>
-                  <RegStep2_Single 
+                  <Step2_Single 
                     previewData={mainPreview}
                     conditionData={condition}
                     setCondition={setCondition}
@@ -263,7 +263,7 @@ export default function RegPage() {
                 {/* 2. 영역지정 (다중) */}
                 {activeStep === 1 && newData.type === '다중' && (
                 <>
-                  <RegStep2_Multi 
+                  <Step2_Multi 
                     previewData={mainPreview}
                     detailData={detailPreview}
                     newData={newData}
@@ -282,7 +282,7 @@ export default function RegPage() {
                 {/* 3. 검토 (단일) */}
                 {activeStep === 2 && newData.type === '단일' &&  (
                 <>
-                  <RegStep3_Single 
+                  <Step3_Single 
                     newData={newData}
                     condition={condition}
                   />
@@ -291,7 +291,7 @@ export default function RegPage() {
                 {/* 3. 검토 (다중) */}
                 {activeStep === 2 && newData.type === '다중' &&  (
                 <>
-                  <RegStep3_Multi 
+                  <Step3_Multi 
                     newData={newData}
                     condition={condition}
                   />

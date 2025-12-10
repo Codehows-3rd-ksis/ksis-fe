@@ -50,7 +50,7 @@ interface Props {
     setDetailUrl: (value: string | ((prev: string) => string)) => void;
 }
 
-export default React.memo(function RegStep2_Multi({
+export default React.memo(function Step2_Multi({
     previewData,
     detailData,
     newData,
@@ -190,7 +190,7 @@ export default React.memo(function RegStep2_Multi({
         const selector = getCssSelector(element);
         if(selector === null) return;
 
-        // ② 로컬 preview(domRects)에서 selector로 rect 검색
+        // 로컬 preview(domRects)에서 selector로 rect 검색
         const rect = findRectFromLocal(selector, previewData);
         
         if (!rect) {
@@ -198,7 +198,7 @@ export default React.memo(function RegStep2_Multi({
           return;
         }
 
-        // ③ mainRects 업데이트
+        // mainRects 업데이트
         setMainRects(prev => {
           const filtered = prev.filter(r => r.target !== selectTarget);
         
@@ -225,37 +225,38 @@ export default React.memo(function RegStep2_Multi({
           } else {
             newMap[selectTarget] = element; // 새 노드 저장
           }
-        
-          // ★ newData도 토글 ON/OFF에 따라 동기화
-          setNewData(prev => ({
-            ...prev,
-            [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
-            [`${selectTarget}`]: isToggleOff ? "" : selector,
-          }));
-        
-          // linkArea: 토글 ON → 링크 업데이트, 토글 OFF → URL 제거
-          if (selectTarget === 'linkArea') {
-            if (isToggleOff) {
-              // 동일 노드를 다시 눌러서 해제할 경우
-              setDetailUrl("");
-            } else {
-              // 태그 이름 확인
-              const tag = element.tagName.toLowerCase();
-              // href 속성이 존재하는지 확인
-              const hrefLink = element.getAttribute("href");
 
-              // <a> 또는 <area> + href가 있는 경우만 "진짜 링크"로 인정
-              if ((tag === "a" || tag === "area") && hrefLink) {
-                setDetailUrl(new URL(hrefLink, newData.url).href);
-              } else {
-                // 링크가 아니라고 판단 → 초기화
-                setDetailUrl("");
-              }
-            }
-          }
-        
           return newMap;
         });
+        // ✔ highlight 업데이트 이후 따로 호출
+        const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
+
+        // ★ newData도 토글 ON/OFF에 따라 동기화
+        setNewData(prev => ({
+          ...prev,
+          [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
+          [`${selectTarget}`]: isToggleOff ? "" : selector,
+        }));
+      
+        // linkArea: 토글 ON → 링크 업데이트, 토글 OFF → URL 제거
+        if (selectTarget === 'linkArea') {
+          if (isToggleOff) {
+            // 동일 노드를 다시 눌러서 해제할 경우
+            setDetailUrl("");
+          } else {
+            // 태그 이름 확인
+            const tag = element.tagName.toLowerCase();
+            // href 속성이 존재하는지 확인
+            const hrefLink = element.getAttribute("href");
+            // <a> 또는 <area> + href가 있는 경우만 "진짜 링크"로 인정
+            if ((tag === "a" || tag === "area") && hrefLink) {
+              setDetailUrl(new URL(hrefLink, newData.url).href);
+            } else {
+              // 링크가 아니라고 판단 → 초기화
+              setDetailUrl("");
+            }
+          }
+        }
 
         setSelectTarget(null)
         setLoading(false)
@@ -305,19 +306,21 @@ export default React.memo(function RegStep2_Multi({
             newMap[selectTarget] = element; // 새 노드 저장
           }
         
-          setCondition((prev) =>
-            prev.map((row) =>
-              row.id === selectTarget
-                ? {
-                    ...row,
-                    conditionsValue: isToggleOff ? "" : (selector ?? ""),
-                  }
-                : row
-            )
-          );
-        
           return newMap;
         });
+        
+        const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
+
+        setCondition((prev) =>
+          prev.map((row) =>
+            row.id === selectTarget
+              ? {
+                  ...row,
+                  conditionsValue: isToggleOff ? "" : (selector ?? ""),
+                }
+              : row
+          )
+        );
 
         setSelectTarget(null)
         setLoading(false)
@@ -586,6 +589,7 @@ export default React.memo(function RegStep2_Multi({
                                     text='상세페이지 불러오기'
                                     radius={1}
                                     height="40px"
+                                    disabled={detailUrl? false: true}
                                     onClick={()=>{
                                       setLoading(true)
                                       handleDetailLoad()

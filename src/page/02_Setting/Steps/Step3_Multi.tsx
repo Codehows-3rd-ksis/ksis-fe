@@ -45,7 +45,7 @@ const reviewColumns = [
       { field: 'conditionsKey', headerName: '추출값 명칭 지정', flex: 1 },
 ]
 
-export default function RegStep3_Single({
+export default function Step3_Multi({
   newData,
   condition, 
 }: Props) {

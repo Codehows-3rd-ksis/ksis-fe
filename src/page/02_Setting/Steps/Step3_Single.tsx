@@ -35,7 +35,7 @@ const userAgentList = [
         },
 ]
 
-export default function RegStep3_Single({
+export default function Step3_Single({
   newData,
   condition, 
 }: Props) {
