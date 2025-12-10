@@ -239,20 +239,18 @@ export default React.memo(function Step2_Multi({
         }));
       
         // linkArea: 토글 ON → 링크 업데이트, 토글 OFF → URL 제거
-        if (selectTarget === 'linkArea') {
+        if (selectTarget === "linkArea") {
           if (isToggleOff) {
-            // 동일 노드를 다시 눌러서 해제할 경우
             setDetailUrl("");
           } else {
-            // 태그 이름 확인
-            const tag = element.tagName.toLowerCase();
-            // href 속성이 존재하는지 확인
-            const hrefLink = element.getAttribute("href");
-            // <a> 또는 <area> + href가 있는 경우만 "진짜 링크"로 인정
-            if ((tag === "a" || tag === "area") && hrefLink) {
-              setDetailUrl(new URL(hrefLink, newData.url).href);
+            const url = extractDetailUrlUniversal(
+              element as HTMLElement,
+              newData.url
+            );
+          
+            if (url) {
+              setDetailUrl(url);
             } else {
-              // 링크가 아니라고 판단 → 초기화
               setDetailUrl("");
             }
           }
@@ -335,20 +333,147 @@ export default React.memo(function Step2_Multi({
     };
 
     const handleDetailLoad = async () => {
-          try {
-            const resPreview2 = await getPreview2(detailUrl) 
-            setDetailPreview(resPreview2)
-            setIsDetail(true)
-            setLoading(false)
-          }
-          catch(err) {
-            console.error(err)
-            setAlertMsg('상세영역 미리보기 불러오기 실패')
-            setOpenErrorAlert(true)
-            setIsDetail(false)
-            setLoading(false)
-          }
+        try {
+          const resPreview2 = await getPreview2(detailUrl) 
+          setDetailPreview(resPreview2)
+          setIsDetail(true)
+          setLoading(false)
         }
+        catch(err) {
+          console.error(err)
+          setAlertMsg('상세영역 미리보기 불러오기 실패')
+          setOpenErrorAlert(true)
+          setIsDetail(false)
+          setLoading(false)
+        }
+    }
+
+    function extractDetailUrlUniversal(element: HTMLElement, pageUrl: string): string | null {
+      const href = element.getAttribute("href") ?? "";
+      const onclick = element.getAttribute("onclick") ?? "";
+      const datasetUrl = (element as any)?.dataset?.url;
+      const dataCode = (element as any)?.dataset?.code;    // 서울시 게시판
+      const dataNttId = (element as any)?.dataset?.nttid;  // 일부 지자체 게시판
+      const base = new URL(pageUrl);
+        
+      // =====================================================
+      // ➊ 정상 href 처리 (javascript 제외)
+      // =====================================================
+      if (href && href !== "#" && !href.startsWith("javascript")) {
+        try {
+          return new URL(href, base).href;
+        } catch {}
+      }
+    
+      // =====================================================
+      // ➋ onclick="location.href='...'"
+      // =====================================================
+      const locMatch = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
+      if (locMatch) {
+        try {
+          return new URL(locMatch[1], base).href;
+        } catch {}
+      }
+    
+      // =====================================================
+      // ➌ onclick="window.open('...')"
+      // =====================================================
+      const openMatch = onclick.match(/window\.open\s*\(\s*['"]([^'"]+)['"]/);
+      if (openMatch) {
+        try {
+          return new URL(openMatch[1], base).href;
+        } catch {}
+      }
+    
+      // =====================================================
+      // ➍ data-* 기반 지자체 패턴
+      // =====================================================
+      // 서울시: <a data-code="448396">
+      if (dataCode) {
+        try {
+          return new URL(`/news/news_view.do?nttId=${dataCode}`, base).href;
+        } catch {}
+      }
+    
+      // 부산/울산: <a data-nttid="1234">
+      if (dataNttId) {
+        try {
+          return new URL(`/view.do?nttId=${dataNttId}`, base).href;
+        } catch {}
+      }
+    
+      // dataset-url 사용
+      if (datasetUrl) {
+        try {
+          return new URL(datasetUrl, base).href;
+        } catch {}
+      }
+    
+      // =====================================================
+      // ➎ onclick 함수 호출 패턴
+      // =====================================================
+      const funcMatch = onclick.match(/([A-Za-z0-9_]+)\((.*?)\)/);
+      if (funcMatch) {
+        const funcName = funcMatch[1];
+        const argsRaw = funcMatch[2];
+      
+        const args = argsRaw
+          .split(",")
+          .map(v => v.trim().replace(/^['"]|['"]$/g, ""));
+      
+        const fName = funcName.toLowerCase();
+      
+        // 대구광역시 fnView('code','no')
+        if (fName === "fnview" && args.length >= 2) {
+          try {
+            return new URL(`/bbs/view.do?code=${args[0]}&no=${args[1]}`, base).href;
+          } catch {}
+        }
+      
+        // 통합 행정기관 fn_icms_navi_common('view','779519')
+        if (fName === "fn_icms_navi_common" && args.length >= 2) {
+          try {
+            return new URL(
+              `/icms/bbs/selectBoardArticle.do?bbsId=BBS_00153&nttId=${args[1]}`,
+              base
+            ).href;
+          } catch {}
+        }
+      
+        // 규격화된 view( 'id' ) 패턴
+        if (fName.includes("view") && args.length === 1) {
+          try {
+            return new URL(`/view.do?id=${args[0]}`, base).href;
+          } catch {}
+        }
+      
+        // 그 외 함수 → 기본적으로 funcName.do?param=...
+        try {
+          return new URL(
+            `${funcName}.do?param=${encodeURIComponent(args.join(","))}`,
+            base
+          ).href;
+        } catch {}
+      }
+    
+      // =====================================================
+      // ➏ 내부 a[href] 우선 사용
+      // =====================================================
+      const innerA = element.querySelector("a[href]");
+      if (innerA) {
+        const innerHref = innerA.getAttribute("href") ?? "";
+        if (innerHref) {
+          try {
+            return new URL(innerHref, base).href;
+          } catch {}
+        }
+      }
+    
+      // =====================================================
+      // ➐ 모든 케이스 실패
+      // =====================================================
+      return null;
+    }
 
     // Conditions input 수정관련
     const handleConditionChange = (id: number, key: keyof ConditionTableRows, value: string) => {

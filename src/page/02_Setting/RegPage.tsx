@@ -245,6 +245,7 @@ export default function RegPage() {
                     setPreviewLoaded={setPreviewLoaded}
                     robotsRows={robotsRows}
                     setRobotsRows={setRobotsRows}
+                    setDetailUrl={setDetailUrl}
                   />
                 </>
                 )}

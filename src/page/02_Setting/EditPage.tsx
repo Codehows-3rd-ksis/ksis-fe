@@ -243,6 +243,7 @@ export default function EditPage() {
                       setPreviewLoaded={setPreviewLoaded}
                       robotsRows={robotsRows}
                       setRobotsRows={setRobotsRows}
+                      setDetailUrl={setDetailUrl}
                     />
                   </>
                 )}

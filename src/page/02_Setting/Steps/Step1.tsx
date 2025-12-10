@@ -19,6 +19,7 @@ interface Props {
   setPreviewLoaded: (v: boolean) => void;
   robotsRows: RobotsTableRows[]
   setRobotsRows: (value: RobotsTableRows[] | ((prev: RobotsTableRows[]) => RobotsTableRows[])) => void;
+  setDetailUrl: (v: string) => void;
   
 }
 
@@ -60,6 +61,7 @@ export default function Step1({
   setPreviewLoaded,
   robotsRows,
   setRobotsRows,
+  setDetailUrl,
 }: Props) {
   const [openRobotsAlert, setOpenRobotsAlert] = useState(false)
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
@@ -77,6 +79,12 @@ export default function Step1({
             setIsAble(false)
             setPreviewLoaded(false)
             setCondition([])
+            prev['listArea'] = ''
+            prev['pagingArea'] = ''
+            prev['pagingNextbtn'] = ''
+            prev['linkArea'] = ''
+            setDetailUrl('')
+
           }
         
           return { ...prev, [key]: value };
