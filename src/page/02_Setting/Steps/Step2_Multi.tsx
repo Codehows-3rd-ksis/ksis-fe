@@ -9,7 +9,7 @@ import HtmlInspector from '../../../component/HTMLInspector';
 import Alert from '../../../component/Alert';
 import { type NewData } from '../RegPage';
 import { type ConditionTableRows, getColumns } from '../../../Types/TableHeaders/SettingConditionHeader';
-import { getPreview2, getDetailPreview } from '../../../API/02_SettingApi';
+import { getDetailPreview } from '../../../API/02_SettingApi';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
