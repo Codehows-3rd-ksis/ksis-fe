@@ -74,7 +74,6 @@ export default function RegPage() {
         domRects: []
       }
     )
-    const [detailUrl, setDetailUrl] = useState('');
     const [condition, setCondition] = useState<ConditionTableRows[]>([]) // 추출조건 테이블 데이터
     const [isDetail, setIsDetail] = useState(false) // 상세영역 on/off 여부
     
@@ -104,7 +103,6 @@ export default function RegPage() {
                   domRects: []
                 }
               )
-              setDetailUrl('')
               setPreviewLoaded(true);
           } catch(err) {
               console.error(err);
@@ -245,7 +243,6 @@ export default function RegPage() {
                     setPreviewLoaded={setPreviewLoaded}
                     robotsRows={robotsRows}
                     setRobotsRows={setRobotsRows}
-                    setDetailUrl={setDetailUrl}
                   />
                 </>
                 )}
@@ -275,8 +272,6 @@ export default function RegPage() {
                     setLoading={setLoading}
                     isDetail={isDetail}
                     setIsDetail={setIsDetail}
-                    detailUrl={detailUrl}
-                    setDetailUrl={setDetailUrl}
                   />
                 </>
                 )}

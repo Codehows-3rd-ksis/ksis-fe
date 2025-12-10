@@ -58,7 +58,6 @@ export default function EditPage() {
         domRects: []
       }
     )
-    const [detailUrl, setDetailUrl] = useState<any>(null);
     const [condition, setCondition] = useState<ConditionTableRows[]>([]) // 추출조건 테이블 데이터
     const [isDetail, setIsDetail] = useState(false) // 상세영역 on/off 여부
     
@@ -102,7 +101,6 @@ export default function EditPage() {
                   domRects: []
                 }
               )
-              setDetailUrl('')
               setPreviewLoaded(true);
           } catch(err) {
               console.error(err);
@@ -243,7 +241,6 @@ export default function EditPage() {
                       setPreviewLoaded={setPreviewLoaded}
                       robotsRows={robotsRows}
                       setRobotsRows={setRobotsRows}
-                      setDetailUrl={setDetailUrl}
                     />
                   </>
                 )}
@@ -273,8 +270,6 @@ export default function EditPage() {
                       setLoading={setLoading}
                       isDetail={isDetail}
                       setIsDetail={setIsDetail}
-                      detailUrl={detailUrl}
-                      setDetailUrl={setDetailUrl}
                     />
                   </>    
                 )}

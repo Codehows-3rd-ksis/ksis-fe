@@ -9,7 +9,7 @@ import HtmlInspector from '../../../component/HTMLInspector';
 import Alert from '../../../component/Alert';
 import { type NewData } from '../RegPage';
 import { type ConditionTableRows, getColumns } from '../../../Types/TableHeaders/SettingConditionHeader';
-import { getPreview2 } from '../../../API/02_SettingApi';
+import { getPreview2, getDetailPreview } from '../../../API/02_SettingApi';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
@@ -46,8 +46,6 @@ interface Props {
     setLoading: (v: boolean) => void;
     isDetail: boolean;
     setIsDetail: (v: boolean) => void;
-    detailUrl: string;
-    setDetailUrl: (value: string | ((prev: string) => string)) => void;
 }
 
 export default React.memo(function Step2_Multi({
@@ -61,8 +59,6 @@ export default React.memo(function Step2_Multi({
     setLoading,
     isDetail,
     setIsDetail,
-    detailUrl,
-    setDetailUrl
 }: Props) {
     const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, Element | undefined>>({});
     const [mainRects, setMainRects] = useState<HighlightPos[]>([]);
@@ -237,24 +233,6 @@ export default React.memo(function Step2_Multi({
           [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
           [`${selectTarget}`]: isToggleOff ? "" : selector,
         }));
-      
-        // linkArea: 토글 ON → 링크 업데이트, 토글 OFF → URL 제거
-        if (selectTarget === "linkArea") {
-          if (isToggleOff) {
-            setDetailUrl("");
-          } else {
-            const url = extractDetailUrlUniversal(
-              element as HTMLElement,
-              newData.url
-            );
-          
-            if (url) {
-              setDetailUrl(url);
-            } else {
-              setDetailUrl("");
-            }
-          }
-        }
 
         setSelectTarget(null)
         setLoading(false)
@@ -334,8 +312,13 @@ export default React.memo(function Step2_Multi({
 
     const handleDetailLoad = async () => {
         try {
-          const resPreview2 = await getPreview2(detailUrl) 
-          setDetailPreview(resPreview2)
+          // const resPreview2 = await getPreview2(detailUrl) 
+          // setDetailPreview(resPreview2)
+          if(!newData.listArea || !newData.linkArea) {
+            return;
+          }
+          const resDetailPreview = await getDetailPreview(newData.url, newData.listArea, newData.linkArea)
+          setDetailPreview(resDetailPreview)
           setIsDetail(true)
           setLoading(false)
         }
@@ -346,133 +329,6 @@ export default React.memo(function Step2_Multi({
           setIsDetail(false)
           setLoading(false)
         }
-    }
-
-    function extractDetailUrlUniversal(element: HTMLElement, pageUrl: string): string | null {
-      const href = element.getAttribute("href") ?? "";
-      const onclick = element.getAttribute("onclick") ?? "";
-      const datasetUrl = (element as any)?.dataset?.url;
-      const dataCode = (element as any)?.dataset?.code;    // 서울시 게시판
-      const dataNttId = (element as any)?.dataset?.nttid;  // 일부 지자체 게시판
-      const base = new URL(pageUrl);
-        
-      // =====================================================
-      // ➊ 정상 href 처리 (javascript 제외)
-      // =====================================================
-      if (href && href !== "#" && !href.startsWith("javascript")) {
-        try {
-          return new URL(href, base).href;
-        } catch {}
-      }
-    
-      // =====================================================
-      // ➋ onclick="location.href='...'"
-      // =====================================================
-      const locMatch = onclick.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-      if (locMatch) {
-        try {
-          return new URL(locMatch[1], base).href;
-        } catch {}
-      }
-    
-      // =====================================================
-      // ➌ onclick="window.open('...')"
-      // =====================================================
-      const openMatch = onclick.match(/window\.open\s*\(\s*['"]([^'"]+)['"]/);
-      if (openMatch) {
-        try {
-          return new URL(openMatch[1], base).href;
-        } catch {}
-      }
-    
-      // =====================================================
-      // ➍ data-* 기반 지자체 패턴
-      // =====================================================
-      // 서울시: <a data-code="448396">
-      if (dataCode) {
-        try {
-          return new URL(`/news/news_view.do?nttId=${dataCode}`, base).href;
-        } catch {}
-      }
-    
-      // 부산/울산: <a data-nttid="1234">
-      if (dataNttId) {
-        try {
-          return new URL(`/view.do?nttId=${dataNttId}`, base).href;
-        } catch {}
-      }
-    
-      // dataset-url 사용
-      if (datasetUrl) {
-        try {
-          return new URL(datasetUrl, base).href;
-        } catch {}
-      }
-    
-      // =====================================================
-      // ➎ onclick 함수 호출 패턴
-      // =====================================================
-      const funcMatch = onclick.match(/([A-Za-z0-9_]+)\((.*?)\)/);
-      if (funcMatch) {
-        const funcName = funcMatch[1];
-        const argsRaw = funcMatch[2];
-      
-        const args = argsRaw
-          .split(",")
-          .map(v => v.trim().replace(/^['"]|['"]$/g, ""));
-      
-        const fName = funcName.toLowerCase();
-      
-        // 대구광역시 fnView('code','no')
-        if (fName === "fnview" && args.length >= 2) {
-          try {
-            return new URL(`/bbs/view.do?code=${args[0]}&no=${args[1]}`, base).href;
-          } catch {}
-        }
-      
-        // 통합 행정기관 fn_icms_navi_common('view','779519')
-        if (fName === "fn_icms_navi_common" && args.length >= 2) {
-          try {
-            return new URL(
-              `/icms/bbs/selectBoardArticle.do?bbsId=BBS_00153&nttId=${args[1]}`,
-              base
-            ).href;
-          } catch {}
-        }
-      
-        // 규격화된 view( 'id' ) 패턴
-        if (fName.includes("view") && args.length === 1) {
-          try {
-            return new URL(`/view.do?id=${args[0]}`, base).href;
-          } catch {}
-        }
-      
-        // 그 외 함수 → 기본적으로 funcName.do?param=...
-        try {
-          return new URL(
-            `${funcName}.do?param=${encodeURIComponent(args.join(","))}`,
-            base
-          ).href;
-        } catch {}
-      }
-    
-      // =====================================================
-      // ➏ 내부 a[href] 우선 사용
-      // =====================================================
-      const innerA = element.querySelector("a[href]");
-      if (innerA) {
-        const innerHref = innerA.getAttribute("href") ?? "";
-        if (innerHref) {
-          try {
-            return new URL(innerHref, base).href;
-          } catch {}
-        }
-      }
-    
-      // =====================================================
-      // ➐ 모든 케이스 실패
-      // =====================================================
-      return null;
     }
 
     // Conditions input 수정관련
@@ -714,7 +570,7 @@ export default React.memo(function Step2_Multi({
                                     text='상세페이지 불러오기'
                                     radius={1}
                                     height="40px"
-                                    disabled={detailUrl? false: true}
+                                    disabled={newData.linkArea? false: true}
                                     onClick={()=>{
                                       setLoading(true)
                                       handleDetailLoad()

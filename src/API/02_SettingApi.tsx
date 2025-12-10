@@ -15,6 +15,11 @@ export const getPreview2 = async (url: string) => {
   const response = await instance.post(`/preview2`, {url});
   return response.data;
 };
+// 상세 페이지 미리보기 요청 (스크린샷 + HTML)
+export const getDetailPreview = async (url: string, listArea: string, linkArea: string) => {
+  const response = await instance.post(`/preview/detail`, {url, listArea, linkArea});
+  return response.data;
+};
 // 특정 selector에 대한 하이라이트 좌표 요청
 export const getHighlight = async (url: string, selector: string) => {
   const response = await instance.post(`/highlight`, {url, cssSelector: selector});
