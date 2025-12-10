@@ -1,6 +1,7 @@
-import { Typography } from '@mui/material';
+import { Typography, IconButton } from '@mui/material';
 import { type GridColDef } from '@mui/x-data-grid';
 import CustomIconButton from '../../component/CustomIconButton';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import dayjs from 'dayjs'
 
 export interface HistoryTableRows {
@@ -68,4 +69,63 @@ export const getColumns = ({
     field: 'export', headerName: '내보내기', width: 100, headerAlign: 'center', align: 'center',
     renderCell: (params) => ( <CustomIconButton icon="export" onClick={(e: any) => handleExport(params.row, e)} /> ),
   },
+];
+
+// ========== 상세 페이지 컬럼 ==========
+
+// 기본 정보 테이블 컬럼
+export const getDetailSettingColumns = (): GridColDef[] => [
+  { field: 'settingName', headerName: '데이터수집명', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'state', headerName: '진행상태', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'startAt', headerName: '수집시작', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'endAt', headerName: '수집완료', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'type', headerName: '실행타입', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'period', headerName: '수집기간', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'cycle', headerName: '수집주기', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'userId', headerName: '유저ID', flex: 1, headerAlign: 'center', align: 'center' },
+];
+
+// 수집 실패 테이블 핸들러 타입
+export interface FailureColumnHandlers {
+  handleRecollectClick: (itemId: string, progressNo: string, url: string) => void;
+}
+
+// 수집 실패 테이블 컬럼
+export const getFailureColumns = ({
+  handleRecollectClick,
+}: FailureColumnHandlers): GridColDef[] => [
+  { field: 'progressNo', headerName: '진행번호', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'url', headerName: 'URL', flex: 6, headerAlign: 'center', align: 'left' },
+  {
+    field: 'recollect',
+    headerName: '재수집',
+    flex: 1,
+    headerAlign: 'center',
+    align: 'center',
+    renderCell: (params) => (
+      <IconButton
+        color="primary"
+        size="small"
+        onClick={() =>
+          handleRecollectClick(
+            params.row.itemId,
+            params.row.progressNo,
+            params.row.url
+          )
+        }
+        title="재수집"
+      >
+        <RefreshIcon />
+      </IconButton>
+    ),
+  },
+];
+
+// 수집 데이터 테이블 컬럼
+export const getCollectionColumns = (): GridColDef[] => [
+  { field: 'progressNo', headerName: '진행번호', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'title', headerName: '제목', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'writer', headerName: '작성자', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'date', headerName: '작성일', flex: 1, headerAlign: 'center', align: 'center' },
+  { field: 'context', headerName: '본문', flex: 4, headerAlign: 'center', align: 'left' },
 ];
