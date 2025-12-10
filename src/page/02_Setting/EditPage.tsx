@@ -362,6 +362,7 @@ export default function EditPage() {
                 }}
             />
             <Dialog 
+                disableRestoreFocus
                 open={loading}
                 slotProps={{
                   paper: {

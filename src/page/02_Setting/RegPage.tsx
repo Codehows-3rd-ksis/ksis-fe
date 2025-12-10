@@ -362,6 +362,7 @@ export default function RegPage() {
                 }}
             />
             <Dialog 
+                disableRestoreFocus
                 open={loading}
                 slotProps={{
                   paper: {
