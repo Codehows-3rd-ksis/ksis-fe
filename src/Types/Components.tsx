@@ -19,6 +19,7 @@ export interface TextField_Type {
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   startAdornment?: React.ReactNode;
   endAdornment?: React.ReactNode;
+  boxMinWidth?: string;
 }
 
 export interface Button_Type {
