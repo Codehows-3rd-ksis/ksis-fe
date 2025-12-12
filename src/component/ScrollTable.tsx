@@ -7,12 +7,15 @@ import { useRef, useEffect } from 'react'
 /** 중요! */
 // MUI 기본 테이블은 최대 페이지 크기가 100 제한
 
-function ScrollTable(props: ScrollTableProps) {
+function ScrollTable(props: ScrollTableProps & {
+  processRowUpdate?: (newRow: any, oldRow: any) => any;
+}) {
     const {
       columns, rows, selectedRows, check, 
-      height,
+      height, maxHeight,
       width,
       onRowClick, onRowSelectionChange, onLoadMore,
+      processRowUpdate
     } = props
 
     // DataGrid를 감싸는 div ref
@@ -47,10 +50,10 @@ function ScrollTable(props: ScrollTableProps) {
     }, [onLoadMore])
 
     return (
-      <Paper  sx={{ height: height, width: width }}>
+      <Paper  sx={{ height: height, width: width,  maxHeight: maxHeight }}>
         <div
           // style={{ height: 630, overflow: 'auto' }}
-          style={{ height: height, width: '100%', overflow: 'auto' }}
+          style={{ height: height, width: '100%', overflow: 'auto', maxHeight: maxHeight  }}
           ref={dataGridWrapperRef}
         >
 
@@ -69,6 +72,10 @@ function ScrollTable(props: ScrollTableProps) {
 
             checkboxSelection={check || false}
 
+            // 편집 모드 설정
+            editMode="cell" // 또는 "row"
+            processRowUpdate={processRowUpdate}
+
             getRowClassName={(params) => {
               const classes = [];
               // 1) 짝수 행 스타일 적용 (checkbox 없어도 동작)
@@ -85,6 +92,7 @@ function ScrollTable(props: ScrollTableProps) {
             sx={{
                 // width: '100%',
                 // minHeight: height,
+                maxHeight: maxHeight,
                 border: '1px solid #CDBAA6',
                 // 헤더 배경색
                 '&': {
@@ -103,7 +111,13 @@ function ScrollTable(props: ScrollTableProps) {
                 // 셀 폰트
                 '& .MuiDataGrid-cell': {
                   fontSize: 16,
-                  fontWeight: 'Normal'
+                  fontWeight: 'Normal',
+                  display: 'flex',
+                  alignItems: 'center',
+                },
+                '& .MuiDataGrid-cell > input': {
+                  backgroundColor: 'white',
+                  color: 'black'
                 },
                 // 비활성화 row
                 '& .row-inactive': {
@@ -126,6 +140,7 @@ function ScrollTable(props: ScrollTableProps) {
                 '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
                   outline: 'none !important',
                 },
+                
             }}
           />
         </div>

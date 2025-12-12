@@ -21,6 +21,7 @@ export interface ScrollTableProps {
   rows: GridRowsProp;
   selectedRows?: { id: GridRowId }[];  
   height?: number | string; 
+  maxHeight?: number | string; 
   width? : number | string;
   check?: boolean;
   onRowClick?: (params: GridRowParams) => void;
