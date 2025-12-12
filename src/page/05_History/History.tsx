@@ -22,6 +22,10 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Dayjs } from "dayjs";
 import CustomTextField from "../../component/CustomTextField";
 import CustomIconButton from "../../component/CustomIconButton";
+import { getHistory, getHistoryResult } from "../../API/05_HistoryApi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import Alert from '../../component/Alert';
 
 export default function History() {
   const navigate = useNavigate();
@@ -38,6 +42,9 @@ export default function History() {
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
   // 내보내기 대상 row
   const [exportRow, setExportRow] = useState<HistoryTableRows | null>(null);
+
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
     getTableDatas();
@@ -119,68 +126,40 @@ export default function History() {
     return { week: "", day: "" };
   }
 
-  const getTableDatas = () => {
-    const data = [
-      {
-        id: 1,
-        index: 1,
-        settingId: 1,
-        settingName: "창원시청 공지사항 수집",
-        state: "진행중",
-        startAt: "2025-10-24 09:00",
-        startDate: "2025-10-23",
-        endDate: "2025-11-23",
-        cronExpression: "0 0 9 ? * MON,TUE,WED",
-        type: "스케줄링",
-      },
-      {
-        id: 2,
-        index: 2,
-        settingId: 1,
-        settingName: "창원시청 공지사항 수집",
-        state: "수집완료(수집실패: 5건)",
-        startAt: "2025-10-24 09:00",
-        endAt: "2025-10-24 09:43",
-        startDate: "2025-10-23",
-        endDate: "2025-11-23",
-        cronExpression: "0 0 9 ? * LTHU",
-        type: "스케줄링",
-      },
-      {
-        id: 3,
-        index: 3,
-        settingId: 3,
-        settingName: "경상남도 보도자료 수집",
-        userId: 1,
-        loginId: "ksis1",
-        state: "수집완료",
-        startAt: "2025-10-22 15:23",
-        endAt: "2025-10-22 16:00",
-        type: "수동실행",
-      },
-    ];
+  const getTableDatas = async () => {
+    try {
+      const data = await getHistory()
 
-    const res = data.map((item) => {
-      let cycle = "";
-      if (item.cronExpression) {
-        const { week, day } = parseCronWeekDay(item.cronExpression);
-        cycle = `${week} ${day}`.trim();
-      }
+      const res = data.map((row: HistoryTableRows, i: number) => {
+        let cycle = "";
+        if (row.cronExpression) {
+          const { week, day } = parseCronWeekDay(row.cronExpression);
+          cycle = `${week} ${day}`.trim();
+        }
 
-      const period =
-        item.startDate && item.endDate
-          ? `${item.startDate} ~ ${item.endDate}`
-          : "";
+        const period =
+          row.startDate && row.endDate
+            ? `${row.startDate} ~ ${row.endDate}`
+            : "";
 
-      return {
-        ...item,
-        cycle,
-        period,
-      };
-    });
+        return {
+          ...row,
+          cycle,
+          period,
+          index: i+1,
+          id: row.workId,
+        };
+      });
 
-    setBaseRows(res);
-    setFilteredRows(res);
+      setBaseRows(res);
+      setFilteredRows(res);
+    }
+    catch(err) {
+      console.error(err)
+      setErrorMsg("유저이력 조회 실패")
+      setOpenErrorAlert(true)
+    }
+    
   };
 
   //  /**  Table Handlers */
@@ -213,16 +192,108 @@ export default function History() {
   // }
 
   const handleDetailView = (row: HistoryTableRows) => {
-    console.log("row", row);
     navigate(`/history/detail/${row.id}`, { state: { rowData: row } });
     // 현재 행의 상세조회
   };
-  const handleExport = (row: HistoryTableRows, event?: any) => {
-    setExportRow(row);
-    setExportAnchor(event.currentTarget); // 클릭한 아이콘 위치에 메뉴 뜨게
+
+  // =========================
+  // 공통 다운로드 함수
+  // =========================
+  const downloadFile = (data: BlobPart, filename: string, type: string) => {
+    const blob = new Blob([data], { type });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
   };
 
-  const columns = getColumns({ handleDetailView, handleExport });
+  // =========================
+  // JSON 내보내기
+  // =========================
+  const exportJSON = (jsonData: any, filename: string) => {
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    downloadFile(jsonString, filename + ".json", "application/json");
+  };
+
+  // =========================
+  // CSV 내보내기
+  // =========================
+  const exportCSV = (jsonData: any, filename: string) => {
+    const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
+    const headers = Object.keys(arr[0]).join(",");
+
+    const rows = arr
+      .map((row) => Object.values(row).join(","))
+      .join("\n");
+
+    const csv = headers + "\n" + rows;
+    downloadFile(csv, filename + ".csv", "text/csv;charset=utf-8;");
+  };
+
+  // =========================
+  // Excel(xlsx) 내보내기
+  // =========================
+
+  const exportExcel = (jsonData: any, filename: string) => {
+    const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
+    const worksheet = XLSX.utils.json_to_sheet(arr);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, filename + ".xlsx");
+  };
+
+  // =========================
+  // value 배열을 단일 객체로 평탄화
+  // =========================
+  const flattenResult = (rows: any[]) => {
+  return rows.map(item => {
+    // JSON 문자열인 resultValue를 파싱
+    let parsedValue;
+    try {
+      parsedValue = JSON.parse(item.resultValue);
+    } catch (e) {
+      parsedValue = [];
+      console.error("result_value JSON parse error", e);
+    }
+
+    // parsedValue가 배열이 아닐 수도 있으니 배열인지 체크
+    const valueArray = Array.isArray(parsedValue) ? parsedValue : [parsedValue];
+
+    const flat = valueArray.reduce((acc: any, obj: any) => {
+      // obj가 객체인지 확인
+      if (typeof obj === 'object' && obj !== null) {
+        Object.entries(obj).forEach(([key, val]) => {
+          acc[key] = val;
+        });
+      }
+      return acc;
+    }, {});
+
+    return {
+      seq: item.seq,
+      page_url: item.pageUrl,
+      ...flat
+    };
+  });
+};
+  
+
+  
 
   const handleInputChange = (value: string) => {
     setSearchName(value);
@@ -288,15 +359,36 @@ export default function History() {
     handleSearch(value);
   };
 
-  const handleExport_Excel = () => {
-    console.log("엑셀로 내보내기", exportRow);
+  const handleExport = (row: HistoryTableRows, event?: any) => {
+    setExportRow(row);
+    setExportAnchor(event.currentTarget); // 클릭한 아이콘 위치에 메뉴 뜨게
   };
-  const handleExport_CSV = () => {
-    console.log("CSV로 내보내기");
+
+  const getExportData = async () => {
+      if (!exportRow) return [];
+      const result = await getHistoryResult(Number(exportRow.id))
+
+      const targets = result.filter((r:any) => r.workId === exportRow.id);
+      return flattenResult(targets); // 평탄화된 형태로 반환
+    };
+
+  const handleExport_Excel = async () => {
+    if (!exportRow) return;
+    const exportData = await getExportData();
+    exportExcel(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0,12)})_수집이력`);
   };
-  const handleExport_Json = () => {
-    console.log("Json로 내보내기");
+  const handleExport_CSV = async () => {
+    if (!exportRow) return;
+    const exportData = await getExportData();
+    exportCSV(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0,12)})_수집이력`);
   };
+  const handleExport_Json = async () => {
+    if (!exportRow) return;
+    const exportData = await getExportData();
+    exportJSON(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0,12)})_수집이력`);
+  };
+
+  const columns = getColumns({ handleDetailView, handleExport });
 
   return (
     <Box sx={{ height: "97%" }}>
@@ -472,6 +564,16 @@ export default function History() {
           <ListItemText>JSON</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   );
 }

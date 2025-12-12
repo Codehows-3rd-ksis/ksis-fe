@@ -14,7 +14,7 @@ export default function CustomSelect(props: Select_Type) {
     }, [listItem]);
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', alignItems: 'center', bgcolor: 'white' }}> 
       <FormControl sx={{ width: inputWidth || '300px', border: border || '', borderRadius: 1 }}>
         <Select
           value={value}

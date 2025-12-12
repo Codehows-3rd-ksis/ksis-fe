@@ -19,6 +19,7 @@ export interface UserTableRows {
 // 외부에서 받을 핸들러들을 타입으로 정의
 export interface UserTableColumnHandlers {
   handleEditOpen: (row: UserTableRows) => void;
+  handleEditAccountOpen: (row: UserTableRows) => void;
   handleDeleteOpen: (row: UserTableRows) => void;
   handleShowLogOpen: (row: UserTableRows) => void;
 }
@@ -26,6 +27,7 @@ export interface UserTableColumnHandlers {
 // 핸들러를 주입받아 columns를 반환하는 함수
 export const getColumns = ({
   handleEditOpen,
+  handleEditAccountOpen,
   handleDeleteOpen,
   handleShowLogOpen,
 }: UserTableColumnHandlers): GridColDef[] => [
@@ -42,8 +44,12 @@ export const getColumns = ({
     }
   },
   {
-    field: 'edit', headerName: '수정', width: 70, headerAlign: 'center', align: 'center',
+    field: 'editInfo', headerName: '정보수정', width: 100, headerAlign: 'center', align: 'center',
     renderCell: (params) => ( <CustomIconButton icon="edit" onClick={() => handleEditOpen(params.row)} /> )
+  },
+  {
+    field: 'editAccount', headerName: '계정수정', width: 100, headerAlign: 'center', align: 'center',
+    renderCell: (params) => ( <CustomIconButton icon="account" onClick={() => handleEditAccountOpen(params.row)} /> )
   },
   {
     field: 'del', headerName: '삭제', width: 70, headerAlign: 'center', align: 'center',
