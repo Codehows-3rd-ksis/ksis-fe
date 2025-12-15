@@ -38,27 +38,15 @@ export interface Button_Type {
   disabled?: boolean;
 }
 export interface IconButton_Type {
-  width?: string;
-  height?: string;
-  fontSize?: string;
-  color?: string;
-  fontWeight?: string;
-  backgroundColor?: string;
-  border?: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  icon?:
-    | "search"
-    | "reset"
-    | "visible"
-    | "invisible"
-    | "edit"
-    | "delete"
-    | "log"
-    | "run"
-    | "stop"
-    | "close"
-    | "logout"
-    | "export";
+    width? : string;
+    height? : string;
+    fontSize? : string;
+    color? : string;
+    fontWeight? : string;
+    backgroundColor? : string;
+    border? : string;
+    onClick? : React.MouseEventHandler<HTMLButtonElement>,
+    icon?: 'add' | 'search' | 'reset' | 'visible' | 'invisible' | 'edit' | 'delete' | 'log' | 'run' | 'stop' | 'close' | 'logout' | 'export' | 'account'
 }
 
 export interface SearchBar_Type {
