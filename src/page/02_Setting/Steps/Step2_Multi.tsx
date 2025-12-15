@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { Box, Typography, InputAdornment, type SelectChangeEvent, Card } from '@mui/material'
+import { Box, Typography, InputAdornment, type SelectChangeEvent } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomTextField from '../../../component/CustomTextField';
 import CustomButton from '../../../component/CustomButton';
@@ -604,8 +604,8 @@ export default React.memo(function Step2_Multi({
                           placeholder="태그 검색"
                           onSearch={runMainSearch}
                         />
-                        <CustomButton text="<" radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
-                        <CustomButton text=">" radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
+                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
                         {searchResults.length > 0 ?
                           <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
                           : <></>
