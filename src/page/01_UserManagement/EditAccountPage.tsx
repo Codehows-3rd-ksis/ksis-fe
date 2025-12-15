@@ -1,13 +1,15 @@
-import {useState} from 'react'
-import {Box, Typography, InputAdornment, type SelectChangeEvent} from '@mui/material'
+import { useState, useEffect } from 'react'
+import { Box, Typography, InputAdornment } from '@mui/material'
 import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
-import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { registUser, getUser } from '../../API/01_UsermanagementApi';
+import { updateUserAccount, getUser } from '../../API/01_UsermanagementApi';
 
-interface RegPageProps {
+import { type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
+
+interface EditPageProps {
+    row: UserTableRows | null;
     handleDone: () => void;
     handleCancel: () => void;
 }
@@ -16,37 +18,33 @@ interface UserForm {
   username: string;
   password: string;
   passwordConfirm: string;
-  name: string;
-  dept: string;
-  ranks: string;
-  state: string;
 }
 
-export default function RegPage(props: RegPageProps) {
-    const {handleDone, handleCancel} = props
+export default function EditPage(props: EditPageProps) {
+    const {row, handleDone, handleCancel} = props
     const [isValid_id, setIsValid_id] = useState<boolean | null>(null);
     const [isValidPassword, setIsValidPassword] = useState<boolean | null>(null);
     const [isVisible, setIsVisible] = useState(false)
     const [isPasswordMismatch, setIsPasswordMismatch] = useState(false);
     const [newData, setNewData] = useState<UserForm>({
-        username: '',
-        password: '',
+        username: row?.username || '',
+        password: row?.password || '',
         passwordConfirm: '',
-        name: '',
-        dept: '',
-        ranks: '',
-        state: '승인대기',
-    });
+    })
     const [openCancelAlert, setOpenCancelAlert] = useState(false)
-    const [openRegAlert, setOpenRegAlert] = useState(false)
-    const stateList = [
-        { value: '승인대기', name: '승인대기' },
-        { value: '승인완료', name: '승인완료' },
-    ];
+    const [openEditAlert, setOpenEditAlert] = useState(false)
+
     const [openValidAlert, setOpenValidAlert] = useState(false)
     const [validateMsg, setValidateMsg] = useState('')
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
+
+    useEffect(() => {
+        if (!row) return;
+
+        const valid = validateLoginId(row.username ?? "");
+        setIsValid_id(valid);
+    }, [row]);
 
     const handleShowPassword = () => {
         setIsVisible(!isVisible);
@@ -82,11 +80,6 @@ export default function RegPage(props: RegPageProps) {
         });
     }
 
-    const handleSelectChange = (key: keyof typeof newData) => 
-    (event: SelectChangeEvent<string | number>) => {
-      setNewData((prev) => ({ ...prev, [key]: event.target.value }));
-    };
-
     const validateLoginId = (id: string): boolean => {
       if( id.length < 8 || id.length > 20) return false;
 
@@ -99,10 +92,12 @@ export default function RegPage(props: RegPageProps) {
 
     const handleValidate = async () => {
         try {
+            if(row === null) return;
+            // console.log('row', row)
             const userData = await getUser();
-            // ID 중복검사, true 일시 중복
+            // ID 중복검사, true 일시 중복, 수정할 row 본인의 username이 중복되는 것은 허용
             const findSameUsername = userData.find(
-                (user:any) => user.username === newData.username
+                (user:any) => user.username === newData.username && user.userId !== row.userId
             )
             // console.log('중복 ID 검사', findSameUsername)
 
@@ -120,46 +115,47 @@ export default function RegPage(props: RegPageProps) {
             }
 
             const errMsg = []
-            if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식')
+            if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
             if (findSameUsername) errMsg.push('아이디 중복') 
             if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
             if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
-            if (newData.name === '') errMsg.push('이름 미입력')
 
             if(errMsg.length !== 0) {
                 setValidateMsg(errMsg.join('\n'));
                 setOpenValidAlert(true)
             } else {
-                handleRegist()
+                handleEdit()
             }
-        } 
+        }
         catch(err) {
             console.error(err)
-            setOpenRegAlert(false);
+            setOpenEditAlert(false);
             setErrorMsg('get User 실패');
             setOpenErrorAlert(true)
         }
+        
     }
-
-    const handleRegist = async () => {
+    const handleEdit = async () => {
         try {
-            await registUser({
+            if(row === null) {
+                setOpenEditAlert(false);
+                setErrorMsg('row is null // User 수정 실패');
+                setOpenErrorAlert(true)
+                return;
+            }
+            await updateUserAccount(row.userId,{
                 username: newData.username,
                 password: newData.password,
-                name: newData.name,
-                dept: newData.dept,
-                ranks: newData.ranks,
-                state: newData.state,
             })
             handleDone()
         }
         catch(err) {
             console.error(err)
-            setOpenRegAlert(false);
-            setErrorMsg('User 등록 실패');
+            setOpenEditAlert(false);
+            setErrorMsg('User 수정 실패');
             setOpenErrorAlert(true)
+            
         }
-
     }
 
 
@@ -173,20 +169,20 @@ export default function RegPage(props: RegPageProps) {
             justifyContent: 'space-between'
         }}>
             <Box sx={{bgcolor: '#FFC98B', display: 'flex', justifyContent: 'space-between'}}>
-                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px'}}>사용자 등록</Typography>
+                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px'}}>사용자 계정 수정</Typography>
                 <CustomIconButton icon="close" backgroundColor='#FFC98B' onClick={()=>setOpenCancelAlert(true)}/>
             </Box>
             <Box sx={{
                 border: '2px solid #abababff',
                 marginLeft: '20px',
                 marginRight: '20px',
-                paddingTop: 1,
-                paddingBottom: 1,
                 borderRadius: 1,
+                paddingTop: 1,
+                paddingBottom: 1
             }}>
                 {/* ID */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1, }}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', width: '200px', borderRight: '1px solid'}}>
+                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
+                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>아이디</Typography>
                         <Typography sx={{color: 'red'}}>*</Typography>
                     </Box>
@@ -201,13 +197,7 @@ export default function RegPage(props: RegPageProps) {
                           type="text"
                           onChange={(e) => handleInputChange('username', e.target.value)}
                         />
-                        <Box sx={{ 
-                            backgroundColor: '#c5c4c7', 
-                            // border: '3px solid #757575', 
-                            borderRadius:1, 
-                            width: '300px',
-                            p: '1px'
-                        }}>
+                        <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
                             <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 8자 이상 20자 이하 이어야 합니다.</Typography>
                             {isValid_id === null ? null : (
                               isValid_id ? (
@@ -220,7 +210,7 @@ export default function RegPage(props: RegPageProps) {
                     </Box>
                 </Box>
                 {/* 비밀번호 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1 }}>
+                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
                     <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>비밀번호</Typography>
                         <Typography sx={{color: 'red'}}>*</Typography>
@@ -245,7 +235,7 @@ export default function RegPage(props: RegPageProps) {
                             }
                         />
                         <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
-                            <Typography sx={{fontSize: 14}}>∴ 8자 이상 입력해주세요.</Typography>
+                            <Typography sx={{fontSize:14}}>∴ 8자 이상 입력해주세요.</Typography>
                             {isValidPassword === null ? null : (
                                 isValidPassword ? (
                                     <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
@@ -258,7 +248,7 @@ export default function RegPage(props: RegPageProps) {
                 </Box>
                 {/* 비밀번호 확인 */}
                 <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid',width: '200px'}}>
+                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>비밀번호 확인</Typography>
                     </Box>
                     <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
@@ -291,80 +281,13 @@ export default function RegPage(props: RegPageProps) {
                         </Box>
                     </Box>
                 </Box>
-                {/* 이름 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid' ,width: '200px'}}>
-                        <Typography>이름</Typography>
-                        <Typography sx={{color: 'red'}}>*</Typography>
-                    </Box>
-                    <Box>
-                        <CustomTextField 
-                          variant="outlined"
-                          value={newData.name}
-                          inputWidth="300px"
-                          disabled={false}
-                          readOnly={false}
-                          placeholder="이름"
-                          type="text"
-                          onChange={(e) => handleInputChange('name', e.target.value)}
-                        />
-                    </Box>
-                </Box>
-                {/* 부서 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
-                        <Typography>부서</Typography>
-                    </Box>
-                    <Box>
-                        <CustomTextField 
-                          variant="outlined"
-                          value={newData.dept}
-                          inputWidth="300px"
-                          disabled={false}
-                          readOnly={false}
-                          placeholder="부서"
-                          type="text"
-                          onChange={(e) => handleInputChange('dept', e.target.value)}
-                        />
-                    </Box>
-                </Box>
-                {/* 직위 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
-                        <Typography>직위</Typography>
-                    </Box>
-                    <Box>
-                        <CustomTextField 
-                          variant="outlined"
-                          value={newData.ranks}
-                          inputWidth="300px"
-                          disabled={false}
-                          readOnly={false}
-                          placeholder="직위"
-                          type="text"
-                          onChange={(e) => handleInputChange('ranks', e.target.value)}
-                        />
-                    </Box>
-                </Box>
-                {/* 승인상태 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
-                        <Typography>승인상태</Typography>
-                    </Box>
-                    <Box sx={{marginRight: '20px'}}>
-                        <CustomSelect
-                          value={newData.state}
-                          listItem={stateList}
-                          onChange={handleSelectChange('state')}
-                        />
-                    </Box>
-                </Box>
             </Box>
             <Box sx={{display: 'flex', justifyContent: 'center', gap:2, marginBottom: 2}}>
-                <CustomButton text="등록" onClick={()=>setOpenRegAlert(true)} radius={2} />
+                <CustomButton text="수정" onClick={()=>setOpenEditAlert(true)} radius={2}/>
                 <CustomButton text="닫기" onClick={()=>setOpenCancelAlert(true)} backgroundColor='#f0f0f0' radius={2}/>
             </Box>
 
+            {/* Cancel Alert */}
             <Alert
               open={openCancelAlert}
               text="정말로 닫으시겠습니까?"
@@ -376,16 +299,17 @@ export default function RegPage(props: RegPageProps) {
                 setOpenCancelAlert(false);
               }}
             />
+            {/* Edit Alert */}
             <Alert
-              open={openRegAlert}
-              text="등록 하시겠습니까?"
+              open={openEditAlert}
+              text="수정 하시겠습니까?"
               type="question"
               onConfirm={() => {
-                setOpenRegAlert(false);
+                setOpenEditAlert(false);
                 handleValidate()
               }}
               onCancel={() => {
-                setOpenRegAlert(false);
+                setOpenEditAlert(false);
               }}
             />
             {/* Validation Alert */}

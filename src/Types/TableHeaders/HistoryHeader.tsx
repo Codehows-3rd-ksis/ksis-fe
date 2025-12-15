@@ -1,15 +1,16 @@
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { type GridColDef } from '@mui/x-data-grid';
 import CustomIconButton from '../../component/CustomIconButton';
 import dayjs from 'dayjs'
 
 export interface HistoryTableRows {
-    id: number,
+    workId: number,
+    id?: number,
     index?: number,
     settingId?: number,
     settingName?: string,
     userId?: number,
-    loginId?: string,
+    username?: string,
     type?: string,
     state?: string,
     startAt: string,
@@ -47,7 +48,22 @@ export const getColumns = ({
                   {params.value}
                 </Typography>
   )},
-  { field: 'state',    headerName: '진행상태',       flex: 1,    headerAlign: 'center',  align: 'center' },
+  { field: 'state',    headerName: '진행상태',       flex: 1,    headerAlign: 'center',  align: 'center',
+    renderCell: (params) => {
+      if (params.value === "SUCCESS") {
+        if(params.row.failCount === 0) return '수집완료';
+        else return (
+          <Box sx={{display: 'flex'}}>
+            <Typography>수집완료(수집실패:</Typography>
+            <Typography sx={{ color: 'red'}}>{params.row.failCount}</Typography>
+            <Typography>건)</Typography>
+          </Box>
+        )
+      } 
+      else if(params.value === "FAILED") return '수집실패'
+      else return '진행중'
+    }
+  },
   { field: 'startAt',    headerName: '수집시작',       flex: 1,  headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
       if (!params.value) return ''; // 값 없으면 빈 문자열
@@ -60,10 +76,25 @@ export const getColumns = ({
       return dayjs(params.value).format('YY-MM-DD HH:mm');           
     }
   },
-  { field: 'type',   headerName: '실행타입',       flex: 1,    headerAlign: 'center',  align: 'center' },
-  { field: 'period',   headerName: '수집기간',       flex: 1,    headerAlign: 'center',  align: 'center' },
-  { field: 'cycle',   headerName: '수집주기',       flex: 1,    headerAlign: 'center',  align: 'center' },
-  { field: 'loginId',   headerName: '유저ID',       flex: 1,    headerAlign: 'center',  align: 'center' },
+  { field: 'type',   headerName: '수집타입',       flex: 1,    headerAlign: 'center',  align: 'center' },
+  { field: 'period',   headerName: '수집기간',       flex: 1,    headerAlign: 'center',  align: 'center',
+    renderCell: (params) => {
+      if (!params.row.scheduleId) return '-';
+      else return params.value
+    }
+  },
+  { field: 'cycle',   headerName: '수집주기',       flex: 1,    headerAlign: 'center',  align: 'center',
+    renderCell: (params) => {
+      if (!params.row.scheduleId) return '-';
+      else return params.value
+    }
+  },
+  { field: 'username',   headerName: '유저ID',       flex: 1,    headerAlign: 'center',  align: 'center',
+    renderCell: (params) => {
+      if (params.row.scheduleId) return '-';
+      else return params.value
+    }
+  },
   {
     field: 'export', headerName: '내보내기', width: 100, headerAlign: 'center', align: 'center',
     renderCell: (params) => ( <CustomIconButton icon="export" onClick={(e: any) => handleExport(params.row, e)} /> ),
