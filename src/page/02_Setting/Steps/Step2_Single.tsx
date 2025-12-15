@@ -170,6 +170,7 @@ export default React.memo(function Step2_Single({
           conditionsKey: ""
         }
       ]);
+      setSelectTarget(null)
     };
 
     const handleAreaSelectTable = (rowId: number) => {

@@ -236,6 +236,7 @@ export default React.memo(function Step2_Multi({
           conditionsKey: ""
         }
       ]);
+      setSelectTarget(null)
     };
 
     const handleInputChange = (key: keyof typeof newData, value: string) => {
@@ -327,6 +328,8 @@ export default React.memo(function Step2_Multi({
     // 다중페이지 영역선택 클릭시
     const handleInspectorClick = (element: Element) => {
       try {
+        if(selectTarget === null) return;
+
         const selector = getCssSelector(element);
         if(selector === null) return;
 
@@ -391,6 +394,8 @@ export default React.memo(function Step2_Multi({
     // 추출조건 테이블 내 영역선택 버튼 클릭시
     const handleInspectorTableClick = (element: Element) => {
       try {
+        if(selectTarget === null) return;
+
         const selector = getCssSelector(element);
         if(selector === null) return;       
         // 로컬 preview(domRects)에서 selector로 rect 검색
@@ -456,8 +461,7 @@ export default React.memo(function Step2_Multi({
 
     const handleDetailLoad = async () => {
         try {
-          // const resPreview2 = await getPreview2(detailUrl) 
-          // setDetailPreview(resPreview2)
+          setSelectTarget(null)
           if(!newData.listArea || !newData.linkArea) {
             return;
           }
