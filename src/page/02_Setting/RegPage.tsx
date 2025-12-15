@@ -1,154 +1,172 @@
-import {useEffect, useState, useRef} from 'react'
+import { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
-    Box, Typography, InputAdornment, type SelectChangeEvent, Stepper, Step, StepLabel, 
-    Breadcrumbs, Link,
+    Box, Typography, Stepper, Step, StepLabel, 
+    Breadcrumbs, Link, Dialog
 } from '@mui/material'
 import CustomButton from '../../component/CustomButton';
-import CustomTextField from '../../component/CustomTextField';
-import CustomSelect from '../../component/CustomSelect';
 import Alert from "../../component/Alert"
-import ScrollTable from '../../component/ScrollTable';
+import { type ConditionTableRows } from '../../Types/TableHeaders/SettingConditionHeader';
+import { type RobotsTableRows} from '../../Types/TableHeaders/SettingRobotsHeader'
+import { getPreview2, registSetting } from '../../API/02_SettingApi';
+import LoadingProgress from '../../component/LoadingProgress';
+import Step1 from './Steps/Step1';
+import Step2_Single from './Steps/Step2_Single';
+import Step2_Multi from './Steps/Step2_Multi';
+import Step3_Single from './Steps/Step3_Single';
+import Step3_Multi from './Steps/Step3_Multi';
 
+interface PreviewData {
+  image?: string;   // base64 이미지 형태
+  html: string;   // 페이지 전체 HTML 문자열
+  domRects: Array<{ selector: string; x:number; y:number; width:number; height:number }>;
+}
 
-let idCounter = 0;
-// dummy
-const dummyData = Array.from({ length: 100 }, () => {
-    idCounter += 1;
-    return {
-      id: idCounter,
-      area: `영역 위치 ${idCounter}`,
-      attr: `속성 ${idCounter}`,
-      naming: `명칭 데이터 ${idCounter}`,
-    };
-  });
+export interface NewData {
+  settingName: string;
+  userAgent: string;
+  rate: string;
+  url: string;
+  type: string;
+  listArea?: string;
+  pagingType?: string;
+  pagingArea?: string;
+  pagingNextbtn?: string;
+  maxPage?: string;
+  linkArea?: string;
+}
 
 export default function RegPage() {
+    // 0. 공통
     const navigate = useNavigate();
-    const loadingRef = useRef(false); // 로딩 상태 직접 관리
-
-    const [openCloseAlert, setOpenCloseAlert] = useState(false)
-    const [openRegAlert, setOpenRegAlert] = useState(false)
-    const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [activeStep, setActiveStep] = useState(0);
-    const [newData, setNewData] = useState({
+    const steps = ['기본 정보', '영역지정', '검토'];
+    const [isAble, setIsAble] = useState(false)
+    // 1. 기본설정
+    const [newData, setNewData] = useState<NewData>({
         settingName: '',
         userAgent: '',
-        rate: '',
+        rate: '0',
         url: '',
         type: '',
         listArea: '',
+        pagingType: '',
         pagingArea: '',
-        maxPage: 1,
+        pagingNextbtn: '',
+        maxPage: '1',
         linkArea: '',
     })
-    // const [nextIndex, setNextIndex] = useState(0);
-    const [rows, setRows] = useState<{id: number, area: string, attr: string, naming: string}[]>([])
-    const columns = [
-        { field: 'area', headerName: '추출영역', flex: 2 },
-        { field: 'attr', headerName: '추출속성', flex: 1 },
-        { field: 'naming', headerName: '추출값 명칭 지정', flex: 1 },
-    ]
-    // const [loading, setLoading] = useState(false);
+    const [robotsRows, setRobotsRows] = useState<RobotsTableRows[]>([]) // Robots 테이블 데이터
+    // 2. 영역지정
+    const [previewLoaded, setPreviewLoaded] = useState(false);
+    const [mainPreview, setMainPreview] = useState<PreviewData>(
+      {
+        image: undefined,
+        html: '',
+        domRects: []
+      }
+    )
+    const [detailPreview, setDetailPreview] = useState<PreviewData>(
+      {
+        image: undefined,
+        html: '',
+        domRects: []
+      }
+    )
+    const [condition, setCondition] = useState<ConditionTableRows[]>([]) // 추출조건 테이블 데이터
+    const [isDetail, setIsDetail] = useState(false) // 상세영역 on/off 여부
+    
+    // Alert
+    const [openCloseAlert, setOpenCloseAlert] = useState(false)
+    const [openRegAlert, setOpenRegAlert] = useState(false)
+    const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
+    const [openErrorAlert, setOpenErrorAlert] = useState(false)
+    const [alertMsg, setAlertMsg] = useState("")
 
+    /** 공통 기능 */
     const handleClose = () => {
         navigate('/setting')
     }
-
     // Stepper
-    const steps = ['기본 정보', '영역지정', '검토'];
-
-    const handleNext = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    const handleNext = async () => {
+        // Step1 → Step2 진입할 때 최초 1회만 API 호출
+        if (activeStep === 0 && previewLoaded === false) {
+            setLoading(true);
+          try {
+              const res = await getPreview2(newData.url);
+              setMainPreview(res);
+              setDetailPreview(
+                {
+                  image: undefined,
+                  html: '',
+                  domRects: []
+                }
+              )
+              setPreviewLoaded(true);
+          } catch(err) {
+              console.error(err);
+          }
+          setLoading(false);
+        }
+        setActiveStep(prev => prev + 1);
     };
     const handleBack = () => {
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
     };
-
-    // 🔹 robots.txt 상태 관리
-    // const [robotsUrl, setRobotsUrl] = useState('');
-    // const [robotsTxt, setRobotsTxt] = useState('');
-    // const [robotsLoading, setRobotsLoading] = useState(false);
-    // const [robotsError, setRobotsError] = useState('');
-
-    const userAgentList = [
-        { value: 'Windows / Edge', name: 'Windows / Edge' },
-        { value: 'Windows / Chrome', name: 'Windows / Chrome' },
-        { value: 'Mac / Chrome', name: 'Mac / Chrome' },
-    ];
-    const typeList = [
-        { value: '단일', name: '단일' },
-        { value: '다중', name: '다중' },
-    ];
-
-    const handleInputChange = (key: keyof typeof newData, value: string) => {
-        setNewData((prev) => {
-            if(key === 'rate') {
-                value = Number(value) < 0 ? '0' : value
-            }
-            
-            const updated = { ...prev, [key]: value };
-
-            return updated;
-        });
-    }
-
-    const handleSelectChange = (key: keyof typeof newData) => 
-    (event: SelectChangeEvent<string | number>) => {
-      setNewData((prev) => ({ ...prev, [key]: event.target.value }));
-    };
-
-    const handleRegist = () => {
-        // 설정 등록 API 호출
-        setOpenRegDoneAlert(true)
-    }
-
-    /** ✅ robots.txt 확인 */
-    const handleRobots = async () => {
-        if (!newData.url) {
-          alert('URL을 입력해주세요.');
-          return;
+    const handleValidate = () => {
+        const errMsg = []
+        if(newData.settingName === '') {
+            errMsg.push('데이터 수집명을 입력해주세요.')     
+        }
+        if(Number(newData.rate) < 0) {
+            errMsg.push('수집간격의 값이 잘못되었습니다.')
+        }
+        if(Number(newData.maxPage) <= 0) {
+            errMsg.push('수집할 페이지 수 는 최소 1을 입력해야합니다.')
+        }
+        if(condition.length <= 0) {
+            errMsg.push('추출조건은 최소 1개 입력해야합니다.')
+        }
+        const invalidRows = condition.filter(
+          (row) => !row.conditionsValue || !row.attr || !row.conditionsKey
+        );
+        if(invalidRows.length > 0) {
+          errMsg.push('추출조건 중 입력되지 않은 값이 존재합니다.')
         }
 
-        // setRobotsTxt('');
-        // setRobotsError('');
-        // setRobotsLoading(true);
+        if(newData.type === '다중') {
+          if(newData.listArea === '') errMsg.push('게시물 영역을 입력해주세요.')
+          if(newData.pagingArea === '') errMsg.push('페이지네이션 영역을 입력해주세요.')
+          if(newData.pagingNextbtn === '') errMsg.push('페이지네이션 다음버튼 영역을 입력해주세요.')
+          if(newData.linkArea === '') errMsg.push('페이지네이션 다음버튼 영역을 입력해주세요.')
+        }
 
-        // 여기에 백엔드 api를 입력해야됨. 프론트에서 하려니 CORS정책때문에 불가능
-        
+        if(errMsg.length !== 0) {
+            setAlertMsg(errMsg.join('\n'));
+            setOpenErrorAlert(true)
+        } else {
+            handleRegist()
+        }
     }
-
-    /** 테이블 무한스크롤 */
-    useEffect(() => {
-        setRows(dummyData.slice(0, 20));
-    }, []);
-    
-    useEffect(() => {
-      if (rows.length < dummyData.length) {
-        loadingRef.current = false;
-      } else {
-        // 모든 데이터를 불러왔으니 더 이상 로딩 막음
-        loadingRef.current = true;
-      }
-    }, [rows]);
-
-    const loadMore = () => {
-        if (loadingRef.current) return;
-        loadingRef.current = true;
-
-        setRows((prevRows) => {
-            const start = prevRows.length;
-            const newRows = dummyData.slice(start, start + 20);
-          if (newRows.length === 0) {
-            loadingRef.current = false;
-            console.log('No more rows to load');
-            return prevRows;
-          }
-
-          return [...prevRows, ...newRows];
-        });
-    };
-    
+    const handleRegist = async () => {
+        const data = {
+          ...newData,
+          rate: Number(newData.rate),
+          maxPage: Number(newData.maxPage),
+          conditions: condition
+        }
+        try {
+          await registSetting(data)
+          setOpenRegDoneAlert(true)
+        }
+        catch(err) {
+          console.error(err)
+          setAlertMsg('세팅 등록을 실패하였습니다.')
+          setOpenErrorAlert(true)
+          return;
+        }
+    }
 
     return (
         <Box sx={{ height: '97%', display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -209,201 +227,90 @@ export default function RegPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
-                alignItems: activeStep === 0 ? 'center' : 'flex-start',
                 gap: 2,
-                paddingTop: 2
+                p:2,
+                overflowY: 'auto'
             }}>
+                {/* 1. 기본 정보 */}
                 {activeStep === 0 && (
                 <>
-                    {/* 데이터 수집명 */}
-                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2, color: 'black'}}>
-                        <Typography sx={{width: '200px', textAlign:'left', fontSize: 25}}>데이터 수집명</Typography>
-                        <CustomTextField 
-                        height="50px"
-                        value={newData.settingName}
-                        inputWidth="600px"
-                        disabled={false}
-                        readOnly={false}
-                        placeholder="데이터 수집명"
-                        type="text"
-                        onChange={(e) => handleInputChange('settingName', e.target.value)}
-                        />
-                    </Box>
-                    {/* User-Agent */}
-                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2, color: 'black'}}>
-                        <Typography sx={{width: '200px', textAlign:'left', fontSize: 25}}>User-Agent</Typography>
-                        <CustomSelect
-                            inputWidth="600px"
-                            height="50px"
-                            value={newData.userAgent}
-                            listItem={userAgentList}
-                            onChange={handleSelectChange('userAgent')}
-                        />
-                    </Box>
-                    {/* 수집간격 */}
-                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2, color: 'black'}}>
-                        <Typography sx={{width: '200px', textAlign:'left', fontSize: 25}}>데이터 수집간격(s)</Typography>
-                        <CustomTextField 
-                        height="50px"
-                        value={newData.rate}
-                        inputWidth="600px"
-                        disabled={false}
-                        readOnly={false}
-                        placeholder="데이터 수집간격(ms)"
-                        type="number"
-                        step={10}
-                        onChange={(e) => handleInputChange('rate', e.target.value)}
-                        />
-                    </Box>
-                    {/* URL */}
-                    <Box sx={{display: 'flex', alignItems: 'center', gap: 2, color: 'black'}}>
-                        <Typography sx={{width: '200px', textAlign:'left', fontSize: 25}}>URL</Typography>
-                        <CustomTextField 
-                            height="50px"
-                            value={newData.url}
-                            inputWidth="600px"
-                            disabled={false}
-                            readOnly={false}
-                            placeholder="URL"
-                            type="text"
-                            onChange={(e) => handleInputChange('url', e.target.value)}
-                            startAdornment={
-                                <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
-                                    <CustomSelect
-                                        height="50px"
-                                        inputWidth="80px"
-                                        value={newData.type}
-                                        listItem={typeList}
-                                        onChange={handleSelectChange('type')}
-                                    />
-                                </InputAdornment>  
-                            }
-                            endAdornment={
-                                <InputAdornment position="end" sx={{marginRight: '-14px'}}>
-                                    <CustomButton width='40px' height='50px' 
-                                        text={'검증'}
-                                        // text={robotsLoading ? '확인중' : '검증'}
-                                        onClick={handleRobots} 
-                                        radius={1}
-                                    />
-                                </InputAdornment>
-                            }
-                        />
-                    </Box>
-                    <Box sx={{
-                        width: '816px',
-                        height: 600,
-                        // height: 'calc(97%-296px)',
-                        bgcolor: '#f0f0f0'
-                    }}>
-
-                    </Box>
-                </>)}
-
-                {/* 나중에 step 1, 2 단계 추가할 자리 */}
-                {activeStep === 1 && (
-                <Box sx={{ mx: 2, p: 3 }}>
-                    <Typography>영역 지정 단계 화면 구성 예정</Typography>
-                </Box>
+                  <Step1 
+                    newData={newData}
+                    setNewData={setNewData}
+                    setIsAble={setIsAble}
+                    setCondition={setCondition}
+                    setLoading={setLoading}
+                    setPreviewLoaded={setPreviewLoaded}
+                    robotsRows={robotsRows}
+                    setRobotsRows={setRobotsRows}
+                  />
+                </>
                 )}
-                {/* 검토 - 단일 */}
+
+                {/* 2. 영역지정 (단일) */}
+                {activeStep === 1 && newData.type === '단일' && (
+                <>
+                  <Step2_Single 
+                    previewData={mainPreview}
+                    conditionData={condition}
+                    setCondition={setCondition}
+                    setLoading={setLoading}
+                  />
+                </>
+                )}
+                {/* 2. 영역지정 (다중) */}
+                {activeStep === 1 && newData.type === '다중' && (
+                <>
+                  <Step2_Multi 
+                    previewData={mainPreview}
+                    detailData={detailPreview}
+                    newData={newData}
+                    conditionData={condition}
+                    setNewData={setNewData}
+                    setCondition={setCondition}
+                    setDetailPreview={setDetailPreview}
+                    setLoading={setLoading}
+                    isDetail={isDetail}
+                    setIsDetail={setIsDetail}
+                  />
+                </>
+                )}
+                {/* 3. 검토 (단일) */}
                 {activeStep === 2 && newData.type === '단일' &&  (
-                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    <Box>
-                        <Typography sx={{ fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
-                        <Box sx={{ display: 'flex', width:'50%'}}>
-                            <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                <Typography sx={{ fontSize: 20}}>데이터 수집명</Typography>
-                                <Typography sx={{ fontSize: 20}}>User-agent</Typography>
-                                <Typography sx={{ fontSize: 20}}>데이터 수집간격(s)</Typography>
-                                <Typography sx={{ fontSize: 20}}>URL</Typography>
-                            </Box>
-                            <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                <Typography sx={{ fontSize: 20}}>{newData.settingName}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.userAgent}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.rate}</Typography>
-                                <Typography sx={{ fontSize: 20}}>{newData.url}</Typography>
-                            </Box>
-                        </Box>
-                    </Box>
-                    <Box>
-                        <Typography sx={{ fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
-                        <Box sx={{ paddingRight: 4}}>
-                            <ScrollTable
-                                rows={rows}
-                                columns={columns}
-                                height={630}
-                                onLoadMore={loadMore}
-                            />
-                        </Box>
-                    </Box>
-                  </Box>
+                <>
+                  <Step3_Single 
+                    newData={newData}
+                    condition={condition}
+                  />
+                </>
                 )}
-                {/* 검토 - 다중 */}
+                {/* 3. 검토 (다중) */}
                 {activeStep === 2 && newData.type === '다중' &&  (
-                  <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    <Box>
-                        <Typography sx={{ fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
-                        <Box sx={{ display: 'flex', justifyContent:'space-around'}}>
-                            <Box sx={{ display: 'flex', width:'50%'}}>
-                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>데이터 수집명</Typography>
-                                    <Typography sx={{ fontSize: 20}}>User-agent</Typography>
-                                    <Typography sx={{ fontSize: 20}}>데이터 수집간격(s)</Typography>
-                                    <Typography sx={{ fontSize: 20}}>URL</Typography>
-                                </Box>
-                                <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>{newData.settingName}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.userAgent}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.rate}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.url}</Typography>
-                                </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', width:'50%'}}>
-                                <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>게시물 영역</Typography>
-                                    <Typography sx={{ fontSize: 20}}>페이지네이션 영역</Typography>
-                                    <Typography sx={{ fontSize: 20}}>수집할 페이지 수</Typography>
-                                    <Typography sx={{ fontSize: 20}}>상세 링크 영역</Typography>
-                                </Box>
-                                <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                                    <Typography sx={{ fontSize: 20}}>{newData.listArea}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.pagingArea}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.maxPage}</Typography>
-                                    <Typography sx={{ fontSize: 20}}>{newData.linkArea}</Typography>
-                                </Box>
-                            </Box>
-
-                        </Box>
-                    </Box>
-                    <Box>
-                        <Typography sx={{ fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
-                        <Box sx={{ paddingRight: 4}}>
-                            <ScrollTable
-                                rows={rows}
-                                columns={columns}
-                                height={630}
-                                onLoadMore={loadMore}
-                            />
-                        </Box>
-                    </Box>
-                  </Box>
+                <>
+                  <Step3_Multi 
+                    newData={newData}
+                    condition={condition}
+                  />
+                </>
                 )}
             </Box>
-
-
-            <Box sx={{display: 'flex', justifyContent: 'space-between', paddingLeft: 2.5, paddingRight: 2.5 }}>
+            <Box sx={{display: 'flex', justifyContent: 'space-between', paddingLeft: 2.5, paddingRight: 2.5, marginTop: 2 }}>
                 <CustomButton text="닫기" radius={2} backgroundColor='#BABABA' onClick={()=>setOpenCloseAlert(true)} />
                 <Box sx={{display: 'flex', gap: 2}}>
                     {activeStep > 0 && <CustomButton text="◀ 이전" onClick={handleBack} radius={2} backgroundColor='#BABABA'/>}
                     {activeStep < steps.length - 1 ? (
                         <>
-                            <CustomButton text="다음 ▶" onClick={handleNext} radius={2} />
+                            <CustomButton text="다음 ▶" onClick={handleNext} radius={2} 
+                              disabled={
+                                activeStep === 0 ? 
+                                  ( isAble === false ? true : false)
+                                  : false
+                              }
+                            />
                         </>
                     ) : (
                         <>
                             <CustomButton text="등록" onClick={()=>setOpenRegAlert(true)} radius={2} />
-                            {/* <CustomButton text="닫기" onClick={handleCancle} /> */}
                         </>
                     )}
                 </Box>
@@ -426,7 +333,7 @@ export default function RegPage() {
               type="question"
               onConfirm={() => {
                 setOpenRegAlert(false);
-                handleRegist()
+                handleValidate()
               }}
               onCancel={() => {
                 setOpenRegAlert(false);
@@ -441,6 +348,40 @@ export default function RegPage() {
                   navigate('/setting')
                 }}
             />
+            <Alert
+                open={openErrorAlert}
+                text={alertMsg}
+                type='error'
+                onConfirm={() => {
+                  setOpenErrorAlert(false);
+                }}
+            />
+            <Dialog 
+                disableRestoreFocus
+                open={loading}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      backgroundColor: 'transparent',
+                      boxShadow: 'none',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      height: '100vh',
+                      width: '100vw',
+                    }
+                  },
+                  backdrop: {
+                    sx: {
+                      backgroundColor: 'rgba(0,0,0,0.3)',
+                      backdropFilter: 'blur(2px)', 
+                    }
+                  }
+                }}
+            >
+                <LoadingProgress />
+            </Dialog>
         </Box>
     )
 }

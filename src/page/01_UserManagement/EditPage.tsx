@@ -1,11 +1,11 @@
 import {useState} from 'react'
-import {Box, Typography, InputAdornment, type SelectChangeEvent} from '@mui/material'
+import {Box, Typography, type SelectChangeEvent} from '@mui/material'
 import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { updateUser, getUser } from '../../API/01_UsermanagementApi';
+import { updateUserInfo } from '../../API/01_UsermanagementApi';
 
 import { type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 
@@ -17,8 +17,6 @@ interface EditPageProps {
 
 interface UserForm {
   username: string;
-  password: string;
-  passwordConfirm: string;
   name: string;
   dept: string;
   ranks: string;
@@ -27,14 +25,8 @@ interface UserForm {
 
 export default function EditPage(props: EditPageProps) {
     const {row, handleDone, handleCancel} = props
-    const [isValid_id, setIsValid_id] = useState<boolean | null>(row?.userId? true : null);
-    const [isValidPassword, setIsValidPassword] = useState<boolean | null>(null);
-    const [isVisible, setIsVisible] = useState(false)
-    const [isPasswordMismatch, setIsPasswordMismatch] = useState(false);
     const [newData, setNewData] = useState<UserForm>({
         username: row?.username || '',
-        password: row?.password || '',
-        passwordConfirm: '',
         name: row?.name || '',
         dept: row?.dept || '',
         ranks: row?.ranks || '',
@@ -51,34 +43,9 @@ export default function EditPage(props: EditPageProps) {
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
 
-    const handleShowPassword = () => {
-        setIsVisible(!isVisible);
-    }
-
     const handleInputChange = (key: keyof typeof newData, value: string) => {
         setNewData((prev) => {
             const updated = { ...prev, [key]: value };
-
-            if (key === 'username') {
-                if (value === '') {
-                    setIsValid_id(null); // 입력이 없으면 검사 안함
-                } else {
-                    setIsValid_id(validateLoginId(value));
-                }
-            }
-
-            if (key === 'password') {
-              if (value === '') {
-                setIsValidPassword(null);
-              } else {
-                setIsValidPassword(validatePassword(value));
-              }
-            }
-            
-            if (key === 'passwordConfirm' || key === 'password') {
-                const mismatch = updated.password !== updated.passwordConfirm;
-                setIsPasswordMismatch(mismatch);
-            }
 
             return updated;
         });
@@ -89,51 +56,11 @@ export default function EditPage(props: EditPageProps) {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
     };
 
-    const validateLoginId = (id: string): boolean => {
-      const regex = /^[a-z0-9]{6,20}$/;
-      return regex.test(id);
-    };
-    const validatePassword = (password: string): boolean => {
-      if (password.length < 9) return false;
-
-      let count = 0;
-      if (/[A-Z]/.test(password)) count++;    // 영대문자
-      if (/[a-z]/.test(password)) count++;    // 영소문자
-      if (/[0-9]/.test(password)) count++;    // 숫자
-      if (/[^A-Za-z0-9]/.test(password)) count++;  // 특수문자
-
-      return count >= 3;
-    };
-
     const handleValidate = async () => {
         try {
             if(row === null) return;
-            // console.log('row', row)
-            const userData = await getUser();
-            // ID 중복검사, true 일시 중복, 수정할 row 본인의 username이 중복되는 것은 허용
-            const findSameUsername = userData.find(
-                (user:any) => user.username === newData.username && user.userId !== row.userId
-            )
-            // console.log('중복 ID 검사', findSameUsername)
-
-            const password = newData.password;
-            const passwordConfirm = newData.passwordConfirm;
-
-            // 한글 포함 여부 검사
-            const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(password);
-            const hasKoreanC = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(passwordConfirm);
-
-            if (hasKorean || hasKoreanC) {
-                setValidateMsg('비밀번호에 한글은 포함될 수 없습니다.');
-                setOpenValidAlert(true)
-                return;
-            }
 
             const errMsg = []
-            if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
-            if (findSameUsername) errMsg.push('아이디 중복') 
-            if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
-            if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
             if (newData.name === '') errMsg.push('이름 미입력')
 
             if(errMsg.length !== 0) {
@@ -159,9 +86,7 @@ export default function EditPage(props: EditPageProps) {
                 setOpenErrorAlert(true)
                 return;
             }
-            await updateUser(row.userId,{
-                username: newData.username,
-                password: newData.password,
+            await updateUserInfo(row.userId,{
                 name: newData.name,
                 dept: newData.dept,
                 ranks: newData.ranks,
@@ -189,7 +114,7 @@ export default function EditPage(props: EditPageProps) {
             justifyContent: 'space-between'
         }}>
             <Box sx={{bgcolor: '#FFC98B', display: 'flex', justifyContent: 'space-between'}}>
-                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px'}}>사용자 등록</Typography>
+                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px'}}>사용자 정보 수정</Typography>
                 <CustomIconButton icon="close" backgroundColor='#FFC98B' onClick={()=>setOpenCancelAlert(true)}/>
             </Box>
             <Box sx={{
@@ -211,94 +136,11 @@ export default function EditPage(props: EditPageProps) {
                           variant="outlined"
                           value={newData.username}
                           inputWidth="300px"
-                          disabled={false}
-                          readOnly={false}
+                          disabled={true}
+                          readOnly={true}
                           placeholder="아이디"
                           type="text"
-                          onChange={(e) => handleInputChange('username', e.target.value)}
                         />
-                        <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
-                            <Typography sx={{fontSize: 14}}>∴ 영문 소문자(a-z), 숫자(0~9) 조합으로 6자 이상 20자 이하 이어야 합니다.</Typography>
-                            {isValid_id === null ? null : (
-                              isValid_id ? (
-                                <Typography sx={{ color: 'green' }}>사용 가능한 아이디 형식입니다.</Typography>
-                              ) : (
-                                <Typography sx={{ color: 'red' }}>사용 불가능한 아이디 형식입니다.</Typography>
-                              )
-                            )}
-                        </Box>
-                    </Box>
-                </Box>
-                {/* 비밀번호 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
-                        <Typography>비밀번호</Typography>
-                        <Typography sx={{color: 'red'}}>*</Typography>
-                    </Box>
-                    <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
-                        <CustomTextField 
-                            variant="outlined"
-                            value={newData.password}
-                            inputWidth="300px"
-                            disabled={false}
-                            readOnly={false}
-                            placeholder="비밀번호"
-                            type={isVisible? 'text' : "password"}
-                            onChange={(e) => handleInputChange('password', e.target.value)}
-                            endAdornment={
-                              <InputAdornment position="end">
-                                { isVisible?
-                                    (<CustomIconButton icon="invisible" width='20px' height='20px' color="gray" onClick={handleShowPassword} />) :
-                                    (<CustomIconButton icon="visible"   width='20px' height='20px' color="gray" onClick={handleShowPassword} />) 
-                                }
-                              </InputAdornment>
-                            }
-                        />
-                        <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px'}}>
-                            <Typography sx={{fontSize:14}}>∴ 9자 이상의 영대문자, 영소문자, 숫자, 특수문자 중 3종류 이상의 조합만 가능합니다.</Typography>
-                            {isValidPassword === null ? null : (
-                                isValidPassword ? (
-                                    <Typography sx={{ color: 'green' }}>사용 가능한 비밀번호 형식입니다.</Typography>
-                                ) : (
-                                    <Typography sx={{ color: 'red' }}>사용 불가능한 비밀번호 형식입니다.</Typography>
-                                )
-                            )}
-                        </Box>
-                    </Box>
-                </Box>
-                {/* 비밀번호 확인 */}
-                <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>
-                    <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
-                        <Typography>비밀번호 확인</Typography>
-                    </Box>
-                    <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
-                        <CustomTextField 
-                            variant="outlined"
-                            value={newData.passwordConfirm}
-                            inputWidth="300px"
-                            disabled={false}
-                            readOnly={false}
-                            placeholder="비밀번호 확인"
-                            type={isVisible? 'text' : "password"}
-                            onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
-                            endAdornment={
-                              <InputAdornment position="end">
-                                { isVisible?
-                                    (<CustomIconButton icon="invisible" width='20px' height='20px' color="gray" onClick={handleShowPassword} />) :
-                                    (<CustomIconButton icon="visible"   width='20px' height='20px' color="gray" onClick={handleShowPassword} />) 
-                                }
-                              </InputAdornment>
-                            }
-                        />
-                        <Box sx={{ backgroundColor: '#c5c4c7', borderRadius:1, width: '300px', 
-                            overflow: 'hidden', // 높이 줄이기 위해 꼭 필요
-                            height: isPasswordMismatch  ? 'auto' : 0,
-                            opacity: isPasswordMismatch  ? 1 : 0,
-                            transition: 'all 0.3s ease', // 부드럽게 등장/사라짐
-                        }}>
-                            <Typography sx={{color: 'red', fontSize: 14}}>∴ 입력한 비밀번호가 다릅니다.</Typography>
-                            <Typography sx={{color: 'red', fontSize: 14, whiteSpace: 'pre'}}>{'     '}비밀번호를 확인해주세요.</Typography>
-                        </Box>
                     </Box>
                 </Box>
                 {/* 이름 */}

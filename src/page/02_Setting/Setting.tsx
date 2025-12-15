@@ -10,6 +10,8 @@ import SearchBarSet from "../../component/SearchBarSet"
 import { getSettingSearchCategory } from "../../Types/Search"
 // Comp
 import Alert from "../../component/Alert"
+// API
+import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
@@ -23,19 +25,35 @@ function Setting() {
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false)
   const [openRunAlert, setOpenRunAlert] = useState(false)
   const [openRunDoneAlert, setOpenRunDoneAlert] = useState(false)
+  const [openErrorAlert, setOpenErrorAlert] = useState(false)
+  const [alertMsg, setAlertMsg] = useState("")
 
   useEffect(()=> {
-    const data = [
-      { id: 1, settingName: '창원시청 공지사항 수집', url: 'https://...', userAgent: 'Windows / Edge', rate: 10  },
-      { id: 2, settingName: '경상남도 보도자료 수집', url: 'https://...', userAgent: 'Windows / Chrome', rate: 10 },
-      { id: 3, settingName: '창원관광 관광지자료 수집', url: 'https://...', userAgent: 'Windows / Chrome', rate: 10 },
-    ];
-
-    setBaseRows(data)
-    setFilteredRows(data)
+    BoardRefresh();
   }, [])
 
   /**  Table  =========================================== */
+  const getTableDatas = async () => {
+    try {
+        const data = await getSetting()
+        
+        const result = data.map((row: SettingTableRows, i: number) => ({
+            ...row,
+            id: row.settingId,
+            index: i+1,
+        }))
+        setBaseRows(result)
+        setFilteredRows(result)
+    }
+    catch(err) {
+        console.error(err)
+        setAlertMsg("설정데이터 조회 실패")
+        setOpenErrorAlert(true)
+    }
+  }
+  const BoardRefresh = () => {
+        getTableDatas();
+  }
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
       navigate('/setting/reg')
@@ -49,25 +67,32 @@ function Setting() {
     setSelectedRow(row)
     setOpenDeleteAlert(true)
   }
-  const handleDelete = () => {
-    console.log('Row', selectedRow)
-    // delete api 연결
-
-    // 삭제완료 팝업
-    setOpenDelDoneAlert(true);
+  const handleDelete = async () => {
+    try {
+      await deleteSetting(Number(selectedRow?.settingId))
+      setOpenDelDoneAlert(true);
+    }
+    catch(err) {
+      console.error(err)
+      setAlertMsg('데이터 삭제 실패.')
+      setOpenErrorAlert(true)
+    }
   }
   /**  수동실행  =========================================== */
   const handleRunCrawl = (row: SettingTableRows) => { // 수동실행 버튼 클릭시 팝업
     setSelectedRow(row)
     setOpenRunAlert(true)
   }
-  const handleCrawl = () => {
-    console.log('Row', selectedRow)
-    // 수동실행 크롤링 API 호출
-
-    // 실행완료 팝업
-    setOpenRunDoneAlert(true);
-    
+  const handleCrawl = async () => {
+    try {
+      await runCrawl(Number(selectedRow?.settingId))
+      setOpenRunDoneAlert(true);
+    }
+    catch(err) {
+      console.error(err)
+      setAlertMsg("수동 실행 실패")
+      setOpenErrorAlert(true)
+    }
   }
   const columns = getColumns({ handleEditOpen, handleDeleteOpen, handleRunCrawl });
 
@@ -115,7 +140,7 @@ function Setting() {
             type='success'
             onConfirm={() => {
               setOpenDelDoneAlert(false);
-              // 테이블 Refresh 함수 추가해야함
+              BoardRefresh()
             }}
         />
         {/* 수동 실행 */}
@@ -137,6 +162,15 @@ function Setting() {
             type='success'
             onConfirm={() => {
               setOpenRunDoneAlert(false);
+            }}
+        />
+        {/* 에러 */}
+        <Alert
+            open={openErrorAlert}
+            text={alertMsg}
+            type='error'
+            onConfirm={() => {
+              setOpenErrorAlert(false);
             }}
         />
     </Box>

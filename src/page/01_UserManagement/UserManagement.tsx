@@ -10,6 +10,7 @@ import SearchBarSet from "../../component/SearchBarSet"
 import { getUserSearchCategory } from "../../Types/Search"
 // Pages
 import EditPage from "./EditPage"
+import EditAccountPage from "./EditAccountPage"
 import RegPage from "./RegPage"
 // Comp
 import Alert from "../../component/Alert";
@@ -25,6 +26,7 @@ function UserManagement() {
   // Dialog
   const [openReg, setOpenReg] = useState(false)
   const [openEdit, setOpenEdit] = useState(false)
+  const [openEditAccount, setOpenEditAccount] = useState(false)
 
   // LogPage
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ function UserManagement() {
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false)
   const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false)
   const [openEditDoneAlert, setOpenEditDoneAlert] = useState(false)
+  const [openEditAccountDoneAlert, setOpenEditAccountDoneAlert] = useState(false)
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -46,7 +49,6 @@ function UserManagement() {
               id: row.userId,
               index: i+1,
           }))
-
           setBaseRows(result)
           setFilteredRows(result)
       }
@@ -76,7 +78,7 @@ function UserManagement() {
     handleCloseReg() // 등록 다이얼로그 닫기
     setOpenRegDoneAlert(true) // 등록 완료 팝업 띄우기
   }
-  /**  수정 페이지  =========================================== */
+  /**  정보수정 페이지  =========================================== */
   const handleEditOpen = (row: UserTableRows) => {
     setSelectedRow(row)
     setOpenEdit(true)
@@ -88,6 +90,19 @@ function UserManagement() {
   const handleEdit = () => {
     handleCloseEdit() // 수정 다이얼로그 닫기
     setOpenEditDoneAlert(true) // 수정완료팝업
+  }
+  /**  계정수정 페이지  =========================================== */
+  const handleEditAccountOpen = (row: UserTableRows) => {
+    setSelectedRow(row)
+    setOpenEditAccount(true)
+  }
+  const handleCloseEditAccount = () => {
+    setSelectedRow(null)
+    setOpenEditAccount(false)
+  }
+  const handleEditAccount = () => {
+    handleCloseEditAccount()
+    setOpenEditAccountDoneAlert(true) // 수정완료팝업
   }
   /**  삭제 팝업  =========================================== */
   const handleDeleteOpen = (row: UserTableRows) => {
@@ -120,7 +135,12 @@ function UserManagement() {
     navigate('/user/log', {state: {userId: row.userId, username: row.username} })
   }
 
-  const columns = getColumns({ handleEditOpen, handleDeleteOpen, handleShowLogOpen });
+  const columns = getColumns({ 
+    handleEditOpen, 
+    handleEditAccountOpen, 
+    handleDeleteOpen, 
+    handleShowLogOpen 
+  });
 
   return (
     <Box sx={{ height: '97%'}}>
@@ -160,7 +180,7 @@ function UserManagement() {
               BoardRefresh()
             }}
         />
-        {/* 수정 페이지 */}
+        {/* 정보수정 페이지 */}
         <Dialog open={openEdit} onClose={handleCloseEdit} maxWidth={false} disableEnforceFocus disableRestoreFocus>
             <EditPage row={selectedRow} handleDone={handleEdit} handleCancel={handleCloseEdit} />
         </Dialog>
@@ -170,6 +190,19 @@ function UserManagement() {
             type='success'
             onConfirm={() => {
               setOpenEditDoneAlert(false);
+              BoardRefresh()
+            }}
+        />
+        {/* 계정수정 페이지 */}
+        <Dialog open={openEditAccount} onClose={handleCloseEditAccount} maxWidth={false} disableEnforceFocus disableRestoreFocus>
+            <EditAccountPage row={selectedRow} handleDone={handleEditAccount} handleCancel={handleCloseEditAccount} />
+        </Dialog>
+        <Alert
+            open={openEditAccountDoneAlert}
+            text="수정 되었습니다."
+            type='success'
+            onConfirm={() => {
+              setOpenEditAccountDoneAlert(false);
               BoardRefresh()
             }}
         />
