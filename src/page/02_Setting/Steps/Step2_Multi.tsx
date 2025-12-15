@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { Box, Typography, InputAdornment, type SelectChangeEvent, } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomTextField from '../../../component/CustomTextField';
@@ -10,6 +10,7 @@ import Alert from '../../../component/Alert';
 import { type NewData } from '../RegPage';
 import { type ConditionTableRows, getColumns } from '../../../Types/TableHeaders/SettingConditionHeader';
 import { getDetailPreview } from '../../../API/02_SettingApi';
+import { SearchBar } from '../SearchBar';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
@@ -23,6 +24,14 @@ interface HighlightPos {
   width: number;
   height: number;
 }
+type RunSearchParams = {
+  keyword: string;
+  domRefMap: Map<Element, HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  setResults: React.Dispatch<React.SetStateAction<Element[]>>;
+  setIndex: React.Dispatch<React.SetStateAction<number>>;
+};
+
 const colors = [
   "rgba(255, 235, 59, 0.8)",   // 노란색
   "rgba(100, 181, 246, 0.8)",  // 파란색
@@ -81,6 +90,142 @@ export default React.memo(function Step2_Multi({
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [alertMsg, setAlertMsg] = useState('')
 
+    const [searchResults, setSearchResults] = useState<Element[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const inspectorContainerRef = useRef<HTMLDivElement | null>(null);
+    const domRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
+    
+    const [searchDetailResults, setSearchDetailResults] = useState<Element[]>([]);
+    const [currentDetailIndex, setCurrentDetailIndex] = useState(0);
+    const detailInspectorContainerRef = useRef<HTMLDivElement>(null);
+    const detailDomRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
+
+    const runSearchCommon = ({
+      keyword,
+      domRefMap,
+      containerRef,
+      setResults,
+      setIndex,
+    }: RunSearchParams) => {
+      const normalized = keyword.trim().toLowerCase();
+      if (!normalized) return;
+    
+      const results: Element[] = [];
+      const seen = new Set<string>();
+    
+      for (const el of domRefMap.keys()) {
+        const tag = el.tagName.toLowerCase();
+        const id = el.getAttribute("id")?.toLowerCase() || "";
+        const cls = el.getAttribute("class")?.toLowerCase() || "";
+      
+        if (
+          tag.includes(normalized) ||
+          id.includes(normalized) ||
+          cls.includes(normalized)
+        ) {
+          const key = `${tag}#${id}.${cls}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            results.push(el);
+          }
+        }
+      }
+    
+      setResults(results);
+      setIndex(0);
+    
+      if (results.length > 0) {
+        scrollToElement(results[0], domRefMap, containerRef);
+      }
+    };
+
+    const scrollToElement = (
+      el: Element,
+      domRefMap: Map<Element, HTMLDivElement>,
+      containerRef: React.RefObject<HTMLDivElement | null>
+    ) => {
+      const wrapper = domRefMap.get(el);
+      const container = containerRef.current;
+      if (!wrapper || !container) return;
+    
+      const containerRect = container.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+    
+      const top =
+        container.scrollTop +
+        (wrapperRect.top - containerRect.top) -
+        container.clientHeight / 2 
+        // +
+        // wrapperRect.height / 2;
+    
+      container.scrollTo({ top, behavior: "smooth" });
+    };
+
+    const runMainSearch = useCallback(
+      (keyword: string) => {
+        runSearchCommon({
+          keyword,
+          domRefMap: domRefs.current,
+          containerRef: inspectorContainerRef,
+          setResults: setSearchResults,
+          setIndex: setCurrentIndex,
+        });
+      },
+      []
+    );
+    const runDetailSearch = useCallback(
+      (keyword: string) => {
+        runSearchCommon({
+          keyword,
+          domRefMap: detailDomRefs.current,
+          containerRef: detailInspectorContainerRef,
+          setResults: setSearchDetailResults,
+          setIndex: setCurrentDetailIndex,
+        });
+      },
+      []
+    );
+    const findNext = () => {
+      if (searchResults.length === 0) return;
+      const nextIndex = (currentIndex + 1) % searchResults.length;
+      setCurrentIndex(nextIndex);
+      scrollToElement(
+        searchResults[nextIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+    const findPrev = () => {
+      if (searchResults.length === 0) return;
+      const prevIndex = (currentIndex - 1 + searchResults.length) % searchResults.length;
+      setCurrentIndex(prevIndex);
+      scrollToElement(
+        searchResults[prevIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+    const findNextDetail = () => {
+      if (searchDetailResults.length === 0) return;
+      const nextIndex = (currentDetailIndex + 1) % searchDetailResults.length;
+      setCurrentDetailIndex(nextIndex);
+      scrollToElement(
+        searchDetailResults[nextIndex],
+        detailDomRefs.current,
+        detailInspectorContainerRef
+      );
+    };
+    const findPrevDetail = () => {
+      if (searchDetailResults.length === 0) return;
+      const prevIndex = (currentDetailIndex - 1 + searchDetailResults.length) % searchDetailResults.length;
+      setCurrentDetailIndex(prevIndex);
+      scrollToElement(
+        searchDetailResults[prevIndex],
+        detailDomRefs.current,
+        detailInspectorContainerRef
+      );
+    };
+
     const handleAddCondition = () => {
       setCondition(prev => [
         ...prev,
@@ -108,7 +253,6 @@ export default React.memo(function Step2_Multi({
     (event: SelectChangeEvent<string | number>) => {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
     };
-
     const handleAreaSelect = (target: any) => {
       setSelectTarget(target);
     };
@@ -234,7 +378,7 @@ export default React.memo(function Step2_Multi({
           [`${selectTarget}`]: isToggleOff ? "" : selector,
         }));
 
-        setSelectTarget(null)
+        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -298,7 +442,7 @@ export default React.memo(function Step2_Multi({
           )
         );
 
-        setSelectTarget(null)
+        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -392,7 +536,7 @@ export default React.memo(function Step2_Multi({
                       sx={{
                         flex: 1,
                         overflow: "auto",
-                        maxHeight: 640,
+                        // maxHeight: 640,
                         background: "#eaeaea",
                         display: "flex",
                         justifyContent: "center",
@@ -446,11 +590,46 @@ export default React.memo(function Step2_Multi({
                         })}
                     </Box>
                     {/* HTML 태그 */}
-                    <HtmlInspector 
-                      html={previewData.html}
-                      onNodeClick={handleInspectorClick}
-                      highlightNodes={highlightNodesMap}
-                    />
+                    <Box sx={{
+                      width: '50%'
+                    }}>
+                      <Box 
+                        sx={{ 
+                          display:'flex', 
+                          gap:2, 
+                          height: 60,
+                          alignItems: 'center'
+                      }}>
+                        <SearchBar
+                          placeholder="태그 검색"
+                          onSearch={runMainSearch}
+                        />
+                        <CustomButton text="<" radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
+                        <CustomButton text=">" radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        {searchResults.length > 0 ?
+                          <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
+                          : <></>
+                        }
+                      </Box>
+                      <Box 
+                        sx={{
+                          overflow: 'auto',
+                          height: 490,
+                        }}
+                        ref={inspectorContainerRef}
+                        data-scroll-container
+                      >
+                        <HtmlInspector 
+                          html={previewData.html}
+                          onNodeClick={handleInspectorClick}
+                          highlightNodes={highlightNodesMap}
+                          registerDomRef={(el, div) => {
+                            domRefs.current.set(el, div);
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
                 </Box>
                 <Box 
                   sx={{
@@ -575,7 +754,7 @@ export default React.memo(function Step2_Multi({
                                       setLoading(true)
                                       handleDetailLoad()
                                     }}
-                                    backgroundColor='#BABABA'
+                                    backgroundColor={isDetail? '#BABABA' : ''}
                                     width='200px'
                                 />
                             </InputAdornment>  
@@ -600,7 +779,7 @@ export default React.memo(function Step2_Multi({
                           sx={{
                             flex: 1,
                             overflow: "auto",
-                            maxHeight: 640,
+                            // maxHeight: 640,
                             background: "#eaeaea",
                             display: "flex",
                             justifyContent: "center",
@@ -653,11 +832,45 @@ export default React.memo(function Step2_Multi({
                           })}
                       </Box>
                       {/* HTML 태그 */}
-                      <HtmlInspector 
-                        html={detailData.html}
-                        onNodeClick={handleInspectorTableClick}
-                        highlightNodes={highlightNodesMap}
-                      />
+                      <Box sx={{
+                        width: '50%'
+                      }}>
+                        <Box 
+                          sx={{ 
+                            display:'flex', 
+                            gap:2, 
+                            height: 60,
+                            alignItems: 'center'
+                        }}>
+                          <SearchBar
+                            placeholder="태그 검색"
+                            onSearch={runDetailSearch}
+                          />
+                          <CustomButton text="<" radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
+                          <CustomButton text=">" radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
+                          {searchDetailResults.length > 0 ?
+                            <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
+                            : <></>
+                          }
+                        </Box>
+                        <Box 
+                          sx={{
+                            overflow: 'auto',
+                            height: 490,
+                          }}
+                          ref={detailInspectorContainerRef}
+                          data-scroll-container
+                        >
+                          <HtmlInspector 
+                            html={detailData.html}
+                            onNodeClick={handleInspectorTableClick}
+                            highlightNodes={highlightNodesMap}
+                            registerDomRef={(el, div) => {
+                              detailDomRefs.current.set(el, div);
+                            }}
+                          />
+                        </Box>
+                      </Box>
                     </Box>
                     <Box 
                     sx={{

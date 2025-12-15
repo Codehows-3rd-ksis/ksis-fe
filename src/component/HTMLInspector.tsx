@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 
 // ----------------------
 // 1) HTML 문자열 → DOM 객체 변환
@@ -18,6 +18,7 @@ interface DomNodeProps {
   highlightNodes: {
     [target: string]: Element | undefined;
   };
+  registerDomRef: (el: Element, ref: HTMLDivElement) => void;
 }
 
 const colors = [
@@ -28,7 +29,14 @@ const colors = [
 ];
 
 const DomNode: React.FC<DomNodeProps> = React.memo(
-  ({ node, onNodeClick, highlightNodes }) => {
+  ({ node, onNodeClick, highlightNodes, registerDomRef }) => {
+    const divRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+      if (divRef.current) {
+        registerDomRef(node, divRef.current); 
+      }
+    }, [node]);
     const entries = Object.entries(highlightNodes);
 
     let isHighlighted = false;
@@ -44,7 +52,7 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
     }
 
     return (
-      <div style={{ marginLeft: 12 }}>
+      <div ref={divRef} style={{ marginLeft: 12 }}>
         <span
           style={{
             cursor: "pointer",
@@ -80,6 +88,7 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
             node={child}
             onNodeClick={onNodeClick}
             highlightNodes={highlightNodes}
+            registerDomRef={registerDomRef}
           />
         ))}
       </div>
@@ -94,10 +103,12 @@ const HtmlInspector = ({
   html,
   onNodeClick,
   highlightNodes,
+  registerDomRef 
 }: {
   html: string;
   onNodeClick: (el: Element) => void;
   highlightNodes: { [target: string]: Element | undefined };
+  registerDomRef: (el: Element, ref: HTMLDivElement) => void;
 }) => {
   const dom = useMemo(() => parseHtmlString(html), [html]);
 
@@ -107,13 +118,14 @@ const HtmlInspector = ({
     <Box
       sx={{
         flex: 1,
-        overflow: "auto",
+        // overflow: "auto",
+        // border: "1px solid #ccc",
         background: "#fafafa",
-        border: "1px solid #ccc",
         padding: 1,
         fontSize: 13,
         fontFamily: "monospace",
       }}
+      data-scroll-container
     >
       {Array.from(dom.body.children).map((child, i) => (
         <DomNode
@@ -121,6 +133,7 @@ const HtmlInspector = ({
           node={child}
           onNodeClick={onNodeClick}
           highlightNodes={highlightNodes}
+          registerDomRef ={registerDomRef}
         />
       ))}
     </Box>

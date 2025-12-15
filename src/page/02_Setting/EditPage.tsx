@@ -304,7 +304,10 @@ export default function EditPage() {
                               disabled={
                                 activeStep === 0 ? 
                                   ( isAble === false ? true : false)
-                                  : false
+                                  : 
+                                  (activeStep === 1 ?
+                                  ( condition.length === 0 ? true : false) : false
+                                  )
                               }
                             />
                         </>
