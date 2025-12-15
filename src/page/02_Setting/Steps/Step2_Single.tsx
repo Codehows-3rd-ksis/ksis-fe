@@ -62,6 +62,7 @@ export default React.memo(function Step2_Single({
 
     const [searchResults, setSearchResults] = useState<Element[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [searchHighlightSet, setSearchHighlightSet] = useState<Set<Element>>(new Set());
     const inspectorContainerRef = useRef<HTMLDivElement | null>(null);
     const domRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
 
@@ -95,12 +96,16 @@ export default React.memo(function Step2_Single({
           }
         }
       }
-    
+
       setResults(results);
       setIndex(0);
+      setSearchHighlightSet(new Set(results));
     
       if (results.length > 0) {
         scrollToElement(results[0], domRefMap, containerRef);
+      } else {
+        setAlertMsg('검색결과가 존재하지 않습니다.')
+        setOpenErrorAlert(true)
       }
     };
 
@@ -458,6 +463,8 @@ export default React.memo(function Step2_Single({
                           html={previewData.html}
                           onNodeClick={handleInspectorTableClick}
                           highlightNodes={highlightNodesMap}
+                          searchHighlightSet={searchHighlightSet}
+                          currentSearchEl={searchResults[currentIndex] ?? null}
                           registerDomRef={(el, div) => {
                             domRefs.current.set(el, div);
                           }}

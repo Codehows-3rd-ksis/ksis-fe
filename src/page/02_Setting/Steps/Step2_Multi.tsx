@@ -25,6 +25,7 @@ interface HighlightPos {
   height: number;
 }
 type RunSearchParams = {
+  type: "main" | "detail";
   keyword: string;
   domRefMap: Map<Element, HTMLDivElement>;
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -92,15 +93,18 @@ export default React.memo(function Step2_Multi({
 
     const [searchResults, setSearchResults] = useState<Element[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [searchHighlightSet, setSearchHighlightSet] = useState<Set<Element>>(new Set());
     const inspectorContainerRef = useRef<HTMLDivElement | null>(null);
     const domRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
     
     const [searchDetailResults, setSearchDetailResults] = useState<Element[]>([]);
     const [currentDetailIndex, setCurrentDetailIndex] = useState(0);
+    const [searchDetailHighlightSet, setSearchDetailHighlightSet] = useState<Set<Element>>(new Set());
     const detailInspectorContainerRef = useRef<HTMLDivElement>(null);
     const detailDomRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
 
     const runSearchCommon = ({
+      type,
       keyword,
       domRefMap,
       containerRef,
@@ -117,11 +121,22 @@ export default React.memo(function Step2_Multi({
         const tag = el.tagName.toLowerCase();
         const id = el.getAttribute("id")?.toLowerCase() || "";
         const cls = el.getAttribute("class")?.toLowerCase() || "";
+
+        // ✅ 모든 attribute 검색
+        const attr = Array.from(el.attributes).some(attr => {
+          const name = attr.name.toLowerCase();
+          const value = attr.value.toLowerCase();
+          return (
+            name.includes(normalized) ||
+            value.includes(normalized)
+          );
+        });
       
         if (
           tag.includes(normalized) ||
           id.includes(normalized) ||
-          cls.includes(normalized)
+          cls.includes(normalized) 
+          || attr
         ) {
           const key = `${tag}#${id}.${cls}`;
           if (!seen.has(key)) {
@@ -133,9 +148,19 @@ export default React.memo(function Step2_Multi({
     
       setResults(results);
       setIndex(0);
+
+      if(type === "main") {
+        // ✅ 검색 하이라이트용
+        setSearchHighlightSet(new Set(results));
+      } else {
+        setSearchDetailHighlightSet(new Set(results));
+      }
     
       if (results.length > 0) {
         scrollToElement(results[0], domRefMap, containerRef);
+      } else {
+        setAlertMsg('검색결과가 존재하지 않습니다.')
+        setOpenErrorAlert(true)
       }
     };
 
@@ -164,6 +189,7 @@ export default React.memo(function Step2_Multi({
     const runMainSearch = useCallback(
       (keyword: string) => {
         runSearchCommon({
+          type: "main",
           keyword,
           domRefMap: domRefs.current,
           containerRef: inspectorContainerRef,
@@ -176,6 +202,7 @@ export default React.memo(function Step2_Multi({
     const runDetailSearch = useCallback(
       (keyword: string) => {
         runSearchCommon({
+          type: "detail",
           keyword,
           domRefMap: detailDomRefs.current,
           containerRef: detailInspectorContainerRef,
@@ -627,6 +654,8 @@ export default React.memo(function Step2_Multi({
                           html={previewData.html}
                           onNodeClick={handleInspectorClick}
                           highlightNodes={highlightNodesMap}
+                          searchHighlightSet={searchHighlightSet}
+                          currentSearchEl={searchResults[currentIndex] ?? null}
                           registerDomRef={(el, div) => {
                             domRefs.current.set(el, div);
                           }}
@@ -869,6 +898,8 @@ export default React.memo(function Step2_Multi({
                             html={detailData.html}
                             onNodeClick={handleInspectorTableClick}
                             highlightNodes={highlightNodesMap}
+                            searchHighlightSet={searchDetailHighlightSet}
+                            currentSearchEl={searchDetailResults[currentDetailIndex] ?? null}
                             registerDomRef={(el, div) => {
                               detailDomRefs.current.set(el, div);
                             }}

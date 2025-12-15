@@ -18,6 +18,8 @@ interface DomNodeProps {
   highlightNodes: {
     [target: string]: Element | undefined;
   };
+  searchHighlightSet?: Set<Element>;
+  currentSearchEl?: Element | null;
   registerDomRef: (el: Element, ref: HTMLDivElement) => void;
 }
 
@@ -29,7 +31,14 @@ const colors = [
 ];
 
 const DomNode: React.FC<DomNodeProps> = React.memo(
-  ({ node, onNodeClick, highlightNodes, registerDomRef }) => {
+  ({ 
+    node, 
+    onNodeClick, 
+    highlightNodes, 
+    searchHighlightSet, 
+    currentSearchEl, 
+    registerDomRef 
+  }) => {
     const divRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -51,6 +60,10 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
       }
     }
 
+    const isSearchHighlighted = searchHighlightSet?.has(node) ?? false;
+    const isCurrentSearch =
+      currentSearchEl ? currentSearchEl.isSameNode(node) : false;
+
     return (
       <div ref={divRef} style={{ marginLeft: 12 }}>
         <span
@@ -65,6 +78,12 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
             boxShadow: isHighlighted
               ? `0 0 5px 2px ${highlightColor}`
               : "none",
+            outline: isCurrentSearch
+              ? "3px solid #e91e63"        // 👉 현재 포커스
+              : isSearchHighlighted
+              ? "2px dashed #9c27b0"       // 👉 검색 결과
+              : "none",
+            outlineOffset: "2px",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -88,6 +107,8 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
             node={child}
             onNodeClick={onNodeClick}
             highlightNodes={highlightNodes}
+            searchHighlightSet={searchHighlightSet} 
+            currentSearchEl={currentSearchEl} 
             registerDomRef={registerDomRef}
           />
         ))}
@@ -103,11 +124,15 @@ const HtmlInspector = ({
   html,
   onNodeClick,
   highlightNodes,
+  searchHighlightSet,
+  currentSearchEl,
   registerDomRef 
 }: {
   html: string;
   onNodeClick: (el: Element) => void;
   highlightNodes: { [target: string]: Element | undefined };
+  searchHighlightSet?: Set<Element>;
+  currentSearchEl?: Element | null;
   registerDomRef: (el: Element, ref: HTMLDivElement) => void;
 }) => {
   const dom = useMemo(() => parseHtmlString(html), [html]);
@@ -133,6 +158,8 @@ const HtmlInspector = ({
           node={child}
           onNodeClick={onNodeClick}
           highlightNodes={highlightNodes}
+          searchHighlightSet={searchHighlightSet}
+          currentSearchEl={currentSearchEl}
           registerDomRef ={registerDomRef}
         />
       ))}
