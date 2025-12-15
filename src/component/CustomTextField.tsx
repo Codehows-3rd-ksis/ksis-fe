@@ -6,7 +6,8 @@ import {type TextField_Type} from '../Types/Components'
 export default function CustomTextField(props: TextField_Type) {
     const {value, label, variant, border, radius, inputWidth, height, fontSize,
         disabled, placeholder, readOnly, type, step, 
-        onChange, startAdornment, endAdornment} = props
+        onChange, onEnter,
+        startAdornment, endAdornment} = props
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: '320px'}}>
             <TextField 
@@ -17,10 +18,15 @@ export default function CustomTextField(props: TextField_Type) {
                     minWidth: '246px'
                 }}
                 size= "small"
-                value={value || ''}
+                value={value ?? ''}
                 label={label || ''}
                 variant={variant || undefined}
                 onChange={onChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onEnter?.();   // ✅ 여기
+                  }
+                }}
                 disabled={disabled || false}
                 placeholder={placeholder || ''}
                 // inputProps={{ autoFocus: true, }}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { Box, Typography, InputAdornment, type SelectChangeEvent, } from '@mui/material'
+import { Box, Typography, InputAdornment, type SelectChangeEvent, Card } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomTextField from '../../../component/CustomTextField';
 import CustomButton from '../../../component/CustomButton';
@@ -846,8 +846,8 @@ export default React.memo(function Step2_Multi({
                             placeholder="태그 검색"
                             onSearch={runDetailSearch}
                           />
-                          <CustomButton text="<" radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
-                          <CustomButton text=">" radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
+                          <CustomButton text="<" width="40px" backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
+                          <CustomButton text=">" width="40px" backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
                           {searchDetailResults.length > 0 ?
                             <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
                             : <></>
@@ -873,17 +873,17 @@ export default React.memo(function Step2_Multi({
                       </Box>
                     </Box>
                     <Box 
-                    sx={{
-                      height: 350,
-                      minHeight: 350,
-                      mt: 2,
-                      background: "#f7f7f7",
-                      borderRadius: 2,
-                      p: 2,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2
-                  }}>
+                        sx={{
+                          height: 350,
+                          minHeight: 350,
+                          mt: 2,
+                          background: "#f7f7f7",
+                          borderRadius: 2,
+                          p: 2,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2
+                    }}>
                       <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
                           <Typography sx={{ fontSize: 22, fontWeight: "bold" }}>
                               조건 행 추가
@@ -894,7 +894,7 @@ export default React.memo(function Step2_Multi({
                               rows={conditionData}
                               columns={conditionColumns}
                               processRowUpdate={processRowUpdate}
-                              maxHeight={320}
+                              maxHeight={300}
                       />
                     </Box>
                   </>

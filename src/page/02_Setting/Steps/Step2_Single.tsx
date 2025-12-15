@@ -438,8 +438,8 @@ export default React.memo(function Step2_Single({
                           placeholder="태그 검색"
                           onSearch={runMainSearch}
                         />
-                        <CustomButton text="<" radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
-                        <CustomButton text=">" radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1? "#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
+                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : "" } radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
                         {searchResults.length > 0 ?
                           <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
                           : <></>

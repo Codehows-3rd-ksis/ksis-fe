@@ -17,6 +17,7 @@ export interface TextField_Type {
     type?: 'text' | 'number' | 'password';
     step?: number;
     onChange?: React.ChangeEventHandler<HTMLInputElement>;
+    onEnter?: () => void;
     startAdornment?: React.ReactNode; 
     endAdornment?: React.ReactNode;
 }

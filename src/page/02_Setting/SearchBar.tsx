@@ -22,9 +22,7 @@ export const SearchBar = React.memo(
           value={value}
           placeholder={placeholder}
           onChange={(e) => setValue(e.target.value)}
-        //   onKeyDown={(e) => {
-        //     if (e.key === "Enter") handleSearch();
-        //   }}
+          onEnter={handleSearch}
         />
         <CustomButton radius={1} text="검색" onClick={handleSearch} />
       </Box>
