@@ -19,6 +19,7 @@ import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
 function Status() {
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.user?.userId);
+  const userRole = useAuthStore((state) => state.user?.role);
   const { readyState, connect, subscribe } = useWebSocketStore();
   const { progressMap, handleCrawlingProgress, resetCrawlingState } =
     useCrawlingProgress();
@@ -117,7 +118,13 @@ function Status() {
   // WebSocket 구독 (크롤링 진행 상태)
   useEffect(() => {
     if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
-      const destination = `/user/queue/crawling-progress`;
+      // 역할에 따라 구독 경로 분기
+      const destination =
+        userRole === "ROLE_ADMIN"
+          ? `/topic/crawling-progress` // 관리자: 공개 토픽 (모든 크롤링 작업)
+          : `/user/queue/crawling-progress`; // 일반 유저: 개인 큐 (자신의 작업만)
+
+      console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
         const parsedMessage: CrawlingMessage = JSON.parse(message.body);
         handleCrawlingProgress(parsedMessage);
@@ -144,7 +151,7 @@ function Status() {
         console.log("[WebSocket] 구독 해제: Status Page");
       }
     };
-  }, [readyState, userId, subscribe, handleCrawlingProgress, fetchStatusList]);
+  }, [readyState, userId, subscribe, handleCrawlingProgress, fetchStatusList, userRole]);
 
 
 

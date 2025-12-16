@@ -7,10 +7,11 @@ import {
   Paper,
   Breadcrumbs,
   Link,
-  LinearProgress,
 } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
+// import Alert from "../../component/Alert";
+// import CustomButton from "../../component/CustomButton";
 import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
 import { type StatusDetailResponse } from "../../API/03_StatusApi";
 import {
@@ -19,7 +20,11 @@ import {
   FAILURE_COLUMNS,
   createCollectionColumns,
 } from "../../Types/TableHeaders/StatusDetailHeader";
-import { getStatusDetail } from "../../API/03_StatusApi";
+import {
+  getStatusDetail,
+  // recollectWork,
+  // recollectItem,
+} from "../../API/03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
@@ -45,6 +50,7 @@ function StatusDetail() {
 
   // WebSocket
   const userId = useAuthStore((state) => state.user?.userId);
+  const userRole = useAuthStore((state) => state.user?.role);
   const { connect, subscribe, readyState } = useWebSocketStore();
   const { progressMap, handleCrawlingProgress, resetCrawlingState } =
     useCrawlingProgress();
@@ -63,6 +69,11 @@ function StatusDetail() {
   const collectionIdSet = useRef(new Set<number>());
   const failureIdSet = useRef(new Set<number>());
 
+  // 재수집 관련 상태
+  // const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  // const [alertOpen, setAlertOpen] = useState(false);
+  // const [alertType, setAlertType] = useState<"single" | "batch">("single");
+
   // 진행도 정보 (Source of Truth for counts)
   const currentProgress = progressMap.get(workId) ?? null;
 
@@ -80,6 +91,53 @@ function StatusDetail() {
   const progress = currentProgress?.progress ?? 0;
 
   const handleBack = () => navigate("/status");
+
+  // ========== 재수집 핸들러 ==========
+  // const handleRecollectItem = async (itemId: number) => {
+  //   try {
+  //     await recollectItem(itemId);
+  //     alert("재수집 요청이 완료되었습니다.");
+  //   } catch (error) {
+  //     console.error("개별 재수집 요청 실패:", error);
+  //     alert("재수집 요청에 실패했습니다.");
+  //   }
+  // };
+
+  // const handleBatchRecollect = async () => {
+  //   try {
+  //     await recollectWork(workId);
+  //     alert("일괄 재수집 요청이 완료되었습니다.");
+  //   } catch (error) {
+  //     console.error("일괄 재수집 요청 실패:", error);
+  //     alert("일괄 재수집 요청에 실패했습니다.");
+  //   }
+  // };
+
+  // const handleRecollectClick = (itemId: number) => {
+  //   setSelectedItemId(itemId);
+  //   setAlertType("single");
+  //   setAlertOpen(true);
+  // };
+
+  // const handleBatchRecollectClick = () => {
+  //   setAlertType("batch");
+  //   setAlertOpen(true);
+  // };
+
+  // const handleConfirm = async () => {
+  //   setAlertOpen(false);
+  //   if (alertType === "single" && selectedItemId !== null) {
+  //     await handleRecollectItem(selectedItemId);
+  //   } else if (alertType === "batch") {
+  //     await handleBatchRecollect();
+  //   }
+  //   setSelectedItemId(null);
+  // };
+
+  // const handleCancel = () => {
+  //   setAlertOpen(false);
+  //   setSelectedItemId(null);
+  // };
 
   // workId 변경 시 상태 초기화
   useEffect(() => {
@@ -105,6 +163,7 @@ function StatusDetail() {
         id: row.itemId,
         itemId: row.itemId,
         state: "FAILURE" as const,
+        // onRecollect: handleRecollectClick, // 재수집 버튼 클릭 핸들러
       }));
       setFailureRows(failureList);
       failureList.forEach((row) => failureIdSet.current.add(row.itemId));
@@ -159,7 +218,13 @@ function StatusDetail() {
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
-      const destination = `/user/queue/crawling-progress/${workId}`;
+      // 역할에 따라 구독 경로 분기
+      const destination =
+        userRole === "ROLE_ADMIN"
+          ? `/topic/crawling-progress/${workId}` // 관리자: 공개 토픽
+          : `/user/queue/crawling-progress/${workId}`; // 일반 유저: 개인 큐
+
+      console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
         const data: CrawlingMessage = JSON.parse(message.body);
 
@@ -209,10 +274,12 @@ function StatusDetail() {
           }
         }
 
-        // 3. 완료 메시지 처리 (state === "완료"로 감지)
-        if (data.data.state === "완료") {
-          console.log(`[크롤링 완료] workId: ${workId}, 최종 데이터 조회`);
-          fetchDetailData(); // 최종 집계 결과 동기화
+        // 3. 완료 메시지 처리 (endAt 업데이트)
+        if (data.data.endAt && detailData) {
+          console.log(`[크롤링 완료] workId: ${workId}, endAt: ${data.data.endAt}`);
+          setDetailData((prev) =>
+            prev ? { ...prev, endAt: data.data.endAt } : prev
+          );
         }
       });
     }
@@ -223,7 +290,7 @@ function StatusDetail() {
         console.log("[WebSocket] 구독 해제: Status Detail Page");
       }
     };
-  }, [workId, readyState, subscribe, handleCrawlingProgress, fetchDetailData]);
+  }, [workId, readyState, subscribe, handleCrawlingProgress, detailData, userRole]);
 
   // 컴포넌트 언마운트 시 해당 workId의 progress만 초기화
   useEffect(() => {
@@ -288,24 +355,20 @@ function StatusDetail() {
               </Typography>
               <CommonTable
                 columns={DETAIL_SETTING_COLUMNS}
-                rows={detailData ? [detailData] : []}
+                rows={
+                  detailData
+                    ? [
+                        {
+                          ...detailData,
+                          progress: currentProgress?.progress ?? 0,
+                          state: currentProgress?.state ?? detailData.state,
+                        },
+                      ]
+                    : []
+                }
                 pageSize={1}
                 hideFooter={true}
               />
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, my: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                진행률:
-              </Typography>
-              <Box sx={{ width: "100%", mr: 1 }}>
-                <LinearProgress variant="determinate" value={progress} />
-              </Box>
-              <Box sx={{ minWidth: 35 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >{`${Math.round(progress)}%`}</Typography>
-              </Box>
             </Box>
             <Box sx={{ marginTop: 2 }}>
               <Box
@@ -331,6 +394,11 @@ function StatusDetail() {
                     {failCount}/{totalCount}
                   </Typography>
                 </Box>
+                {/* <CustomButton
+                  text="일괄 재수집"
+                  onClick={handleBatchRecollectClick}
+                  radius={2}
+                /> */}
               </Box>
               <CommonTable
                 columns={FAILURE_COLUMNS}
@@ -387,6 +455,18 @@ function StatusDetail() {
           </Box>
         </Paper>
       </Box>
+
+      {/* <Alert
+        open={alertOpen}
+        type="question"
+        text={
+          alertType === "single"
+            ? `선택한 항목을 재수집하시겠습니까?`
+            : `모든 실패 항목을 재수집하시겠습니까?`
+        }
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      /> */}
     </Box>
   );
 }

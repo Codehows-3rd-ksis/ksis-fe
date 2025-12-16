@@ -13,6 +13,7 @@ export interface CrawlingProgress {
   collectCount: number;
   failCount: number;
   expectEndAt: string;
+  endAt?: string; // 수집완료 시간 (크롤링 완료 시 웹소켓으로 전송됨)
 }
 
 // progressmap : workId로 여러 개의 크롤링 작업 동시 관리(workId:number)하기 위해

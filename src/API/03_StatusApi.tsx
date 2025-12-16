@@ -83,3 +83,23 @@ export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
   const response = await AxiosInstance.post(`/crawl/stop`, { workId });
   return response.data;
 };
+
+// /**
+//  * 일괄 재수집
+//  * @param workId 작업 ID
+//  * @returns 재수집 결과
+//  */
+// export const recollectWork = async (workId: number): Promise<any> => {
+//   const response = await AxiosInstance.post(`/recollect/work/${workId}`);
+//   return response.data;
+// };
+
+// /**
+//  * 개별 재수집
+//  * @param itemId 항목 ID
+//  * @returns 재수집 결과
+//  */
+// export const recollectItem = async (itemId: number): Promise<any> => {
+//   const response = await AxiosInstance.post(`/recollect/item/${itemId}`);
+//   return response.data;
+// };

@@ -120,7 +120,9 @@ export const getColumns = ({
             width: "100%", // Box가 셀 너비를 모두 차지하도록 설정
           }}
         >
-          <span>{progressLabel}</span>
+          <Box sx={{ minWidth: "50px", textAlign: "right" }}>
+            <span>{progressLabel}</span>
+          </Box>
           <Box
             sx={{
               display: "inline-flex",
@@ -143,11 +145,12 @@ export const getColumns = ({
               }}
             />
           </Box>
-
-          <CustomIconButton
-            icon="stop"
-            onClick={() => handleStopClick(params.row)}
-          />
+          <Box sx={{ minWidth: "40px", display: "flex", justifyContent: "center" }}>
+            <CustomIconButton
+              icon="stop"
+              onClick={() => handleStopClick(params.row)}
+            />
+          </Box>
         </Box>
       );
     },

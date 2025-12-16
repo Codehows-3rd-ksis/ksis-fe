@@ -6,6 +6,7 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import { parseResultValue } from "../../utils/resultValueParser";
 import dayjs from "dayjs";
+import { Box, LinearProgress } from "@mui/material";
 
 //** 데이터 **/
 // 크롤링 결과 항목 (백엔드 CrawlResultItem 엔티티)
@@ -95,6 +96,71 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
     headerAlign: "center",
     align: "center",
   },
+  {
+    field: "progress",
+    headerName: "진행도",
+    flex: 1,
+    minWidth: 250,
+    headerAlign: "center",
+    align: "center",
+    renderCell: (params) => {
+      let progressValue: number;
+      let progressLabel: string;
+
+      if (typeof params.value === "number") {
+        progressValue = params.value;
+        if (progressValue === 100) {
+          progressLabel = "완료";
+        } else {
+          progressLabel = `${Math.floor(progressValue)}%`;
+        }
+      } else if (typeof params.value === "string") {
+        progressLabel = params.value;
+        progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
+      } else {
+        progressValue = 0;
+        progressLabel = "-";
+      }
+
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            width: "100%",
+          }}
+        >
+          <Box sx={{ minWidth: "50px", textAlign: "right" }}>
+            <span>{progressLabel}</span>
+          </Box>
+          <Box
+            sx={{
+              display: "inline-flex",
+              height: "6px",
+              paddingRight: "21.186px",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              width: "100px",
+            }}
+          >
+            <LinearProgress
+              variant="determinate"
+              value={progressValue}
+              sx={{
+                width: "100%",
+                height: "6px",
+                borderRadius: "3px",
+                background: "var(--Fills-Primary, rgba(120, 120, 120, 0.20))",
+              }}
+            />
+          </Box>
+        </Box>
+      );
+    },
+  },
 ];
 
 // 수집 실패 테이블 컬럼
@@ -113,6 +179,19 @@ export const FAILURE_COLUMNS: GridColDef[] = [
     headerAlign: "center",
     align: "left",
   },
+  // {
+  //   field: "recollect",
+  //   headerName: "재수집",
+  //   flex: 1,
+  //   headerAlign: "center",
+  //   align: "center",
+  //   renderCell: (params) => (
+  //     <CustomIconButton
+  //       icon="refresh"
+  //       onClick={() => params.row.onRecollect?.(params.row.itemId)}
+  //     />
+  //   ),
+  // },
 ];
 
 // 수집 데이터 컬럼 생성 함수 (동적 컬럼)
