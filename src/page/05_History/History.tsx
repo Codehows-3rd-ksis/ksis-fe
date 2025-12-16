@@ -26,6 +26,7 @@ import { getHistory, getHistoryResult } from "../../API/05_HistoryApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import Alert from '../../component/Alert';
+import { parseResultValueRows } from '../../utils/resultValueParser';
 
 export default function History() {
   const navigate = useNavigate();
@@ -260,37 +261,7 @@ export default function History() {
   // =========================
   // value 배열을 단일 객체로 평탄화
   // =========================
-  const flattenResult = (rows: any[]) => {
-  return rows.map(item => {
-    // JSON 문자열인 resultValue를 파싱
-    let parsedValue;
-    try {
-      parsedValue = JSON.parse(item.resultValue);
-    } catch (e) {
-      parsedValue = [];
-      console.error("result_value JSON parse error", e);
-    }
-
-    // parsedValue가 배열이 아닐 수도 있으니 배열인지 체크
-    const valueArray = Array.isArray(parsedValue) ? parsedValue : [parsedValue];
-
-    const flat = valueArray.reduce((acc: any, obj: any) => {
-      // obj가 객체인지 확인
-      if (typeof obj === 'object' && obj !== null) {
-        Object.entries(obj).forEach(([key, val]) => {
-          acc[key] = val;
-        });
-      }
-      return acc;
-    }, {});
-
-    return {
-      seq: item.seq,
-      page_url: item.pageUrl,
-      ...flat
-    };
-  });
-};
+  // ✅ parseResultValueRows 공통 함수로 대체됨 (src/utils/resultValueParser.ts)
   
 
   
@@ -369,7 +340,12 @@ export default function History() {
       const result = await getHistoryResult(Number(exportRow.id))
 
       const targets = result.filter((r:any) => r.workId === exportRow.id);
-      return flattenResult(targets); // 평탄화된 형태로 반환
+
+      // ✅ 공통 유틸 함수 사용
+      return parseResultValueRows(targets, (row: any) => ({
+        seq: row.seq,
+        page_url: row.pageUrl
+      }));
     };
 
   const handleExport_Excel = async () => {

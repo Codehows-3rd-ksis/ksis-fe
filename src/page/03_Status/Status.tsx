@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Paper } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
@@ -7,19 +7,20 @@ import {
   type StatusTableRows,
 } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
-import { getStatusList, stopCrawl } from "./03_StatusApi";
+import { getStatusList, stopCrawl } from "../../API/03_StatusApi";
 import type { Subscription } from "stompjs";
 
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
-import { type CrawlingMessage } from "../../Types/Crawling";
+import { type CrawlingMessage } from "../../Types/WebSocket";
 import { useAuthStore } from "../../Store/authStore";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
+import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
 
 function Status() {
   const navigate = useNavigate();
   const userId = useAuthStore((state) => state.user?.userId);
   const { readyState, connect, subscribe } = useWebSocketStore();
-  const { progressMap, handleWebSocketMessage, resetCrawlingState } =
+  const { progressMap, handleCrawlingProgress, resetCrawlingState } =
     useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
@@ -34,7 +35,11 @@ function Status() {
   const fetchStatusList = useCallback(async () => {
     try {
       const data = await getStatusList();
-      setBaseRows(data);
+      const result = data.map((row: StatusTableRows) => ({
+        ...row,
+        id: row.workId,
+      }));
+      setBaseRows(result);
 
       // baseRows에 없는 작업을 progressMap에서 제거
       const validWorkIds = new Set(data.map((row) => row.workId));
@@ -115,7 +120,7 @@ function Status() {
       const destination = `/user/queue/crawling-progress`;
       subscriptionRef.current = subscribe(destination, (message) => {
         const parsedMessage: CrawlingMessage = JSON.parse(message.body);
-        handleWebSocketMessage(parsedMessage);
+        handleCrawlingProgress(parsedMessage);
 
         // 신규 작업 감지 시 목록 갱신
         const { workId } = parsedMessage;
@@ -139,20 +144,9 @@ function Status() {
         console.log("[WebSocket] 구독 해제: Status Page");
       }
     };
-  }, [
-    readyState,
-    userId,
-    subscribe,
-    handleWebSocketMessage,
-    fetchStatusList,
-  ]);
+  }, [readyState, userId, subscribe, handleCrawlingProgress, fetchStatusList]);
 
-  // 컴포넌트 언마운트 시 progressMap 전체 초기화
-  useEffect(() => {
-    return () => {
-      resetCrawlingState();
-    };
-  }, [resetCrawlingState]);
+
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>

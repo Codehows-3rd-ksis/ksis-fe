@@ -57,7 +57,8 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
       set({ reconnectTimeoutId: null });
     }
 
-    if (readyState === ReadyState.OPEN || readyState === ReadyState.CONNECTING) return;
+    if (readyState === ReadyState.OPEN || readyState === ReadyState.CONNECTING)
+      return;
 
     if (reconnectAttempts >= maxReconnectAttempts) {
       console.warn("[WebSocket] 최대 재연결 시도 횟수 초과");
@@ -74,7 +75,9 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
     set({ readyState: ReadyState.CONNECTING });
 
     const accessToken = useAuthStore.getState().accessToken;
-    const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+    const headers = accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : {};
 
     const socket = new SockJS(url);
     const newStompClient = Stomp.over(socket);
@@ -92,7 +95,7 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
       },
       (error) => {
         console.error("[WebSocket] 연결 오류", error);
-        
+
         set((state) => {
           const nextAttempts = state.reconnectAttempts + 1;
           const delay = Math.min(1000 * Math.pow(2, nextAttempts), 30000);
@@ -126,11 +129,19 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
 
     if (stompClient?.connected) {
       stompClient.disconnect(() => {
-        set({ readyState: ReadyState.CLOSED, stompClient: null, reconnectAttempts: 0 });
+        set({
+          readyState: ReadyState.CLOSED,
+          stompClient: null,
+          reconnectAttempts: 0,
+        });
         console.log("[WebSocket] 연결 종료");
       });
     } else {
-      set({ readyState: ReadyState.CLOSED, stompClient: null, reconnectAttempts: 0 });
+      set({
+        readyState: ReadyState.CLOSED,
+        stompClient: null,
+        reconnectAttempts: 0,
+      });
     }
   },
 

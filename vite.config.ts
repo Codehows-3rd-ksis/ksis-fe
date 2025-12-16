@@ -9,6 +9,11 @@ export default defineConfig({
         target: 'http://localhost:8080',
         rewrite: (path) => path.replace(/^\/api/, ""),
         changeOrigin: true
+      },
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true,  // WebSocket 프록시 활성화
+        changeOrigin: true
       }
     }
   },

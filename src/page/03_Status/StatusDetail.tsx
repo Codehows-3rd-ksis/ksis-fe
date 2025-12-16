@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
@@ -11,18 +11,24 @@ import {
 } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
+import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
+import { type StatusDetailResponse } from "../../API/03_StatusApi";
 import {
-  type StatusTableRows,
+  type FailureRow,
   DETAIL_SETTING_COLUMNS,
   FAILURE_COLUMNS,
   createCollectionColumns,
-} from "../../Types/TableHeaders/StatusHeader";
-import { getStatusDetail } from "./03_StatusApi";
+} from "../../Types/TableHeaders/StatusDetailHeader";
+import { getStatusDetail } from "../../API/03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
-import { type CrawlingMessage } from "../../Types/Crawling";
+import { type CrawlingMessage } from "../../Types/WebSocket";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
 import { useAuthStore } from "../../Store/authStore";
 import type { Subscription } from "stompjs";
+import {
+  parseResultValue,
+  parseResultValueRows,
+} from "../../utils/resultValueParser";
 
 function StatusDetail() {
   // 라우팅
@@ -40,40 +46,38 @@ function StatusDetail() {
   // WebSocket
   const userId = useAuthStore((state) => state.user?.userId);
   const { connect, subscribe, readyState } = useWebSocketStore();
-  const { progressMap, handleWebSocketMessage, resetCrawlingState } =
+  const { progressMap, handleCrawlingProgress, resetCrawlingState } =
     useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
   // 데이터 상태
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
-  const [failureRows, setFailureRows] = useState<
-    Array<{ id: number; progressNo: string; url: string }>
-  >([]);
+  const [failureRows, setFailureRows] = useState<FailureRow[]>([]);
+  // 파싱된 수집 데이터 (동적 필드: title, writer 등)
   const [collectionRows, setCollectionRows] = useState<
-    Array<{ id: number; progressNo: string; [key: string]: string | number }>
+    Array<Record<string, any>>
   >([]);
   const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([]);
 
   // 중복 체크용 ID
   const collectionIdSet = useRef(new Set<number>());
+  const failureIdSet = useRef(new Set<number>());
 
-  // 진행도 정보
+  // 진행도 정보 (Source of Truth for counts)
   const currentProgress = progressMap.get(workId) ?? null;
 
-  // 실패 여부가 포함된 수집 데이터
-  const failureNos = failureRows.map((row) => row.progressNo);
+  // 실패 여부가 포함된 수집 데이터 (state 기반)
   const collectionRowsWithFailure = collectionRows.map((row) => ({
     ...row,
-    isFailure: failureNos.includes(row.progressNo),
+    isFailure: row.state === "FAILURE",
   }));
 
-  // UI 표시용 값
+  // UI 표시용 값 (currentProgress를 신뢰)
   const totalCount = currentProgress?.totalCount ?? 0;
-  const collectionCount =
-    currentProgress?.collectionCount ?? collectionRows.length;
-  const failureCount = currentProgress?.failureCount ?? failureRows.length;
-  const estimatedTime = currentProgress?.estimatedTime ?? "계산 중...";
-  const progressValue = currentProgress?.progress ?? 0;
+  const collectCount = currentProgress?.collectCount ?? 0;
+  const failCount = currentProgress?.failCount ?? 0;
+  const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
+  const progress = currentProgress?.progress ?? 0;
 
   const handleBack = () => navigate("/status");
 
@@ -84,6 +88,7 @@ function StatusDetail() {
     setCollectionRows([]);
     setCollectionColumns([]);
     collectionIdSet.current.clear();
+    failureIdSet.current.clear();
   }, [workId]);
 
   const fetchDetailData = useCallback(async () => {
@@ -91,36 +96,53 @@ function StatusDetail() {
     try {
       const data = await getStatusDetail(workId);
 
-      // 기본 정보 설정
-      setDetailData(data.basicInfo);
+      // 기본 정보 설정 (MUI DataGrid를 위해 id 추가)
+      setDetailData({ ...data.basicInfo, id: data.basicInfo.workId });
 
-      // 실패 목록 설정
-      setFailureRows(data.failureList);
+      // 실패 목록 설정 (id: itemId로 매핑, state 필드 추가)
+      const failureList = data.failureList.map((row) => ({
+        ...row,
+        id: row.itemId,
+        itemId: row.itemId,
+        state: "FAILURE" as const,
+      }));
+      setFailureRows(failureList);
+      failureList.forEach((row) => failureIdSet.current.add(row.itemId));
 
-      // 수집 데이터 설정
-      setCollectionRows(data.collectionData.rows);
-      data.collectionData.rows.forEach((row) =>
-        collectionIdSet.current.add(row.id)
-      );
+      // ✅ 초기 수집 데이터 파싱 (이미 수집된 데이터 표시)
+      if (data.collectionData.rows.length > 0) {
+        const parsedRows = parseResultValueRows(
+          data.collectionData.rows,
+          (row: any) => ({ id: row.itemId, itemId: row.itemId, seq: row.seq })
+        );
+        setCollectionRows(parsedRows);
+        parsedRows.forEach((row) => collectionIdSet.current.add(row.itemId));
 
-      // 컬럼 정의 설정
-      setCollectionColumns(
-        createCollectionColumns(data.collectionData.columns)
-      );
+        // 동적 컬럼 생성
+        setCollectionColumns(createCollectionColumns(data.collectionData.rows));
+      }
 
-      // 진행률 정보 초기화 (WebSocket 메시지 형식으로 전달)
-      handleWebSocketMessage({
-        type: "PROGRESS",
+      // 진행률 정보 초기화 (API 응답으로 받은 DB 집계값을 사용)
+      handleCrawlingProgress({
+        type: "COLLECT_UPDATE",
         workId,
-        totalCount: data.progress.totalCount,
-        estimatedTime: data.progress.estimatedTime,
+        data: {
+          ...data.progress,
+          state: data.basicInfo.state, // API 응답의 최신 state 사용
+          progress:
+            data.progress.totalCount > 0
+              ? ((data.progress.collectCount + data.progress.failCount) /
+                  data.progress.totalCount) *
+                100
+              : 0,
+        },
       });
     } catch (error) {
       console.error("상세 정보 조회 실패:", error);
       alert("상세 정보를 불러오는 데 실패했습니다.");
       navigate("/status");
     }
-  }, [workId, navigate, handleWebSocketMessage]);
+  }, [workId, navigate, handleCrawlingProgress]);
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
@@ -141,48 +163,56 @@ function StatusDetail() {
       subscriptionRef.current = subscribe(destination, (message) => {
         const data: CrawlingMessage = JSON.parse(message.body);
 
-        // 진행도 업데이트
-        handleWebSocketMessage(data);
+        // COLLECT_UPDATE 메시지 처리 (집계 데이터 + 개별 행 데이터)
 
-        // 실제 크롤링 데이터 처리 (성공/실패)
-        switch (data.type) {
-          case "COLLECTION":
-            if (data.row && typeof data.row === "object" && "id" in data.row) {
-              const newRow = data.row;
+        // 1. 집계 데이터 업데이트 (useCrawlingProgress 훅)
+        handleCrawlingProgress(data);
 
-              // 중복 체크
-              if (collectionIdSet.current.has(newRow.id)) break;
+        // 2. 개별 행 데이터 처리 (state로 성공/실패 구분)
+        if (data.crawlResultItem) {
+          const item = data.crawlResultItem;
 
-              // 데이터 추가
-              collectionIdSet.current.add(newRow.id);
-              setCollectionRows((prev) => {
-                const newRows = [...prev, newRow];
+          // collectionRows: 모든 항목 추가 (FAILURE는 seq만, SUCCESS는 전체 데이터)
+          if (!collectionIdSet.current.has(item.itemId)) {
+            collectionIdSet.current.add(item.itemId);
 
-                // 브라우저 메모리 관리 (최대 1000개)
-                if (newRows.length > 1000) {
-                  collectionIdSet.current.delete(newRows[0].id);
-                  return newRows.slice(1);
-                }
-                return newRows;
-              });
+            // SUCCESS일 때만 resultValue 파싱, FAILURE는 비움
+            let additionalData = {};
+            if (item.state === "SUCCESS") {
+              if (typeof item.resultValue === "string") {
+                additionalData = parseResultValue(item.resultValue);
+              } else {
+                additionalData = item.resultValue || {};
+              }
             }
-            break;
 
-          case "FAILURE":
-            if (data.row && typeof data.row === "object" && "id" in data.row) {
-              const newFailure = data.row;
+            const collectionItem = {
+              id: item.itemId,
+              itemId: item.itemId,
+              seq: item.seq,
+              state: item.state,
+              ...additionalData,
+            };
+            setCollectionRows((prev) => [...prev, collectionItem]);
+          }
 
-              // 중복 체크 및 추가
-              setFailureRows((prev) => {
-                if (prev.some((row) => row.id === newFailure.id)) return prev;
-                return [...prev, newFailure];
-              });
-            }
-            break;
+          // failureRows: FAILURE만 추가 (상세 정보)
+          if (
+            item.state === "FAILURE" &&
+            !failureIdSet.current.has(item.itemId)
+          ) {
+            failureIdSet.current.add(item.itemId);
+            setFailureRows((prev) => [
+              ...prev,
+              { ...item, id: item.itemId, itemId: item.itemId } as FailureRow,
+            ]);
+          }
+        }
 
-          case "COMPLETE":
-            console.log(`[크롤링 완료] workId: ${workId}`);
-            break;
+        // 3. 완료 메시지 처리 (state === "완료"로 감지)
+        if (data.data.state === "완료") {
+          console.log(`[크롤링 완료] workId: ${workId}, 최종 데이터 조회`);
+          fetchDetailData(); // 최종 집계 결과 동기화
         }
       });
     }
@@ -193,14 +223,14 @@ function StatusDetail() {
         console.log("[WebSocket] 구독 해제: Status Detail Page");
       }
     };
-  }, [workId, readyState, subscribe, handleWebSocketMessage]);
+  }, [workId, readyState, subscribe, handleCrawlingProgress, fetchDetailData]);
 
-  // 컴포넌트 언마운트 시 progressMap 전체 초기화
+  // 컴포넌트 언마운트 시 해당 workId의 progress만 초기화
   useEffect(() => {
     return () => {
-      resetCrawlingState();
+      resetCrawlingState(workId);
     };
-  }, [resetCrawlingState]);
+  }, [workId, resetCrawlingState]);
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
@@ -268,13 +298,13 @@ function StatusDetail() {
                 진행률:
               </Typography>
               <Box sx={{ width: "100%", mr: 1 }}>
-                <LinearProgress variant="determinate" value={progressValue} />
+                <LinearProgress variant="determinate" value={progress} />
               </Box>
               <Box sx={{ minWidth: 35 }}>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                >{`${Math.round(progressValue)}%`}</Typography>
+                >{`${Math.round(progress)}%`}</Typography>
               </Box>
             </Box>
             <Box sx={{ marginTop: 2 }}>
@@ -298,7 +328,7 @@ function StatusDetail() {
                     수집 실패
                   </Typography>
                   <Typography>
-                    {failureCount}/{totalCount}
+                    {failCount}/{totalCount}
                   </Typography>
                 </Box>
               </Box>
@@ -329,11 +359,11 @@ function StatusDetail() {
                     수집 데이터
                   </Typography>
                   <Typography>
-                    {collectionCount}/{totalCount}
+                    {collectCount}/{totalCount}
                   </Typography>
                 </Box>
                 <Typography sx={{ fontWeight: "bold" }}>
-                  수집완료 예상시간 : {estimatedTime}
+                  수집완료 예상시간 : {expectEndAt}
                 </Typography>
               </Box>
               <CommonTable
