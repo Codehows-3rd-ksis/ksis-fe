@@ -66,13 +66,13 @@ export const getColumns = ({
   },
   { field: 'startAt',    headerName: '수집시작',       flex: 1,  headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
-      if (!params.value) return ''; // 값 없으면 빈 문자열
+      if (!params.value) return '-'; // 값 없으면 빈 문자열
       return dayjs(params.value).format('YY-MM-DD HH:mm');           
     }
   },
   { field: 'endAt',    headerName: '수집완료',       flex: 1,    headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
-      if (!params.value) return ''; // 값 없으면 빈 문자열
+      if (!params.value) return '-';
       return dayjs(params.value).format('YY-MM-DD HH:mm');           
     }
   },
