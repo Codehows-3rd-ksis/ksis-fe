@@ -10,12 +10,17 @@ import SearchHeader from "../../component/SearchHeader"
 import { getSettingSearchCategory } from "../../Types/Search"
 // Comp
 import Alert from "../../component/Alert"
+import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
   // Table
+  const [page, setPage] = useState(0)
+  const [pageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([])
   const [filteredRows, setFilteredRows] = useState<SettingTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<SettingTableRows | null>(null)
@@ -29,26 +34,40 @@ function Setting() {
   const [alertMsg, setAlertMsg] = useState("")
 
   useEffect(()=> {
-    BoardRefresh();
-  }, [])
+    getTableDatas();
+  }, [page])
 
   /**  Table  =========================================== */
   const getTableDatas = async () => {
     try {
-        const data = await getSetting()
+        setLoading(true)
+        // const data = await getSetting()
         
-        const result = data.map((row: SettingTableRows, i: number) => ({
-            ...row,
-            id: row.settingId,
-            index: i+1,
+        // const result = data.map((row: SettingTableRows, i: number) => ({
+        //     ...row,
+        //     id: row.settingId,
+        //     index: i+1,
+        // }))
+        // setBaseRows(result)
+        // setFilteredRows(result)
+        const res = await getSetting("", "", page, pageSize)
+        console.log('res', res)
+        const result = res.content.map((row: SettingTableRows, i: number) => ({
+          ...row,
+          id: row.settingId,
+          index: page * pageSize + i + 1, // 🔥 전체 기준 index
         }))
+
         setBaseRows(result)
         setFilteredRows(result)
+        setTotalCount(res.totalElements)
+        setLoading(false)
     }
     catch(err) {
         console.error(err)
         setAlertMsg("설정데이터 조회 실패")
         setOpenErrorAlert(true)
+        setLoading(false)
     }
   }
   const BoardRefresh = () => {
@@ -111,7 +130,19 @@ function Setting() {
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable columns={columns} rows={filteredRows} /> {/* ✅ 변경 */}
+            <CommonTable 
+                columns={columns} 
+                rows={filteredRows} 
+                page={page}
+                pageSize={pageSize}
+                totalCount={totalCount}
+
+                onPageChange={(newPage) => {
+                  console.log("page", page)
+                  console.log("newPage", newPage)
+                  setPage(newPage)
+                }}
+            />
         </Box>
 
         {/* 삭제 팝업 */}
@@ -166,6 +197,7 @@ function Setting() {
               setOpenErrorAlert(false);
             }}
         />
+        <LoadingProgress open={loading} />
     </Box>
   )
 }

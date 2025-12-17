@@ -1,8 +1,19 @@
 import instance from "./AxiosInstance";
 
 // 유저관리 - 조회
-export const getUser = async () => {
-  const response = await instance.get(`/user`);
+// export const getUser = async () => {
+//   const response = await instance.get(`/user`);
+//   return response.data;
+// };
+export const getUser = async (type: string, keyword: string, page: number, size: number) => {
+  const response = await instance.get(`/user`, {
+    params: {
+      type,
+      keyword,
+      page,
+      size,
+    },
+  });
   return response.data;
 };
 

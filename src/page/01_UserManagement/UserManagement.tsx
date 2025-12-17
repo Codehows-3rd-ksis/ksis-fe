@@ -14,11 +14,16 @@ import EditAccountPage from "./EditAccountPage"
 import RegPage from "./RegPage"
 // Comp
 import Alert from "../../component/Alert";
+import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getUser, deleteUser } from "../../API/01_UsermanagementApi";
 
 function UserManagement() {
+  const [loading, setLoading] = useState(false)
   // Table
+  const [page, setPage] = useState(0)
+  const [pageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<UserTableRows[]>([])
   const [filteredRows, setFilteredRows] = useState<UserTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<UserTableRows | null>(null)
@@ -42,15 +47,28 @@ function UserManagement() {
 
   const getTableDatas = async () => {
       try {
-          const data = await getUser();
+          setLoading(true)
+          // const data = await getUser();
 
-          const result = data.map((row: UserTableRows, i: number) => ({
-              ...row,
-              id: row.userId,
-              index: i+1,
+          // const result = data.map((row: UserTableRows, i: number) => ({
+          //     ...row,
+          //     id: row.userId,
+          //     index: i+1,
+          // }))
+          // setBaseRows(result)
+          // setFilteredRows(result)
+          const res = await getUser("", "", page, pageSize)
+          console.log('res', res)
+          const result = res.content.map((row: UserTableRows, i: number) => ({
+            ...row,
+            id: row.userId,
+            index: page * pageSize + i + 1, // 🔥 전체 기준 index
           }))
+
           setBaseRows(result)
           setFilteredRows(result)
+          setTotalCount(res.totalElements)
+          setLoading(false)
       }
       catch(err) {
           console.error(err)
@@ -61,7 +79,8 @@ function UserManagement() {
 
   useEffect(()=> {
     getTableDatas();
-  }, [])
+  }, [page])
+  // }, [])
 
   const BoardRefresh = () => {
         getTableDatas();
@@ -158,7 +177,17 @@ function UserManagement() {
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable columns={columns} rows={filteredRows} />
+            <CommonTable 
+                columns={columns} 
+                rows={filteredRows} 
+                page={page}
+                pageSize={pageSize}
+                totalCount={totalCount}
+
+                onPageChange={(newPage) => {
+                  setPage(newPage)
+                }}
+            />
         </Box>
 
         {/* 등록 페이지 */}
@@ -231,6 +260,7 @@ function UserManagement() {
             setOpenErrorAlert(false);
           }}
         />
+        <LoadingProgress open={loading} />
     </Box>
   )
 }
