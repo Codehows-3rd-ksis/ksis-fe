@@ -6,7 +6,7 @@ function CommonTable(props: CommonTableProps) {
     const {
       columns, rows, selectedRows, 
       page = 0,
-      pageSize = 10,
+      pageSize = 5,
       totalCount = 0,
       height, width, 
       check, 
@@ -45,7 +45,7 @@ function CommonTable(props: CommonTableProps) {
           }}
         
           rowCount={totalCount}
-          pageSizeOptions={[10]}
+          pageSizeOptions={[pageSize]}
 
           rowSelectionModel={rowSelectionModel}
           onRowSelectionModelChange={(model: GridRowSelectionModel) => {

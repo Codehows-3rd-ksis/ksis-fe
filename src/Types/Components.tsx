@@ -1,25 +1,30 @@
 import type { SelectChangeEvent } from '@mui/material'
 
 export interface TextField_Type {
-    // Input
+    // Box sx
+    boxMinWidth?: string;
+    // TextField attr
     value?: number | string;
     label?: string;
     variant?: 'outlined' | 'filled' | 'standard' | undefined;
-    border?: string;
-    radius?: number | string;
-    inputWidth?: string;
-    height?: string;
-    fontSize?: string;
-    disabled?: boolean;
-    // required?: boolean;
-    placeholder?: string;
-    readOnly?: boolean;
     type?: 'text' | 'number' | 'password';
+    disabled?: boolean;
+    placeholder?: string;
+    // TextField sx
+    border?: string;
+    inputWidth?: string;
+    // input attr
+    readOnly?: boolean;
     step?: number;
-    onChange?: React.ChangeEventHandler<HTMLInputElement>;
-    onEnter?: () => void;
     startAdornment?: React.ReactNode; 
     endAdornment?: React.ReactNode;
+    // input sx
+    radius?: number | string;
+    height?: string;
+    fontSize?: string;
+    // func
+    onChange?: React.ChangeEventHandler<HTMLInputElement>;
+    onEnter?: () => void;
 }
 
 export interface Button_Type {

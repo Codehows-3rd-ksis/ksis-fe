@@ -6,32 +6,28 @@ import { Box, Typography } from '@mui/material'
 import CommonTable from "../../component/CommonTable"
 import { getColumns, type SettingTableRows } from '../../Types/TableHeaders/SettingHeader'
 // Search
-import SearchHeader from "../../component/SearchHeader"
 import { getSettingSearchCategory } from "../../Types/Search"
+import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
 // Comp
 import Alert from "../../component/Alert"
 import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
-interface SearchState {
-  type?: string
-  keyword?: string
-  page: number
-  size: number
-}
-
 function Setting() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false)
+  const [isSearched, setIsSearched] = useState(false);
   // Table
-  const [searchState, setSearchState] = useState<SearchState>({
-        page: 0,
-        size: 10,
-  })
+  const [searchState, setSearchState] = useState({
+    type: 'all',
+    keyword: '',
+    page: 0,
+    size: 5,
+  });
   const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([])
-  const [filteredRows, setFilteredRows] = useState<SettingTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<SettingTableRows | null>(null)
   
   // Alert
@@ -51,17 +47,8 @@ function Setting() {
     try {
         const { type, keyword, page, size } = searchState
         setLoading(true)
-        // const data = await getSetting()
-        
-        // const result = data.map((row: SettingTableRows, i: number) => ({
-        //     ...row,
-        //     id: row.settingId,
-        //     index: i+1,
-        // }))
-        // setBaseRows(result)
-        // setFilteredRows(result)
         const res = await getSetting(
-          type ?? '',
+          type ?? 'all',
           keyword ?? '',
           page, 
           size
@@ -74,7 +61,6 @@ function Setting() {
         }))
 
         setBaseRows(result)
-        setFilteredRows(result)
         setTotalCount(res.totalElements)
         setLoading(false)
     }
@@ -88,6 +74,25 @@ function Setting() {
   const BoardRefresh = () => {
         getTableDatas();
   }
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true)
+    setSearchState(prev => ({
+      ...prev,
+      ...conditions,
+      page: 0,
+    }));
+  };
+  const handleReset = () => {
+    setIsSearched(false)
+    setSearchState({
+      type: 'all',
+      keyword: '',
+      page: 0,
+      size: 5,
+    })
+  }
+
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
       navigate('/setting/reg')
@@ -135,19 +140,31 @@ function Setting() {
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           데이터 수집 설정
         </Typography>
-        <SearchHeader
-          baseRows={baseRows}                 // 전체 데이터 원본
-          setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
-          getSearchCategory={getSettingSearchCategory} // 검색 카테고리 목록
-          onClick={handleOpenReg}             // 등록 버튼 클릭 시 실행할 함수
-          btnName="설정 등록"
-        />
-
+        {/* Search */}
+        <Box sx={{padding: 2}}>
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+            }}
+            totalCount={totalCount}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getSettingSearchCategory()}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={true}
+            buttonLabel="설정 등록"
+            onButtonClick={handleOpenReg}
+          />
+        </Box>
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
             <CommonTable 
                 columns={columns} 
-                rows={filteredRows} 
+                rows={baseRows} 
                 page={searchState.page}
                 pageSize={searchState.size}
                 totalCount={totalCount}

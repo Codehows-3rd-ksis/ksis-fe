@@ -6,8 +6,9 @@ import { Box, Dialog, Typography } from '@mui/material'
 import CommonTable from "../../component/CommonTable"
 import { getColumns, type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 // Search
-import SearchHeader from "../../component/SearchHeader"
 import { getUserSearchCategory } from "../../Types/Search"
+import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
 // Pages
 import EditPage from "./EditPage"
 import EditAccountPage from "./EditAccountPage"
@@ -18,23 +19,18 @@ import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getUser, deleteUser } from "../../API/01_UsermanagementApi";
 
-interface SearchState {
-  type?: string
-  keyword?: string
-  page: number
-  size: number
-}
-
 function UserManagement() {
   const [loading, setLoading] = useState(false)
+  const [isSearched, setIsSearched] = useState(false);
   // Table
-  const [searchState, setSearchState] = useState<SearchState>({
-      page: 0,
-      size: 10,
-  })
   const [totalCount, setTotalCount] = useState(0)
+  const [searchState, setSearchState] = useState({
+    type: 'all',
+    keyword: '',
+    page: 0,
+    size: 5,
+  });
   const [baseRows, setBaseRows] = useState<UserTableRows[]>([])
-  const [filteredRows, setFilteredRows] = useState<UserTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<UserTableRows | null>(null)
 
   // Dialog
@@ -56,19 +52,11 @@ function UserManagement() {
 
   const getTableDatas = async () => {
     try {
-          const { type, keyword, page, size } = searchState
           setLoading(true)
-          // const data = await getUser();
+          const { type, keyword, page, size } = searchState
 
-          // const result = data.map((row: UserTableRows, i: number) => ({
-          //     ...row,
-          //     id: row.userId,
-          //     index: i+1,
-          // }))
-          // setBaseRows(result)
-          // setFilteredRows(result)
           const res = await getUser(
-            type ?? '',
+            type ?? 'all',
             keyword ?? '',
             page, 
             size
@@ -81,7 +69,6 @@ function UserManagement() {
           }))
 
           setBaseRows(result)
-          setFilteredRows(result)
           setTotalCount(res.totalElements)
           setLoading(false)
       }
@@ -89,17 +76,35 @@ function UserManagement() {
           console.error(err)
           setErrorMsg('get User 실패');
           setOpenErrorAlert(true)
+          setLoading(false)
       }
   }
 
   useEffect(()=> {
     getTableDatas();
   }, [searchState])
-  // }, [])
 
   const BoardRefresh = () => {
         getTableDatas();
-    }
+  }
+  
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true)
+    setSearchState(prev => ({
+      ...prev,
+      ...conditions,
+      page: 0,
+    }));
+  };
+  const handleReset = () => {
+    setIsSearched(false)
+    setSearchState({
+      type: 'all',
+      keyword: '',
+      page: 0,
+      size: 5,
+    })
+  }
 
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
@@ -182,19 +187,31 @@ function UserManagement() {
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           유저관리
         </Typography>
-        <SearchHeader
-          baseRows={baseRows}                 // 전체 데이터 원본
-          setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
-          getSearchCategory={getUserSearchCategory} // 검색 카테고리 목록
-          onClick={handleOpenReg}             // 등록 버튼 클릭 시 실행할 함수
-          btnName="유저 등록"
-        />
+        <Box sx={{padding: 2}}>
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+            }}
+            totalCount={totalCount}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getUserSearchCategory()}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={true}
+            buttonLabel="유저 등록"
+            onButtonClick={handleOpenReg}
+          />
+        </Box>
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
             <CommonTable 
                 columns={columns} 
-                rows={filteredRows} 
+                rows={baseRows} 
                 page={searchState.page}
                 pageSize={searchState.size}
                 totalCount={totalCount}
