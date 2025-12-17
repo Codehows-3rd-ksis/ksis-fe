@@ -14,12 +14,21 @@ import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
+interface SearchState {
+  type?: string
+  keyword?: string
+  page: number
+  size: number
+}
+
 function Setting() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false)
   // Table
-  const [page, setPage] = useState(0)
-  const [pageSize] = useState(10)
+  const [searchState, setSearchState] = useState<SearchState>({
+        page: 0,
+        size: 10,
+  })
   const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([])
   const [filteredRows, setFilteredRows] = useState<SettingTableRows[]>([]);
@@ -35,11 +44,12 @@ function Setting() {
 
   useEffect(()=> {
     getTableDatas();
-  }, [page])
+  }, [searchState])
 
   /**  Table  =========================================== */
   const getTableDatas = async () => {
     try {
+        const { type, keyword, page, size } = searchState
         setLoading(true)
         // const data = await getSetting()
         
@@ -50,12 +60,17 @@ function Setting() {
         // }))
         // setBaseRows(result)
         // setFilteredRows(result)
-        const res = await getSetting("", "", page, pageSize)
-        console.log('res', res)
+        const res = await getSetting(
+          type ?? '',
+          keyword ?? '',
+          page, 
+          size
+        )
+        
         const result = res.content.map((row: SettingTableRows, i: number) => ({
           ...row,
           id: row.settingId,
-          index: page * pageSize + i + 1, // 🔥 전체 기준 index
+          index: page * size + i + 1, // 🔥 전체 기준 index
         }))
 
         setBaseRows(result)
@@ -133,14 +148,15 @@ function Setting() {
             <CommonTable 
                 columns={columns} 
                 rows={filteredRows} 
-                page={page}
-                pageSize={pageSize}
+                page={searchState.page}
+                pageSize={searchState.size}
                 totalCount={totalCount}
 
-                onPageChange={(newPage) => {
-                  console.log("page", page)
-                  console.log("newPage", newPage)
-                  setPage(newPage)
+                onPageChange={(newPage: number) => {
+                  setSearchState(prev => ({
+                    ...prev,
+                    page: newPage,
+                  }))
                 }}
             />
         </Box>

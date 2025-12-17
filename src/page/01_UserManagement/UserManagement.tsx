@@ -18,11 +18,20 @@ import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getUser, deleteUser } from "../../API/01_UsermanagementApi";
 
+interface SearchState {
+  type?: string
+  keyword?: string
+  page: number
+  size: number
+}
+
 function UserManagement() {
   const [loading, setLoading] = useState(false)
   // Table
-  const [page, setPage] = useState(0)
-  const [pageSize] = useState(10)
+  const [searchState, setSearchState] = useState<SearchState>({
+      page: 0,
+      size: 10,
+  })
   const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<UserTableRows[]>([])
   const [filteredRows, setFilteredRows] = useState<UserTableRows[]>([]);
@@ -46,7 +55,8 @@ function UserManagement() {
   const [errorMsg, setErrorMsg] = useState('')
 
   const getTableDatas = async () => {
-      try {
+    try {
+          const { type, keyword, page, size } = searchState
           setLoading(true)
           // const data = await getUser();
 
@@ -57,12 +67,17 @@ function UserManagement() {
           // }))
           // setBaseRows(result)
           // setFilteredRows(result)
-          const res = await getUser("", "", page, pageSize)
-          console.log('res', res)
+          const res = await getUser(
+            type ?? '',
+            keyword ?? '',
+            page, 
+            size
+          )
+          
           const result = res.content.map((row: UserTableRows, i: number) => ({
             ...row,
             id: row.userId,
-            index: page * pageSize + i + 1, // 🔥 전체 기준 index
+            index: page * size + i + 1, // 🔥 전체 기준 index
           }))
 
           setBaseRows(result)
@@ -79,7 +94,7 @@ function UserManagement() {
 
   useEffect(()=> {
     getTableDatas();
-  }, [page])
+  }, [searchState])
   // }, [])
 
   const BoardRefresh = () => {
@@ -180,12 +195,15 @@ function UserManagement() {
             <CommonTable 
                 columns={columns} 
                 rows={filteredRows} 
-                page={page}
-                pageSize={pageSize}
+                page={searchState.page}
+                pageSize={searchState.size}
                 totalCount={totalCount}
 
-                onPageChange={(newPage) => {
-                  setPage(newPage)
+                onPageChange={(newPage: number) => {
+                  setSearchState(prev => ({
+                    ...prev,
+                    page: newPage,
+                  }))
                 }}
             />
         </Box>
