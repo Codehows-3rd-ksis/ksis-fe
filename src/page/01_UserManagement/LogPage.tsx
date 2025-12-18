@@ -1,135 +1,129 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
 import { Box, Typography, Breadcrumbs, Link,
-    Radio, RadioGroup, FormControl, FormControlLabel, InputAdornment
+    Radio, RadioGroup, FormControl, FormControlLabel
  } from '@mui/material'
-import CommonTable from '../../component/CommonTable'
+ // Table
+import PaginationServerTable from '../../component/PaginationServerTable'
 import { getColumns, type UserLogTableRows } from '../../Types/TableHeaders/UserManageLogHeader'
-import CustomButton from '../../component/CustomButton';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { Dayjs } from 'dayjs';
-import CustomTextField from '../../component/CustomTextField';
-import CustomIconButton from '../../component/CustomIconButton';
-import { getUserLog } from '../../API/01_UsermanagementApi';
+// Comp
 import Alert from '../../component/Alert';
+// Search
+import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
+// API
+import { getUserLog } from '../../API/01_UsermanagementApi';
+import LoadingProgress from "../../component/LoadingProgress";
+import CustomButton from '../../component/CustomButton';
+
+type SearchState = {
+  startDate: string | null;
+  endDate: string | null;
+  type: string;
+  keyword: string;
+  page: number;
+  size: number;
+};
 
 export default function LogPage () {
     const location = useLocation();
     const navigate = useNavigate();
     const { userId, username } = location.state || {}
 
+    const [loading, setLoading] = useState(false)
+    const [isSearched, setIsSearched] = useState(false);
+    // Table
+    const [totalCount, setTotalCount] = useState(0)
+    const [searchState, setSearchState] = useState<SearchState>({
+      startDate: '',
+      endDate: '',
+      type: 'all',
+      keyword: '',
+      page: 0,
+      size: 10,
+    });
     const [baseRows, setBaseRows] = useState<UserLogTableRows[]>([])
-    const [filteredRows, setFilteredRows] = useState<UserLogTableRows[]>([]);
-    
-    const [filterType, setFilterType] = useState('all');  // 라디오 선택값 상태
-    const [searchStartAt, setSearchStartAt] = useState<Dayjs | null>(null);
-    const [searchEndAt, setSearchEndAt] = useState<Dayjs | null>(null);
-    const [searchName, setSearchName] = useState('')
-    const [searchCount, setSearchCount] = useState(0)
-    
+    // Alert
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
     
     const getTableDatas = async () => {
         try {
-            const data = await getUserLog(userId);
+            setLoading(true)
+            const { startDate, endDate, type, keyword, page, size } = searchState
+            const res = await getUserLog(
+                startDate ?? '',
+                endDate ?? '',
+                type,
+                keyword,
+                page, 
+                size,
+                userId
+            );
             
-            const result = data.map((row: UserLogTableRows, i: number) => ({
-                ...row,
-                id: row.workId,
-                index: i+1,
+            const result = res.content.map((row: UserLogTableRows, i: number) => ({
+              ...row,
+              id: row.workId,
+              index: page * size + i + 1, // 🔥 전체 기준 index
             }))
             
             setBaseRows(result)
-            setFilteredRows(result)
+            setTotalCount(res.totalElements)
+            setLoading(false)
         }
         catch(err) {
             console.error(err)
             setErrorMsg('getUserLog 실패')
             setOpenErrorAlert(true)
+            setLoading(false)
         }
     }
     
     useEffect(()=> {
         getTableDatas()
-    }, [])
+    }, [searchState])
     
+    const handleSearch = (conditions: SearchConditions) => {
+      setIsSearched(true)
+      setSearchState(prev => ({
+        ...prev,
+        ...conditions,
+        page: 0,
+      }));
+    };
+    const handleReset = () => {
+      setIsSearched(false)
+      setSearchState({
+        startDate: '',
+        endDate: '',
+        type: 'all',
+        keyword: '',
+        page: 0,
+        size: 10,
+      })
+    }
+
+    // 라디오 선택 변경시 호출될 함수
+    const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setIsSearched(true);
+      setSearchState(prev => ({
+        ...prev,
+        type: value,
+        page: 0,
+      }));
+    };
+
     const handleDetailView = (row: UserLogTableRows) => {
         console.log('row',row)
         // 수집이력 상세가 만들어지면 거기에 연결하도록
     }
 
     const columns = getColumns({handleDetailView});
+
     const handleClose = () => {
         navigate('/user')
     }
-
-    const handleInputChange = (value: string) => {
-        setSearchName(value)
-    }
-
-    const handleSearch = (forceType?: string) => {
-        let filtered = [...baseRows]
-
-        const typeToUse = forceType ?? filterType;
-
-        if(searchStartAt && (searchEndAt === null)) {
-            filtered = filtered.filter(row => {
-                const startDate = searchStartAt?.format("YYYY-MM-DD");
-                const rowStartDate = row.startAt.slice(0, 10);
-                return rowStartDate >= startDate
-            })
-        } 
-        else if(searchEndAt && (searchStartAt === null)) {
-            filtered = filtered.filter(row => {
-                const endDate = searchEndAt?.format("YYYY-MM-DD");
-                const rowEndDate = row.endAt? row.endAt.slice(0, 10) : null;
-                if(rowEndDate) return rowEndDate <= endDate
-            })
-        } else if(searchStartAt && searchEndAt) {
-            filtered = filtered.filter(row => {
-                const startDate = searchStartAt?.format("YYYY-MM-DD");
-                const rowStartDate = row.startAt.slice(0, 10);
-                const endDate = searchEndAt?.format("YYYY-MM-DD");
-                const rowEndDate = row.endAt? row.endAt.slice(0, 10) : null;
-
-                if(rowEndDate) {
-                    return rowStartDate >= startDate && rowEndDate <= endDate
-                }
-            })
-        }
-
-        if(searchName.trim() !== '') {
-            filtered = filtered.filter(row =>
-                row.settingName?.includes(searchName.trimEnd())
-            )
-        }
-
-        if(typeToUse !== 'all') {
-            filtered = filtered.filter(row => row.type === typeToUse);
-        }
-
-        setFilteredRows(filtered)
-        setSearchCount(filtered.length)
-
-    }
-    const handleReset = () => {
-        setSearchStartAt(null)
-        setSearchEndAt(null)
-        setSearchName('')
-        setFilteredRows(baseRows)
-        setFilterType('all')
-        setSearchCount(0)
-    }
-
-    // 라디오 선택 변경시 호출될 함수
-    const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        setFilterType(value);
-
-        handleSearch(value)
-    };
 
     return (
         <Box sx={{ height: '97%'}}>
@@ -146,114 +140,110 @@ export default function LogPage () {
                             유저관리
                         </Link>
                         <Typography color="text.primary" sx={{ fontWeight: 'bold', fontSize: 16 }}>
-                            데이터 수집 요청 로그
+                            선택유저의 데이터 수집 이력
                         </Typography>
                     </Breadcrumbs>
             </Box>
             <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: -1}}>
-                  데이터 수집 요청 로그
+                  데이터 수집 이력
             </Typography>
-            {/* Search */}
-            <Box sx={{
-                    bgcolor: '#f0f0f0', display: 'flex', justifyContent: 'space-between', height: 80
-                }}>
-                    <Box sx={{display: 'flex', alignItems: 'center', padding:2, gap: 1}}>
-                        <Typography sx={{color: 'black'}}>User ID: </Typography>
-                        <Typography sx={{color: 'black', fontWeight: 600}}>{username}</Typography>
-                    </Box>
-                    {/*  */}
-                    <Box sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
-                        <LocalizationProvider dateAdapter={AdapterDayjs}>
-                          <DatePicker
-                            label="시작일자"
-                            format="YYYY-MM-DD"
-                            value={searchStartAt}
-                            onChange={(newValue) => setSearchStartAt(newValue)}
-                          />
-                          <DatePicker
-                            label="종료일자"
-                            format="YYYY-MM-DD"
-                            value={searchEndAt}
-                            onChange={(newValue) => setSearchEndAt(newValue)}
-                          />
-                        </LocalizationProvider>
-                        <CustomTextField
-                            value={searchName} 
-                            height='56px'
-                            inputWidth='300px' 
-                            placeholder="수집명"
-                            type="text"
-                            onChange={(e) => handleInputChange(e.target.value)}
-                            endAdornment={
-                              <InputAdornment position="end">
-                                    <CustomIconButton icon="search" width='20px' height='20px' color="gray" onClick={() => handleSearch()} />
-                                    <CustomIconButton icon="reset"   width='20px' height='20px' color="gray" onClick={handleReset} />
-                              </InputAdornment>
-                            }
-                        />
-                    </Box>
+            <Box sx={{padding: 2}}>
+              <SearchBarSet
+                value={{
+                  type: searchState.type,
+                  keyword: searchState.keyword,
+                  startDate: searchState.startDate,
+                  endDate: searchState.endDate
+                }}
+                totalCount={totalCount}
+                showDateRange={true}
+                showKeyword={true}
+                showSearchType={false}
+                showCount={isSearched}
+                onSearch={handleSearch}
+                onReset={handleReset}
+                showButton={false}
+              />
             </Box>
-            <Box sx={{display: 'flex', justifyContent: 'space-between'}}>
-                    {/* Search Count */}
-                    <Box sx={{display: 'flex', alignItems: 'center', padding: 2}}>
-                        {searchCount > 0? 
-                            (<Typography sx={{color: 'black', fontWeight: 700}}>검색결과 : {searchCount} 건 입니다.</Typography>) : (
-                                <></>
-                            )
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
+                <Box sx={{paddingLeft: 2}}>
+                    <Typography sx={{color: 'black', fontWeight: 'bold', fontSize: 20}}>
+                        User ID : {username}
+                    </Typography>
+                </Box>
+                {/* RadioBtn */}
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}
+                >
+                  <FormControl>
+                    <RadioGroup
+                      row
+                      value={searchState.type}
+                      onChange={handleFilterChange}
+                      sx={{ color: "black" }}
+                    >
+                      <FormControlLabel
+                        value="all"
+                        control={
+                          <Radio
+                            sx={{
+                              color: "gray",
+                              "&.Mui-checked": {
+                                color: "#BB510C",
+                              },
+                            }}
+                          />
                         }
-                    </Box>
-                    {/* RadioBtn */}
-                    <Box sx={{display: 'flex', justifyContent: 'flex-end', paddingRight: 1}}>
-                        <FormControl>
-                            <RadioGroup
-                                row
-                                value={filterType} 
-                                onChange={handleFilterChange} 
-                                sx={{color: 'black'}}
-                            >
-                                <FormControlLabel 
-                                    value="all" 
-                                    control={
-                                        <Radio sx={{
-                                            color: 'gray',
-                                            '&.Mui-checked': {
-                                                color: '#BB510C', 
-                                            }
-                                        }}/>
-                                    } 
-                                    label="전체" 
-                                />
-                                <FormControlLabel 
-                                    value="스케줄링" 
-                                    control={
-                                        <Radio sx={{
-                                            color: 'gray',
-                                            '&.Mui-checked': {
-                                                color: '#BB510C', 
-                                            }
-                                        }}/>
-                                    } 
-                                    label="스케줄링" 
-                                />
-                                <FormControlLabel 
-                                    value="수동실행" 
-                                    control={
-                                        <Radio sx={{
-                                            color: 'gray',
-                                            '&.Mui-checked': {
-                                                color: '#BB510C', 
-                                            }
-                                        }}/>
-                                    } 
-                                    label="수동실행" 
-                                />
-                            </RadioGroup>
-                        </FormControl>
-                    </Box>
+                        label="전체"
+                      />
+                      <FormControlLabel
+                        value="스케줄링"
+                        control={
+                          <Radio
+                            sx={{
+                              color: "gray",
+                              "&.Mui-checked": {
+                                color: "#BB510C",
+                              },
+                            }}
+                          />
+                        }
+                        label="스케줄링"
+                      />
+                      <FormControlLabel
+                        value="수동실행"
+                        control={
+                          <Radio
+                            sx={{
+                              color: "gray",
+                              "&.Mui-checked": {
+                                color: "#BB510C",
+                              },
+                            }}
+                          />
+                        }
+                        label="수동실행"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
             </Box>
             {/* 테이블 영역 */}
-            <Box sx={{padding: 2}}>
-                <CommonTable columns={columns} rows={filteredRows} />
+            <Box sx={{ padding: 2 }}>
+              <PaginationServerTable 
+                  columns={columns} 
+                  rows={baseRows} 
+                  page={searchState.page}
+                  pageSize={searchState.size}
+                  totalCount={totalCount}
+    
+                  onPageChange={(newPage: number) => {
+                    setSearchState(prev => ({
+                      ...prev,
+                      page: newPage,
+                    }))
+                  }}
+              />
             </Box>
             <Box sx={{display: 'flex', justifyContent: 'flex-end', padding: 2}}>
                 <CustomButton text="닫기" onClick={handleClose} backgroundColor='#f0f0f0' radius={2}/>
@@ -267,6 +257,7 @@ export default function LogPage () {
                 setOpenErrorAlert(false);
               }}
             />
+            <LoadingProgress open={loading} />
         </Box>
     )
 }
