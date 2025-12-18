@@ -17,7 +17,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
-import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
+import { type StatusTableRows } from "../../API/03_StatusApi";
 import CustomButton from "../../component/CustomButton";
 import Alert from "../../component/Alert";
 

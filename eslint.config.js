@@ -24,6 +24,7 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": "warn",
       "no-undef": "off",
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];
