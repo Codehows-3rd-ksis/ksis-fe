@@ -478,27 +478,3 @@ export default function History() {
     </Box>
   );
 }
-
-
-// const data = await getHistory()
-
-//       const res = data.map((row: HistoryTableRows, i: number) => {
-//         let cycle = "";
-//         if (row.cronExpression) {
-//           const { week, day } = parseCronWeekDay(row.cronExpression);
-//           cycle = `${week} ${day}`.trim();
-//         }
-
-//         const period =
-//           row.startDate && row.endDate
-//             ? `${row.startDate} ~ ${row.endDate}`
-//             : "";
-
-//         return {
-//           ...row,
-//           cycle,
-//           period,
-//           index: i+1,
-//           id: row.workId,
-//         };
-//       });
