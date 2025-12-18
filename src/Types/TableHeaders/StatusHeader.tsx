@@ -3,26 +3,9 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
 import { Box, LinearProgress } from "@mui/material";
-export interface StatusTableRows {
-  // 기본 정보
-  id: number;
-  SettingId?: number;
-  settingName?: string;
-  type?: string;
-  userId?: string;
+import dayjs from "dayjs";
 
-  // 스케줄링 설정 (고정값)
-  startDate?: string; // 스케줄 시작 날짜
-  endDate?: string; // 스케줄 종료 날짜
-  period?: string; // startDate ~ endDate
-  cycle?: string; // 수집 주기
-
-  // 실행 정보 (실시간)
-  startAt?: string; // 크롤링 시작 시각
-  endAt?: string; // 크롤링 완료 시각
-  state?: string; // 진행 상태
-  progress?: string; // 진행도
-}
+import { type StatusTableRows } from "../../API/03_StatusApi";
 
 export interface StatusTableColumnHandlers {
   handleStopClick: (row: StatusTableRows) => void;
@@ -58,6 +41,10 @@ export const getColumns = ({
     flex: 1,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+      if (!params.value) return ""; // 값 없으면 빈 문자열
+      return dayjs(params.value).format("YY-MM-DD HH:mm");
+    },
   },
   {
     field: "type",
@@ -72,9 +59,8 @@ export const getColumns = ({
     flex: 1,
     headerAlign: "center",
     align: "center",
-    valueGetter: (value, row) => {
-      console.log('value', value)
-      return `${row.startDate || ""} ~ ${row.endDate || ""}`
+    valueGetter: (_value, row) => {
+      return `${row.startDate || ""} ~ ${row.endDate || ""}`;
     },
     renderCell: (params) => {
       const startDate = params.row.startDate || "";
@@ -102,14 +88,23 @@ export const getColumns = ({
     field: "progress",
     headerName: "진행도",
     flex: 1,
+    minWidth: 300, // 최소 너비 지정
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-      // 진행도 값에서 숫자 추출 (예: "50%" -> 50, "완료" -> 100)
-      const progressValue =
-        typeof params.value === "string"
-          ? parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0
-          : params.value || 0;
+      let progressValue: number;
+      let progressLabel: string;
+
+      if (typeof params.value === "number") {
+        progressValue = params.value;
+        progressLabel = `${Math.floor(progressValue)}%`;
+      } else if (typeof params.value === "string") {
+        progressLabel = params.value;
+        progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
+      } else {
+        progressValue = 0;
+        progressLabel = "-";
+      }
 
       return (
         <Box
@@ -118,9 +113,12 @@ export const getColumns = ({
             alignItems: "center",
             justifyContent: "center",
             gap: 1,
+            width: "100%", // Box가 셀 너비를 모두 차지하도록 설정
           }}
         >
-          <span>{params.value}</span>
+          <Box sx={{ minWidth: "50px", textAlign: "right" }}>
+            <span>{progressLabel}</span>
+          </Box>
           <Box
             sx={{
               display: "inline-flex",
@@ -143,10 +141,14 @@ export const getColumns = ({
               }}
             />
           </Box>
-          <CustomIconButton
-            icon="stop"
-            onClick={() => handleStopClick(params.row)}
-          />
+          <Box
+            sx={{ minWidth: "40px", display: "flex", justifyContent: "center" }}
+          >
+            <CustomIconButton
+              icon="stop"
+              onClick={() => handleStopClick(params.row)}
+            />
+          </Box>
         </Box>
       );
     },
