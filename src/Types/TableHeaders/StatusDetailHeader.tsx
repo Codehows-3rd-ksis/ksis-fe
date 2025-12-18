@@ -7,6 +7,7 @@ import { type GridColDef } from "@mui/x-data-grid";
 import { parseResultValue } from "../../utils/resultValueParser";
 import dayjs from "dayjs";
 import { Box, LinearProgress } from "@mui/material";
+import CustomIconButton from "../../component/CustomIconButton";
 
 //** 데이터 **/
 // 크롤링 결과 항목 (백엔드 CrawlResultItem 엔티티)
@@ -15,18 +16,16 @@ export interface CrawlResultItem {
   itemId: number;
   seq: number;
   resultValue: any;
-  state: "SUCCESS" | "FAILURE";
+  state: "SUCCESS" | "FAILED";
   url?: string;
   [key: string]: any;
 }
 
 // 수집 실패 행 타입 (failureRows state용)
 export interface FailureRow {
-  id: number;
-  itemId: number;
-  seq: number;
-  state: "FAILURE";
-  url: string;
+  id: number; // MUI DataGrid용 고유 ID (백엔드 itemId와 동일)
+  seq: number; // 진행번호
+  url: string; // 실패한 URL
 }
 
 //** 컬럼정의 **/
@@ -45,6 +44,17 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
     flex: 1,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+      if (params.value === "RUNNING") return "진행중";
+      if (params.value === "SUCCESS") return "완료";
+      if (params.value === "FAILED") return "실패";
+      if (params.value === "PARTIAL") {
+        const failCount = params.row.failCount || 0;
+        console.log(params.row);
+        return `수집완료(수집실패:${failCount}건)`;
+      }
+      return params.value; // 알 수 없는 값은 그대로 표시
+    },
   },
   {
     field: "startAt",
@@ -109,11 +119,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
 
       if (typeof params.value === "number") {
         progressValue = params.value;
-        if (progressValue === 100) {
-          progressLabel = "완료";
-        } else {
-          progressLabel = `${Math.floor(progressValue)}%`;
-        }
+        progressLabel = `${Math.floor(progressValue)}%`;
       } else if (typeof params.value === "string") {
         progressLabel = params.value;
         progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
@@ -129,7 +135,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
             alignItems: "center",
             justifyContent: "center",
             gap: 1,
-            width: "100%",
+            width: "100%", // Box가 셀 너비를 모두 차지하도록 설정
           }}
         >
           <Box sx={{ minWidth: "50px", textAlign: "right" }}>
@@ -157,6 +163,17 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
               }}
             />
           </Box>
+          <Box
+            sx={{ minWidth: "40px", display: "flex", justifyContent: "center" }}
+          >
+            <CustomIconButton
+              icon="stop"
+              onClick={() => {
+                // TODO: 중지 기능 구현 예정
+                console.log("중지 버튼 클릭:", params.row);
+              }}
+            />
+          </Box>
         </Box>
       );
     },
@@ -168,30 +185,39 @@ export const FAILURE_COLUMNS: GridColDef[] = [
   {
     field: "seq",
     headerName: "진행번호",
-    flex: 1,
+    width: 120,
     headerAlign: "center",
     align: "center",
   },
   {
     field: "url",
     headerName: "URL",
-    flex: 7,
+    flex: 9,
     headerAlign: "center",
     align: "left",
+    renderCell: (params) => {
+      if (!params.value) return "";
+      return (
+        <a
+          href={params.value}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "#1976d2",
+            textDecoration: "none",
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.textDecoration = "underline";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.textDecoration = "none";
+          }}
+        >
+          {params.value}
+        </a>
+      );
+    },
   },
-  // {
-  //   field: "recollect",
-  //   headerName: "재수집",
-  //   flex: 1,
-  //   headerAlign: "center",
-  //   align: "center",
-  //   renderCell: (params) => (
-  //     <CustomIconButton
-  //       icon="refresh"
-  //       onClick={() => params.row.onRecollect?.(params.row.itemId)}
-  //     />
-  //   ),
-  // },
 ];
 
 // 수집 데이터 컬럼 생성 함수 (동적 컬럼)
@@ -216,7 +242,7 @@ export const createCollectionColumns = (
     {
       field: "seq",
       headerName: "진행번호",
-      flex: 1,
+      width: 120,
       headerAlign: "center",
       align: "center",
     },
@@ -224,7 +250,42 @@ export const createCollectionColumns = (
       ({ field, headerName }): GridColDef => ({
         field,
         headerName,
-        flex: field === "context" ? 4 : 1,
+        minWidth: field === "context" ? 300 : 150,
+        flex: 1,
+        headerAlign: "center",
+        align: field === "context" ? "left" : "center",
+      })
+    ),
+  ];
+};
+
+// 이미 파싱된 row 객체에서 컬럼 생성 (파싱 재사용, 성능 최적화)
+export const createColumnsFromParsedRow = (
+  parsedRow: Record<string, any>
+): GridColDef[] => {
+  if (!parsedRow) return [];
+
+  // id, itemId, seq, state, isFailure 같은 메타 필드 제외하고 동적 필드만 추출
+  const dynamicFields = Object.keys(parsedRow).filter(
+    (key) => !["id", "itemId", "seq", "state", "isFailure"].includes(key)
+  );
+
+  if (dynamicFields.length === 0) return [];
+
+  return [
+    {
+      field: "seq",
+      headerName: "진행번호",
+      width: 120,
+      headerAlign: "center",
+      align: "center",
+    },
+    ...dynamicFields.map(
+      (field): GridColDef => ({
+        field,
+        headerName: field,
+        minWidth: field === "context" ? 300 : 150,
+        flex: 1,
         headerAlign: "center",
         align: field === "context" ? "left" : "center",
       })

@@ -2,19 +2,30 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Paper } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
-import {
-  getColumns,
-  type StatusTableRows,
-} from "../../Types/TableHeaders/StatusHeader";
+import { getColumns } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
-import { getStatusList, stopCrawl } from "../../API/03_StatusApi";
+import {
+  type StatusTableRows,
+  getStatusList,
+  stopCrawl,
+} from "../../API/03_StatusApi";
 import type { Subscription } from "stompjs";
 
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import { useAuthStore } from "../../Store/authStore";
-import useCrawlingProgress from "../../hooks/useCrawlingProgress";
-import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
+import useCrawlingProgress, {
+  type CrawlingProgress,
+} from "../../hooks/useCrawlingProgress";
+
+// 웹소켓을 통해 수신될 수 있는 모든 메시지 타입을 포괄하는 범용 인터페이스
+interface GeneralWebSocketMessage {
+  type?: string;
+  workId?: number;
+  data?: Partial<CrawlingProgress>;
+  crawlResultItem?: any;
+  [key: string]: any;
+}
 
 function Status() {
   const navigate = useNavigate();
@@ -34,26 +45,21 @@ function Status() {
 
   // 현황 목록 조회 API
   const fetchStatusList = useCallback(async () => {
+    console.log("API 호출 시작");
     try {
       const data = await getStatusList();
+      console.log("API 응답:", data);
       const result = data.map((row: StatusTableRows) => ({
         ...row,
         id: row.workId,
       }));
       setBaseRows(result);
-
-      // baseRows에 없는 작업을 progressMap에서 제거
-      const validWorkIds = new Set(data.map((row) => row.workId));
-      progressMap.forEach((_, workId) => {
-        if (!validWorkIds.has(workId)) {
-          resetCrawlingState(workId);
-        }
-      });
+      console.log("baseRows 업데이트 완료");
     } catch (error) {
       alert("수집 현황 목록을 불러오는 데 실패했습니다.");
       console.error("수집 현황 목록 조회 실패:", error);
     }
-  }, [progressMap, resetCrawlingState]);
+  }, []);
 
   // 수집 중지 API
   const handleStopCrawl = async (row: StatusTableRows) => {
@@ -89,13 +95,31 @@ function Status() {
     setSelectedRow(null);
   };
 
-  // 컬럼 정의 및 데이터 가공 (실시간 진행률 병합)
+  // 컬럼 정의
   const columns = getColumns({ handleDetailOpen, handleStopClick });
 
+  // 전체적인 데이터 흐름
+
+  //   1. 마운트 시:
+  //      API 호출 (getStatusList) → baseRows 설정
+
+  //   2. WebSocket 연결:
+  //      /topic/crawling-progress 구독 → 진행률 메시지 수신
+  //      → handleCrawlingProgress 호출 → progressMap 업데이트
+
+  //   3. 렌더링:
+  //      baseRows + progressMap 병합 → displayRows 생성
+  //      → CommonTable에 전달 → 화면에 실시간 진행률 표시
+
+  //   4. 정리:
+  //      baseRows에 없는 workId → progressMap에서 제거
+
+  //API 응답(baseRows)과 웹소켓(progressMap) 병합
   const displayRows = baseRows.map((row) => {
     const progressInfo = progressMap.get(row.workId);
     if (!progressInfo) return row;
 
+    //workid 있으면 progress, state 업데이트
     return {
       ...row,
       progress: progressInfo.progress,
@@ -103,8 +127,23 @@ function Status() {
     };
   });
 
+  // API 응답(baseRows)과 웹소켓(progressMap) 상태 동기화
+  // 완료되거나 없어진 작업을 progressMap에서 제거
+  useEffect(() => {
+    if (baseRows.length === 0) return; // baseRows가 아직 로드되지 않았으면 실행하지 않음
+
+    const validWorkIds = new Set(baseRows.map((row) => row.workId)); //baseRows에서 유효한 작업id목록 추출
+    progressMap.forEach((_, workId) => {
+      if (!validWorkIds.has(workId)) {
+        resetCrawlingState(workId); //progressMap에 없으면 메모리에서 제거
+      }
+    });
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseRows, progressMap]);
+
   // 초기 데이터 로드
   useEffect(() => {
+    console.log("[useEffect] fetchStatusList 실행됨");
     fetchStatusList();
   }, [fetchStatusList]);
 
@@ -126,21 +165,50 @@ function Status() {
 
       console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
-        const parsedMessage: CrawlingMessage = JSON.parse(message.body);
-        handleCrawlingProgress(parsedMessage);
+        const parsedMessage: GeneralWebSocketMessage = JSON.parse(message.body);
 
-        // 신규 작업 감지 시 목록 갱신
-        const { workId } = parsedMessage;
-        setBaseRows((prevRows) => {
-          const exists = prevRows.some((row) => row.workId === workId);
-          if (!exists) {
-            console.log(
-              `[Status] 신규 작업 감지 (ID: ${workId}) -> 목록 갱신 요청`
+        // 메시지 타입에 따라 분기 처리
+        if (
+          parsedMessage.type === "COLLECT_UPDATE" &&
+          parsedMessage.workId !== undefined
+        ) {
+          // 1. type이 'COLLECT_UPDATE'인 경우
+          const crawlingMessage = parsedMessage as CrawlingMessage;
+          handleCrawlingProgress(crawlingMessage);
+
+          setBaseRows((prevRows) => {
+            const exists = prevRows.some(
+              (row) => row.workId === crawlingMessage.workId
             );
-            fetchStatusList();
-          }
-          return prevRows;
-        });
+            if (!exists) {
+              console.log(
+                `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
+              );
+              fetchStatusList();
+            }
+            return prevRows;
+          });
+        } else if (
+          parsedMessage.workId !== undefined &&
+          parsedMessage.progress !== undefined
+        ) {
+          // 2. type이 없지만, workId와 progress가 있는 경우
+          const transformedMessage: CrawlingMessage = {
+            type: "COLLECT_UPDATE",
+            workId: parsedMessage.workId,
+            data: {
+              progress: parsedMessage.progress,
+              state: parsedMessage.progress >= 100 ? "수집완료" : "수집중",
+            },
+          };
+          handleCrawlingProgress(transformedMessage);
+        } else {
+          // 3. 그 외 다른 모든 메시지는 콘솔에 경고로 출력
+          console.warn(
+            "[Status] 알 수 없는 웹소켓 메시지 수신:",
+            parsedMessage
+          );
+        }
       });
     }
 
@@ -151,9 +219,8 @@ function Status() {
         console.log("[WebSocket] 구독 해제: Status Page");
       }
     };
-  }, [readyState, userId, subscribe, handleCrawlingProgress, fetchStatusList, userRole]);
-
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyState, subscribe]);
 
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>

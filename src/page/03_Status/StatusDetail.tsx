@@ -10,30 +10,21 @@ import {
 } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
-// import Alert from "../../component/Alert";
-// import CustomButton from "../../component/CustomButton";
-import { type StatusTableRows } from "../../Types/TableHeaders/StatusHeader";
-import { type StatusDetailResponse } from "../../API/03_StatusApi";
+import { type StatusTableRows } from "../../API/03_StatusApi";
 import {
   type FailureRow,
   DETAIL_SETTING_COLUMNS,
   FAILURE_COLUMNS,
-  createCollectionColumns,
+  createColumnsFromParsedRow,
 } from "../../Types/TableHeaders/StatusDetailHeader";
-import {
-  getStatusDetail,
-  // recollectWork,
-  // recollectItem,
-} from "../../API/03_StatusApi";
+import { getStatusDetail } from "../../API/03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
 import { useAuthStore } from "../../Store/authStore";
 import type { Subscription } from "stompjs";
-import {
-  parseResultValue,
-  parseResultValueRows,
-} from "../../utils/resultValueParser";
+import { parseResultValue } from "../../utils/resultValueParser";
+import dayjs from "dayjs";
 
 function StatusDetail() {
   // 라우팅
@@ -59,6 +50,7 @@ function StatusDetail() {
   // 데이터 상태
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
   const [failureRows, setFailureRows] = useState<FailureRow[]>([]);
+
   // 파싱된 수집 데이터 (동적 필드: title, writer 등)
   const [collectionRows, setCollectionRows] = useState<
     Array<Record<string, any>>
@@ -69,75 +61,32 @@ function StatusDetail() {
   const collectionIdSet = useRef(new Set<number>());
   const failureIdSet = useRef(new Set<number>());
 
-  // 재수집 관련 상태
-  // const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  // const [alertOpen, setAlertOpen] = useState(false);
-  // const [alertType, setAlertType] = useState<"single" | "batch">("single");
-
   // 진행도 정보 (Source of Truth for counts)
   const currentProgress = progressMap.get(workId) ?? null;
 
   // 실패 여부가 포함된 수집 데이터 (state 기반)
-  const collectionRowsWithFailure = collectionRows.map((row) => ({
-    ...row,
-    isFailure: row.state === "FAILURE",
-  }));
+  const collectionRowsWithFailure = collectionRows.map((row) => {
+    // id가 없는 경우 디버깅
+    if (!row.id && !row.itemId) {
+      console.error("❌ id가 없는 row 발견:", row);
+    }
+    return {
+      ...row,
+      id: row.id || row.itemId, // id 보장
+      isFailure: row.state === "FAILED",
+    };
+  });
 
   // UI 표시용 값 (currentProgress를 신뢰)
   const totalCount = currentProgress?.totalCount ?? 0;
   const collectCount = currentProgress?.collectCount ?? 0;
   const failCount = currentProgress?.failCount ?? 0;
+
+  // 완료 예상시간
   const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
-  const progress = currentProgress?.progress ?? 0;
+  // const progress = currentProgress?.progress ?? 0;
 
   const handleBack = () => navigate("/status");
-
-  // ========== 재수집 핸들러 ==========
-  // const handleRecollectItem = async (itemId: number) => {
-  //   try {
-  //     await recollectItem(itemId);
-  //     alert("재수집 요청이 완료되었습니다.");
-  //   } catch (error) {
-  //     console.error("개별 재수집 요청 실패:", error);
-  //     alert("재수집 요청에 실패했습니다.");
-  //   }
-  // };
-
-  // const handleBatchRecollect = async () => {
-  //   try {
-  //     await recollectWork(workId);
-  //     alert("일괄 재수집 요청이 완료되었습니다.");
-  //   } catch (error) {
-  //     console.error("일괄 재수집 요청 실패:", error);
-  //     alert("일괄 재수집 요청에 실패했습니다.");
-  //   }
-  // };
-
-  // const handleRecollectClick = (itemId: number) => {
-  //   setSelectedItemId(itemId);
-  //   setAlertType("single");
-  //   setAlertOpen(true);
-  // };
-
-  // const handleBatchRecollectClick = () => {
-  //   setAlertType("batch");
-  //   setAlertOpen(true);
-  // };
-
-  // const handleConfirm = async () => {
-  //   setAlertOpen(false);
-  //   if (alertType === "single" && selectedItemId !== null) {
-  //     await handleRecollectItem(selectedItemId);
-  //   } else if (alertType === "batch") {
-  //     await handleBatchRecollect();
-  //   }
-  //   setSelectedItemId(null);
-  // };
-
-  // const handleCancel = () => {
-  //   setAlertOpen(false);
-  //   setSelectedItemId(null);
-  // };
 
   // workId 변경 시 상태 초기화
   useEffect(() => {
@@ -157,43 +106,59 @@ function StatusDetail() {
       // 기본 정보 설정 (MUI DataGrid를 위해 id 추가)
       setDetailData({ ...data.basicInfo, id: data.basicInfo.workId });
 
-      // 실패 목록 설정 (id: itemId로 매핑, state 필드 추가)
-      const failureList = data.failureList.map((row) => ({
-        ...row,
-        id: row.itemId,
-        itemId: row.itemId,
-        state: "FAILURE" as const,
-        // onRecollect: handleRecollectClick, // 재수집 버튼 클릭 핸들러
+      // 실패 목록 설정
+      const failureList = data.failureList.map((row: any) => ({
+        id: row.id || row.itemId,
+        seq: row.seq,
+        url: row.url,
       }));
       setFailureRows(failureList);
-      failureList.forEach((row) => failureIdSet.current.add(row.itemId));
+      failureList.forEach((row) => failureIdSet.current.add(row.id));
 
       // ✅ 초기 수집 데이터 파싱 (이미 수집된 데이터 표시)
       if (data.collectionData.rows.length > 0) {
-        const parsedRows = parseResultValueRows(
-          data.collectionData.rows,
-          (row: any) => ({ id: row.itemId, itemId: row.itemId, seq: row.seq })
-        );
-        setCollectionRows(parsedRows);
-        parsedRows.forEach((row) => collectionIdSet.current.add(row.itemId));
+        const parsedRows = data.collectionData.rows.map((row: any) => {
+          // SUCCESS일 때만 resultValue 파싱, FAILED는 동적 컬럼 데이터 비움
+          // state 필드가 없으면 SUCCESS로 간주 (백엔드 호환성)
+          const rowId = row.id || row.itemId;
+          let additionalData = {};
+          if (!row.state || row.state === "SUCCESS") {
+            if (typeof row.resultValue === "string") {
+              additionalData = parseResultValue(row.resultValue);
+            } else {
+              additionalData = row.resultValue || {};
+            }
+          }
 
-        // 동적 컬럼 생성
-        setCollectionColumns(createCollectionColumns(data.collectionData.rows));
+          return {
+            id: rowId,
+            itemId: rowId,
+            seq: row.seq,
+            state: row.state || "SUCCESS",
+            ...additionalData,
+          };
+        });
+
+        setCollectionRows(parsedRows);
+        parsedRows.forEach((row) => collectionIdSet.current.add(row.id));
+
+        // ✅ API 데이터에서 컬럼 생성 (완료된 작업 조회 시)
+        // 첫 번째 SUCCESS 행으로 동적 컬럼 생성
+        const firstSuccessRow = parsedRows.find(
+          (row) => !row.state || row.state === "SUCCESS"
+        );
+        if (firstSuccessRow) {
+          setCollectionColumns(createColumnsFromParsedRow(firstSuccessRow));
+        }
       }
 
-      // 진행률 정보 초기화 (API 응답으로 받은 DB 집계값을 사용)
       handleCrawlingProgress({
         type: "COLLECT_UPDATE",
         workId,
         data: {
-          ...data.progress,
+          ...data.progress, // totalCount, collectCount, failCount, expectEndAt
           state: data.basicInfo.state, // API 응답의 최신 state 사용
-          progress:
-            data.progress.totalCount > 0
-              ? ((data.progress.collectCount + data.progress.failCount) /
-                  data.progress.totalCount) *
-                100
-              : 0,
+          progress: data.basicInfo.progress, // API 응답의 진행률 사용
         },
       });
     } catch (error) {
@@ -203,11 +168,10 @@ function StatusDetail() {
     }
   }, [workId, navigate, handleCrawlingProgress]);
 
+  // 초기 데이터 로드
   useEffect(() => {
-    if (readyState === ReadyState.OPEN) {
-      fetchDetailData();
-    }
-  }, [readyState, fetchDetailData]);
+    fetchDetailData();
+  }, [fetchDetailData]);
 
   // WebSocket 연결
   useEffect(() => {
@@ -224,7 +188,6 @@ function StatusDetail() {
           ? `/topic/crawling-progress/${workId}` // 관리자: 공개 토픽
           : `/user/queue/crawling-progress/${workId}`; // 일반 유저: 개인 큐
 
-      console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
         const data: CrawlingMessage = JSON.parse(message.body);
 
@@ -237,11 +200,12 @@ function StatusDetail() {
         if (data.crawlResultItem) {
           const item = data.crawlResultItem;
 
-          // collectionRows: 모든 항목 추가 (FAILURE는 seq만, SUCCESS는 전체 데이터)
-          if (!collectionIdSet.current.has(item.itemId)) {
-            collectionIdSet.current.add(item.itemId);
+          // collectionRows: 모든 항목 추가 (FAILED는 seq만, SUCCESS는 전체 데이터)
+          const itemId = item.id || item.itemId;
+          if (!collectionIdSet.current.has(itemId)) {
+            collectionIdSet.current.add(itemId);
 
-            // SUCCESS일 때만 resultValue 파싱, FAILURE는 비움
+            // SUCCESS일 때만 resultValue 파싱, FAILED는 비움
             let additionalData = {};
             if (item.state === "SUCCESS") {
               if (typeof item.resultValue === "string") {
@@ -252,31 +216,38 @@ function StatusDetail() {
             }
 
             const collectionItem = {
-              id: item.itemId,
-              itemId: item.itemId,
+              id: itemId,
+              itemId: itemId,
               seq: item.seq,
               state: item.state,
               ...additionalData,
             };
+
+            // 컬럼이 아직 없고 SUCCESS 데이터면 동적 컬럼 생성
+            if (collectionColumns.length === 0 && item.state === "SUCCESS") {
+              setCollectionColumns(createColumnsFromParsedRow(collectionItem));
+            }
+
             setCollectionRows((prev) => [...prev, collectionItem]);
           }
 
-          // failureRows: FAILURE만 추가 (상세 정보)
-          if (
-            item.state === "FAILURE" &&
-            !failureIdSet.current.has(item.itemId)
-          ) {
-            failureIdSet.current.add(item.itemId);
+          // failureRows: FAILED만 추가 (상세 정보)
+          if (item.state === "FAILED" && !failureIdSet.current.has(itemId)) {
+            failureIdSet.current.add(itemId);
             setFailureRows((prev) => [
               ...prev,
-              { ...item, id: item.itemId, itemId: item.itemId } as FailureRow,
+              {
+                id: itemId,
+                seq: item.seq,
+                url: item.url,
+              } as FailureRow,
             ]);
           }
         }
 
         // 3. 완료 메시지 처리 (endAt 업데이트)
-        if (data.data.endAt && detailData) {
-          console.log(`[크롤링 완료] workId: ${workId}, endAt: ${data.data.endAt}`);
+        if (data.data.endAt) {
+          // detailData 조건 제거 - setDetailData 내부에서 prev 체크
           setDetailData((prev) =>
             prev ? { ...prev, endAt: data.data.endAt } : prev
           );
@@ -287,10 +258,10 @@ function StatusDetail() {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = undefined;
-        console.log("[WebSocket] 구독 해제: Status Detail Page");
       }
     };
-  }, [workId, readyState, subscribe, handleCrawlingProgress, detailData, userRole]);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readyState, subscribe]);
 
   // 컴포넌트 언마운트 시 해당 workId의 progress만 초기화
   useEffect(() => {
@@ -362,6 +333,7 @@ function StatusDetail() {
                           ...detailData,
                           progress: currentProgress?.progress ?? 0,
                           state: currentProgress?.state ?? detailData.state,
+                          failCount: currentProgress?.failCount ?? 0,
                         },
                       ]
                     : []
@@ -394,24 +366,30 @@ function StatusDetail() {
                     {failCount}/{totalCount}
                   </Typography>
                 </Box>
-                {/* <CustomButton
-                  text="일괄 재수집"
-                  onClick={handleBatchRecollectClick}
-                  radius={2}
-                /> */}
               </Box>
               <CommonTable
                 columns={FAILURE_COLUMNS}
                 rows={failureRows}
-                pageSize={5}
+                pageSize={3}
+                height={267}
               />
             </Box>
-            <Box sx={{ marginTop: "auto" }}>
+            <Box
+              sx={{
+                marginTop: 2,
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "row",
                   justifyContent: "space-between",
+                  marginBottom: 1,
                 }}
               >
                 <Box
@@ -420,7 +398,6 @@ function StatusDetail() {
                     flexDirection: "row",
                     gap: "10px",
                     alignItems: "center",
-                    marginBottom: 1,
                   }}
                 >
                   <Typography variant="h6" sx={{ fontWeight: "bold" }}>
@@ -431,14 +408,23 @@ function StatusDetail() {
                   </Typography>
                 </Box>
                 <Typography sx={{ fontWeight: "bold" }}>
-                  수집완료 예상시간 : {expectEndAt}
+                  수집완료 예상시간 :{" "}
+                  {expectEndAt &&
+                  expectEndAt !== "계산 중..." &&
+                  expectEndAt !== "완료" &&
+                  dayjs(expectEndAt).isValid()
+                    ? dayjs(expectEndAt).format("YY-MM-DD HH:mm")
+                    : expectEndAt}
                 </Typography>
               </Box>
-              <CommonTable
-                columns={collectionColumns}
-                rows={collectionRowsWithFailure}
-                pageSize={5}
-              />
+              <Box sx={{ flex: 1, minHeight: 0 }}>
+                <CommonTable
+                  columns={collectionColumns}
+                  rows={collectionRowsWithFailure}
+                  pageSize={7}
+                  height="475px"
+                />
+              </Box>
             </Box>
             <Box
               sx={{
@@ -455,18 +441,6 @@ function StatusDetail() {
           </Box>
         </Paper>
       </Box>
-
-      {/* <Alert
-        open={alertOpen}
-        type="question"
-        text={
-          alertType === "single"
-            ? `선택한 항목을 재수집하시겠습니까?`
-            : `모든 실패 항목을 재수집하시겠습니까?`
-        }
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      /> */}
     </Box>
   );
 }

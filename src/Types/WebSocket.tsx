@@ -16,7 +16,7 @@ export interface CrawlingMessage {
     itemId: number;
     seq: number;
     resultValue: any;
-    state: "SUCCESS" | "FAILURE";
+    state: "SUCCESS" | "FAILED";
     url?: string;
     [key: string]: any;
   }; // 방금 처리된 CrawlResultItem (state로 성공/실패 구분)

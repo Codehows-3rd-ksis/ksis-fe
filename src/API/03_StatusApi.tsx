@@ -20,22 +20,26 @@ export interface StatusTableRows {
   startAt?: string; // 수집시작
   endAt?: string; // 수집완료
   state?: string; // 진행 상태
-  progress?: string; // 진행도
+  progress?: number; // 진행도
 }
 
-// 상세 조회 응답 타입
+// 상세 조회 백엔드 응답 타입
 export interface StatusDetailResponse {
   basicInfo: StatusTableRows;
+
   failureList: Array<{ itemId: number; seq: number; url: string }>;
+
   collectionData: {
     columns: Array<{ field: string; headerName: string }>;
     rows: Array<{
       itemId: number;
       seq: number;
+      state: "SUCCESS" | "FAILED";
       resultValue: string;
       [key: string]: any;
     }>;
   };
+
   progress: {
     totalCount: number;
     collectCount: number;

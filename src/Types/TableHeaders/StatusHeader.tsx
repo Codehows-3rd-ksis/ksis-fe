@@ -59,7 +59,7 @@ export const getColumns = ({
     flex: 1,
     headerAlign: "center",
     align: "center",
-    valueGetter: (value, row) => {
+    valueGetter: (_value, row) => {
       return `${row.startDate || ""} ~ ${row.endDate || ""}`;
     },
     renderCell: (params) => {
@@ -97,11 +97,7 @@ export const getColumns = ({
 
       if (typeof params.value === "number") {
         progressValue = params.value;
-        if (progressValue === 100) {
-          progressLabel = "완료";
-        } else {
-          progressLabel = `${Math.floor(progressValue)}%`;
-        }
+        progressLabel = `${Math.floor(progressValue)}%`;
       } else if (typeof params.value === "string") {
         progressLabel = params.value;
         progressValue = parseFloat(params.value.replace(/[^0-9.]/g, "")) || 0;
@@ -145,7 +141,9 @@ export const getColumns = ({
               }}
             />
           </Box>
-          <Box sx={{ minWidth: "40px", display: "flex", justifyContent: "center" }}>
+          <Box
+            sx={{ minWidth: "40px", display: "flex", justifyContent: "center" }}
+          >
             <CustomIconButton
               icon="stop"
               onClick={() => handleStopClick(params.row)}
