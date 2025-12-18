@@ -103,6 +103,10 @@ export default function SearchBarSet({
                 slotProps={{
                   textField: {
                     size: "small",
+                    sx: {
+                      backgroundColor: '#fff',
+                      borderRadius: 1
+                    },
                   },
                 }}
               />
@@ -116,6 +120,10 @@ export default function SearchBarSet({
                 slotProps={{
                   textField: {
                     size: "small",
+                    sx: {
+                      backgroundColor: '#fff',
+                      borderRadius: 1
+                    },
                   },
                 }}
               />
@@ -144,6 +152,7 @@ export default function SearchBarSet({
               inputWidth="250px"
               height="40px"
               boxMinWidth="250px"
+              
               endAdornment={
                 <InputAdornment position="end">
                   <CustomIconButton

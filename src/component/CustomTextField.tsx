@@ -24,7 +24,8 @@ export default function CustomTextField(props: TextField_Type) {
                     backgroundColor: 'white', 
                     border: border || '', 
                     width: inputWidth || '246px', 
-                    minWidth: '246px'
+                    minWidth: '246px',
+                    borderRadius: radius || 1,
                 }}
                 size= "small"
                 value={value ?? ''}
