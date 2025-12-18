@@ -307,16 +307,16 @@ function StatusDetail() {
       >
         <Paper
           elevation={3}
-          sx={{ padding: 4, flex: 1, display: "flex", flexDirection: "column" }}
+          sx={{ padding: 4, flex: 1, display: "flex", flexDirection: "column", gap: 1 }}
         >
-          <Box
+          {/* <Box
             sx={{
               display: "flex",
               flexDirection: "column",
-              gap: 2,
+              gap: 1,
               height: "100%",
             }}
-          >
+          > */}
             <Box>
               <Typography
                 variant="h6"
@@ -421,8 +421,8 @@ function StatusDetail() {
                 <CommonTable
                   columns={collectionColumns}
                   rows={collectionRowsWithFailure}
-                  pageSize={7}
-                  height="475px"
+                  pageSize={5}
+                  height="370px"
                 />
               </Box>
             </Box>
@@ -438,7 +438,7 @@ function StatusDetail() {
                 닫기
               </Button>
             </Box>
-          </Box>
+          {/* </Box> */}
         </Paper>
       </Box>
     </Box>

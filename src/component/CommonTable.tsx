@@ -3,19 +3,9 @@ import { DataGrid, type GridRowId, type GridRowSelectionModel} from '@mui/x-data
 import {type CommonTableProps } from '../Types/Table'
 
 function CommonTable(props: CommonTableProps) {
-    const {
-      columns, rows, selectedRows, 
-      page = 0,
-      pageSize = 5,
-      totalCount = 0,
-      height, width, 
-      check, 
-      hideFooter, 
-      onRowClick, 
-      onRowSelectionChange,
-      onPageChange,
-      onPageSizeChange
-    } = props
+    const {columns, rows, selectedRows, pageSize, height, width, check, hideFooter, onRowClick, onRowSelectionChange} = props
+
+    const paginationModel = { page: 0, pageSize: pageSize || 10 };
 
      // ✅ v8 기준: rowSelectionModel은 객체 구조 ({ type, ids })
     const rowSelectionModel: GridRowSelectionModel = {
@@ -31,31 +21,15 @@ function CommonTable(props: CommonTableProps) {
           {...(!height && { autoHeight: true })} //height 지정 없으면 autoHeight
           hideFooter={hideFooter}
           onRowClick={onRowClick}
-
-          /* ✅ 서버 페이지네이션 */
-          pagination
-          paginationMode="server"
-          paginationModel={{ page, pageSize }}
-          onPaginationModelChange={(model) => {
-            onPageChange?.(model.page)
-          
-            if (model.pageSize !== pageSize) {
-              onPageSizeChange?.(model.pageSize)
-            }
-          }}
-        
-          rowCount={totalCount}
-          pageSizeOptions={[pageSize]}
-
           rowSelectionModel={rowSelectionModel}
           onRowSelectionModelChange={(model: GridRowSelectionModel) => {
             // ✅ model.ids는 Set<GridRowId> 형태
             const selectedIds = Array.from(model.ids) as GridRowId[]
             onRowSelectionChange?.(selectedIds)
           }}
-
+          initialState={{ pagination: { paginationModel } }}
+          pageSizeOptions={[5, 10]}
           checkboxSelection={check || false}
-
           getRowClassName={(params) => {
             const classes = [];
 
@@ -74,7 +48,6 @@ function CommonTable(props: CommonTableProps) {
 
             return classes.join(" ");
           }}
-
           sx={{
               border: '1px solid #CDBAA6',
               // 헤더 배경색
