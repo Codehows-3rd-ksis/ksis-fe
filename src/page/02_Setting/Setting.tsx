@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 // Mui
 import { Box, Typography } from '@mui/material'
 // Table
-import CommonTable from "../../component/CommonTable"
+import PaginationServerTable from "../../component/PaginationServerTable"
 import { getColumns, type SettingTableRows } from '../../Types/TableHeaders/SettingHeader'
 // Search
 import { getSettingSearchCategory } from "../../Types/Search"
@@ -162,7 +162,7 @@ function Setting() {
         </Box>
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable 
+            <PaginationServerTable 
                 columns={columns} 
                 rows={baseRows} 
                 page={searchState.page}
