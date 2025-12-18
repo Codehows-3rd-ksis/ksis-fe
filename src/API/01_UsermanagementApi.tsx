@@ -17,6 +17,25 @@ export const getUser = async (type: string, keyword: string, page: number, size:
   return response.data;
 };
 
+export const checkUsername = async (username: string) => {
+  const response = await instance.get(`/user/checkUsername`, {
+     params:{
+       username,
+     },
+  });
+  return response.data;
+};
+
+export const checkUsernameEdit = async (username: string, userId: number) => {
+  const response = await instance.get(`/user/checkUsername/${userId}`, {
+     params:{
+       username,
+       id: userId,
+     },
+  });
+  return response.data;
+};
+
 // 유저관리 - 회원 등록
 export const registUser = async (data: Partial<{
   username: string; // 사용자 ID (= login ID)

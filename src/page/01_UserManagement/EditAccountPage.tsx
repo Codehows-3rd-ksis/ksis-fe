@@ -4,7 +4,7 @@ import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import Alert from '../../component/Alert';
-import { updateUserAccount, /*getUser*/ } from '../../API/01_UsermanagementApi';
+import { updateUserAccount, checkUsernameEdit } from '../../API/01_UsermanagementApi';
 
 import { type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 
@@ -94,11 +94,8 @@ export default function EditPage(props: EditPageProps) {
         try {
             if(row === null) return;
             
-            // const userData = await getUser();
-            // const findSameUsername = userData.find(
-            //     (user:any) => user.username === newData.username && user.userId !== row.userId
-            // )
-            
+            const isDuplicate = await checkUsernameEdit(newData.username, row.userId);
+            // console.log('isDuplicate', isDuplicate)            
 
             const password = newData.password;
             const passwordConfirm = newData.passwordConfirm;
@@ -115,7 +112,7 @@ export default function EditPage(props: EditPageProps) {
 
             const errMsg = []
             if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
-            // if (findSameUsername) errMsg.push('아이디 중복') 
+            if (isDuplicate.duplicate) errMsg.push(isDuplicate.message) 
             if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
             if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
 
