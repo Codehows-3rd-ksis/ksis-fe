@@ -4,7 +4,7 @@ import CustomButton from '../../component/CustomButton';
 import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import Alert from '../../component/Alert';
-import { updateUserAccount, getUser } from '../../API/01_UsermanagementApi';
+import { updateUserAccount, /*getUser*/ } from '../../API/01_UsermanagementApi';
 
 import { type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 
@@ -93,13 +93,12 @@ export default function EditPage(props: EditPageProps) {
     const handleValidate = async () => {
         try {
             if(row === null) return;
-            // console.log('row', row)
-            const userData = await getUser();
-            // ID 중복검사, true 일시 중복, 수정할 row 본인의 username이 중복되는 것은 허용
-            const findSameUsername = userData.find(
-                (user:any) => user.username === newData.username && user.userId !== row.userId
-            )
-            // console.log('중복 ID 검사', findSameUsername)
+            
+            // const userData = await getUser();
+            // const findSameUsername = userData.find(
+            //     (user:any) => user.username === newData.username && user.userId !== row.userId
+            // )
+            
 
             const password = newData.password;
             const passwordConfirm = newData.passwordConfirm;
@@ -116,7 +115,7 @@ export default function EditPage(props: EditPageProps) {
 
             const errMsg = []
             if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식') 
-            if (findSameUsername) errMsg.push('아이디 중복') 
+            // if (findSameUsername) errMsg.push('아이디 중복') 
             if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
             if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
 

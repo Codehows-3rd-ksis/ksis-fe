@@ -5,7 +5,7 @@ import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { registUser, getUser } from '../../API/01_UsermanagementApi';
+import { registUser, /*getUser*/ } from '../../API/01_UsermanagementApi';
 
 interface RegPageProps {
     handleDone: () => void;
