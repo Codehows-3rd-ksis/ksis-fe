@@ -159,7 +159,10 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
                 width: "100%",
                 height: "6px",
                 borderRadius: "3px",
-                background: "var(--Fills-Primary, rgba(120, 120, 120, 0.20))",
+                background: '#E0E0E0', // 트랙 배경을 연한 회색으로 변경
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: '#F5A623' // 채워진 바의 색상을 팀 색상으로 지정
+                }
               }}
             />
           </Box>

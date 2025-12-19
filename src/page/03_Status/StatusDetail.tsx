@@ -434,10 +434,19 @@ function StatusDetail() {
                 gap: 2,
               }}
             >
-              <Button variant="contained" onClick={handleBack}>
-                닫기
-              </Button>
-            </Box>
+                          <Button
+                            variant="contained"
+                            onClick={handleBack}
+                            sx={(theme) => ({
+                              backgroundColor: theme.palette.grey[500],
+                              color: theme.palette.common.white,
+                              "&:hover": {
+                                backgroundColor: theme.palette.grey[700], // Darker grey on hover
+                              },
+                            })}
+                          >
+                            닫기
+                          </Button>            </Box>
           {/* </Box> */}
         </Paper>
       </Box>

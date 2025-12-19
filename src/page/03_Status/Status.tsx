@@ -14,18 +14,7 @@ import type { Subscription } from "stompjs";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import { useAuthStore } from "../../Store/authStore";
-import useCrawlingProgress, {
-  type CrawlingProgress,
-} from "../../hooks/useCrawlingProgress";
-
-// 웹소켓을 통해 수신될 수 있는 모든 메시지 타입을 포괄하는 범용 인터페이스
-interface GeneralWebSocketMessage {
-  type?: string;
-  workId?: number;
-  data?: Partial<CrawlingProgress>;
-  crawlResultItem?: any;
-  [key: string]: any;
-}
+import useCrawlingProgress from "../../hooks/useCrawlingProgress";
 
 function Status() {
   const navigate = useNavigate();
@@ -98,22 +87,6 @@ function Status() {
   // 컬럼 정의
   const columns = getColumns({ handleDetailOpen, handleStopClick });
 
-  // 전체적인 데이터 흐름
-
-  //   1. 마운트 시:
-  //      API 호출 (getStatusList) → baseRows 설정
-
-  //   2. WebSocket 연결:
-  //      /topic/crawling-progress 구독 → 진행률 메시지 수신
-  //      → handleCrawlingProgress 호출 → progressMap 업데이트
-
-  //   3. 렌더링:
-  //      baseRows + progressMap 병합 → displayRows 생성
-  //      → CommonTable에 전달 → 화면에 실시간 진행률 표시
-
-  //   4. 정리:
-  //      baseRows에 없는 workId → progressMap에서 제거
-
   //API 응답(baseRows)과 웹소켓(progressMap) 병합
   const displayRows = baseRows.map((row) => {
     const progressInfo = progressMap.get(row.workId);
@@ -165,50 +138,22 @@ function Status() {
 
       console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
-        const parsedMessage: GeneralWebSocketMessage = JSON.parse(message.body);
+        const crawlingMessage: CrawlingMessage = JSON.parse(message.body);
 
-        // 메시지 타입에 따라 분기 처리
-        if (
-          parsedMessage.type === "COLLECT_UPDATE" &&
-          parsedMessage.workId !== undefined
-        ) {
-          // 1. type이 'COLLECT_UPDATE'인 경우
-          const crawlingMessage = parsedMessage as CrawlingMessage;
-          handleCrawlingProgress(crawlingMessage);
+        handleCrawlingProgress(crawlingMessage);
 
-          setBaseRows((prevRows) => {
-            const exists = prevRows.some(
-              (row) => row.workId === crawlingMessage.workId
-            );
-            if (!exists) {
-              console.log(
-                `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
-              );
-              fetchStatusList();
-            }
-            return prevRows;
-          });
-        } else if (
-          parsedMessage.workId !== undefined &&
-          parsedMessage.progress !== undefined
-        ) {
-          // 2. type이 없지만, workId와 progress가 있는 경우
-          const transformedMessage: CrawlingMessage = {
-            type: "COLLECT_UPDATE",
-            workId: parsedMessage.workId,
-            data: {
-              progress: parsedMessage.progress,
-              state: parsedMessage.progress >= 100 ? "수집완료" : "수집중",
-            },
-          };
-          handleCrawlingProgress(transformedMessage);
-        } else {
-          // 3. 그 외 다른 모든 메시지는 콘솔에 경고로 출력
-          console.warn(
-            "[Status] 알 수 없는 웹소켓 메시지 수신:",
-            parsedMessage
+        setBaseRows((prevRows) => {
+          const exists = prevRows.some(
+            (row) => row.workId === crawlingMessage.workId
           );
-        }
+          if (!exists) {
+            console.log(
+              `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
+            );
+            fetchStatusList();
+          }
+          return prevRows;
+        });
       });
     }
 

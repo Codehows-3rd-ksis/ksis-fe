@@ -7,10 +7,10 @@ import instance from "./AxiosInstance";
 // };
 export const getHistory = async (
   startDate: string,
-  endDate: string, 
-  type: string, 
-  keyword: string, 
-  page: number, 
+  endDate: string,
+  type: string,
+  keyword: string,
+  page: number,
   size: number
 ) => {
   const response = await instance.get(`/history`, {
@@ -26,9 +26,26 @@ export const getHistory = async (
   return response.data;
 };
 
-
 // 입력한 workId를 가지는 ResultItem들 가져오기
 export const getHistoryResult = async (workId: number) => {
   const response = await instance.get(`/history/result/${workId}`);
+  return response.data;
+};
+
+// 이력 상세 조회
+export const getHistoryDetail = async (workId: string) => {
+  const response = await instance.get(`/history/result/${workId}`);
+  return response.data;
+};
+
+// 개별 재수집
+export const recollectItem = async (itemId: string) => {
+  const response = await instance.post(`/recollect/item/${itemId}`);
+  return response.data;
+};
+
+// 일괄 재수집
+export const recollectWork = async (workId: string) => {
+  const response = await instance.post(`/recollect/work/${workId}`);
   return response.data;
 };

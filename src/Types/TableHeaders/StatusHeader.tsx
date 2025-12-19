@@ -2,7 +2,7 @@
 //각 컬럼의 제목 + 모든 행의 표시 방식을 함께 정의
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
-import { Box, LinearProgress } from "@mui/material";
+import { Box, LinearProgress, Link } from "@mui/material";
 import dayjs from "dayjs";
 
 import { type StatusTableRows } from "../../API/03_StatusApi";
@@ -23,16 +23,17 @@ export const getColumns = ({
     headerAlign: "center",
     align: "center",
     renderCell: (params) => (
-      <span
-        style={{
-          cursor: "pointer",
-          color: "#1976d2",
-          textDecoration: "underline",
-        }}
+      <Link
+        component="button"
         onClick={() => handleDetailOpen(params.row)}
+        sx={{
+          color: 'black',
+          fontWeight: 'bold',
+          textDecoration: 'underline',
+        }}
       >
         {params.value}
-      </span>
+      </Link>
     ),
   },
   {
@@ -137,7 +138,10 @@ export const getColumns = ({
                 width: "100%",
                 height: "6px",
                 borderRadius: "3px",
-                background: "var(--Fills-Primary, rgba(120, 120, 120, 0.20))",
+                background: "#E0E0E0", // 트랙 배경을 연한 회색으로 변경
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor: "#F5A623", // 채워진 바의 색상을 팀 색상으로 지정
+                },
               }}
             />
           </Box>

@@ -58,7 +58,7 @@ export default function SearchBarSet({
   }, [value]);
 
   const updateLocal = (key: keyof SearchConditions, val: any) => {
-    setLocalValue(prev => ({
+    setLocalValue((prev) => ({
       ...prev,
       [key]: val,
     }));
@@ -67,7 +67,7 @@ export default function SearchBarSet({
   return (
     <Box
       sx={{
-        bgcolor: "#dbdbdbff",
+        bgcolor: "white",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -95,17 +95,14 @@ export default function SearchBarSet({
                   localValue.startDate ? dayjs(localValue.startDate) : null
                 }
                 onChange={(v) =>
-                  updateLocal(
-                    "startDate",
-                    v ? v.format("YYYY-MM-DD") : null
-                  )
+                  updateLocal("startDate", v ? v.format("YYYY-MM-DD") : null)
                 }
                 slotProps={{
                   textField: {
                     size: "small",
                     sx: {
-                      backgroundColor: '#fff',
-                      borderRadius: 1
+                      backgroundColor: "#fff",
+                      borderRadius: 1,
                     },
                   },
                 }}
@@ -121,8 +118,8 @@ export default function SearchBarSet({
                   textField: {
                     size: "small",
                     sx: {
-                      backgroundColor: '#fff',
-                      borderRadius: 1
+                      backgroundColor: "#fff",
+                      borderRadius: 1,
                     },
                   },
                 }}
@@ -152,17 +149,13 @@ export default function SearchBarSet({
               inputWidth="250px"
               height="40px"
               boxMinWidth="250px"
-              
               endAdornment={
                 <InputAdornment position="end">
                   <CustomIconButton
                     icon="search"
                     onClick={() => onSearch(localValue)}
                   />
-                  <CustomIconButton
-                    icon="reset"
-                    onClick={onReset}
-                  />
+                  <CustomIconButton icon="reset" onClick={onReset} />
                 </InputAdornment>
               }
               onEnter={() => onSearch(localValue)}
@@ -175,6 +168,8 @@ export default function SearchBarSet({
             text={buttonLabel}
             width={buttonWidth}
             onClick={onButtonClick}
+            radius={2}
+            height="40px"
           />
         )}
       </Box>
