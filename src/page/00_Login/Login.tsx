@@ -88,6 +88,7 @@ function Login({onLoginSuccess}: LoginProps) {
                 placeholder="비밀번호"
                 type={isVisible? 'text' : "password"}
                 onChange={(e) => handleInputChange('password', e.target.value)}
+                onEnter={handleLogin}
                 endAdornment={
                   <InputAdornment position="end">
                     { isVisible?

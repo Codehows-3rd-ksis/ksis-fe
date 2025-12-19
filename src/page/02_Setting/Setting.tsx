@@ -1,23 +1,33 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from 'react-router-dom';
 // Mui
 import { Box, Typography } from '@mui/material'
 // Table
-import CommonTable from "../../component/CommonTable"
+import PaginationServerTable from "../../component/PaginationServerTable"
 import { getColumns, type SettingTableRows } from '../../Types/TableHeaders/SettingHeader'
 // Search
-import SearchHeader from "../../component/SearchHeader"
 import { getSettingSearchCategory } from "../../Types/Search"
+import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
 // Comp
 import Alert from "../../component/Alert"
+import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi"
 
 function Setting() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false)
+  const [isSearched, setIsSearched] = useState(false);
   // Table
+  const [searchState, setSearchState] = useState({
+    type: 'all',
+    keyword: '',
+    page: 0,
+    size: 5,
+  });
+  const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([])
-  const [filteredRows, setFilteredRows] = useState<SettingTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<SettingTableRows | null>(null)
   
   // Alert
@@ -28,32 +38,62 @@ function Setting() {
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [alertMsg, setAlertMsg] = useState("")
 
-  useEffect(()=> {
-    BoardRefresh();
-  }, [])
-
   /**  Table  =========================================== */
-  const getTableDatas = async () => {
+  const getTableDatas = useCallback(async () => {
     try {
-        const data = await getSetting()
+        const { type, keyword, page, size } = searchState
+        setLoading(true)
+        const res = await getSetting(
+          type ?? 'all',
+          keyword ?? '',
+          page, 
+          size
+        )
         
-        const result = data.map((row: SettingTableRows, i: number) => ({
-            ...row,
-            id: row.settingId,
-            index: i+1,
+        const result = res.content.map((row: SettingTableRows, i: number) => ({
+          ...row,
+          id: row.settingId,
+          index: page * size + i + 1, // 🔥 전체 기준 index
         }))
+
         setBaseRows(result)
-        setFilteredRows(result)
+        setTotalCount(res.totalElements)
+        setLoading(false)
     }
     catch(err) {
         console.error(err)
         setAlertMsg("설정데이터 조회 실패")
         setOpenErrorAlert(true)
+        setLoading(false)
     }
-  }
+  }, [searchState] )
+
+  useEffect(()=> {
+    getTableDatas();
+  }, [getTableDatas])
+
   const BoardRefresh = () => {
         getTableDatas();
   }
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true)
+    setSearchState(prev => ({
+      ...prev,
+      ...conditions,
+      page: 0,
+    }));
+  };
+  const handleReset = () => {
+    setIsSearched(false)
+    setSearchState({
+      type: 'all',
+      keyword: '',
+      page: 0,
+      size: 5,
+    })
+  }
+
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
       navigate('/setting/reg')
@@ -101,17 +141,42 @@ function Setting() {
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           데이터 수집 설정
         </Typography>
-        <SearchHeader
-          baseRows={baseRows}                 // 전체 데이터 원본
-          setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
-          getSearchCategory={getSettingSearchCategory} // 검색 카테고리 목록
-          onClick={handleOpenReg}             // 등록 버튼 클릭 시 실행할 함수
-          btnName="설정 등록"
-        />
-
+        {/* Search */}
+        <Box sx={{padding: 2}}>
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+            }}
+            totalCount={totalCount}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getSettingSearchCategory()}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={true}
+            buttonLabel="설정 등록"
+            onButtonClick={handleOpenReg}
+          />
+        </Box>
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable columns={columns} rows={filteredRows} /> {/* ✅ 변경 */}
+            <PaginationServerTable 
+                columns={columns} 
+                rows={baseRows} 
+                page={searchState.page}
+                pageSize={searchState.size}
+                totalCount={totalCount}
+
+                onPageChange={(newPage: number) => {
+                  setSearchState(prev => ({
+                    ...prev,
+                    page: newPage,
+                  }))
+                }}
+            />
         </Box>
 
         {/* 삭제 팝업 */}
@@ -166,6 +231,7 @@ function Setting() {
               setOpenErrorAlert(false);
             }}
         />
+        <LoadingProgress open={loading} />
     </Box>
   )
 }
