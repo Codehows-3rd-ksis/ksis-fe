@@ -30,6 +30,10 @@ export const getColumns = ({
           color: 'black',
           fontWeight: 'bold',
           textDecoration: 'underline',
+          outline: 'none',
+          '&:focus': {
+            outline: 'none',
+          },
         }}
       >
         {params.value}
