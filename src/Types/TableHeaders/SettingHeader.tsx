@@ -1,0 +1,80 @@
+import { type GridColDef } from '@mui/x-data-grid';
+import CustomIconButton from '../../component/CustomIconButton'
+
+export interface SettingTableRows {
+    id: number,
+    settingId?: number,
+    userId?: string,
+    settingName?: string,
+    url?: string,
+    type?: string,
+    userAgent?: string,
+    rate?: number,
+    listArea?: string,
+    pagingType?: string,
+    pagingArea?: string,
+    pagingNextbtn?: string,
+    maxPage?: number,
+    linkArea?: string,
+}
+const userAgentList = [
+        { value: 
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/120.0.0.0 Safari/537.36", 
+          name: 'Windows / Edge' 
+        },
+        { value: 
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", 
+          name: 'Windows / Chrome' 
+        },
+        {
+          value:
+            "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0",
+          name: "Linux / Firefox",
+        },
+        {
+          value:
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          name: "Linux / Chrome",
+        },
+        { value: 
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          name: 'Mac / Chrome' 
+        },
+]
+
+// 외부에서 받을 핸들러들을 타입으로 정의
+export interface SettingTableColumnHandlers {
+  handleEditOpen: (row: SettingTableRows) => void;
+  handleDeleteOpen: (row: SettingTableRows) => void;
+  handleRunCrawl: (row: SettingTableRows) => void;
+}
+
+// 핸들러를 주입받아 columns를 반환하는 함수
+export const getColumns = ({
+  handleEditOpen,
+  handleDeleteOpen,
+  handleRunCrawl,
+}: SettingTableColumnHandlers): GridColDef[] => [
+  { field: 'settingName',   headerName: '데이터수집명',       flex: 1,    headerAlign: 'center',  align: 'center' },
+  { field: 'url',           headerName: 'URL',              flex: 2,    headerAlign: 'center',  align: 'left' },
+  { field: 'userAgent',     headerName: 'USER_AGENT',       flex: 0.7,    headerAlign: 'center',  align: 'center',
+    renderCell: (params) => {
+      if(params.value) {
+        return userAgentList.find(item => item.value === params.value)?.name || params.value;
+      }
+    },
+  },
+  { field: 'rate',          headerName: '수집간격(s)',       width: 120,    headerAlign: 'center',  align: 'center' },
+  {
+    field: 'edit', headerName: '수정', width: 70, headerAlign: 'center', align: 'center',
+    renderCell: (params) => ( <CustomIconButton icon="edit" onClick={() => handleEditOpen(params.row)} /> ),
+  },
+  {
+    field: 'del', headerName: '삭제', width: 70, headerAlign: 'center', align: 'center',
+    renderCell: (params) => ( <CustomIconButton icon="delete" onClick={() => handleDeleteOpen(params.row)} /> ),
+  },
+  {
+    field: 'run', headerName: '수동실행', width: 100, headerAlign: 'center', align: 'center',
+    renderCell: (params) => ( <CustomIconButton icon="run" onClick={() => handleRunCrawl(params.row)} /> ),
+  },
+];

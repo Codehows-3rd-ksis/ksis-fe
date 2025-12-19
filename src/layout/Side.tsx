@@ -1,0 +1,20 @@
+import {Box} from '@mui/material'
+import  {type LayoutProps } from '../Types/Layout';
+
+function Side({children}:LayoutProps) {
+  
+  return (
+    <Box
+        sx={{
+            backgroundColor: '#fff',
+            height: '98vh',
+            border: '3px solid #CDBAA6', 
+            borderRadius: 3,
+        }}
+    >
+            {children}
+    </Box>
+  )
+}
+
+export default Side
