@@ -24,7 +24,7 @@ import LoadingProgress from "../../component/LoadingProgress";
 import SearchBarSet from "../../component/SearchBarSet";
 import type { SearchConditions } from "../../component/SearchBarSet";
 // Api
-import { getHistory, getHistoryResult } from "../../API/05_HistoryApi";
+import { getHistory, getHistoryExport } from "../../API/05_HistoryApi";
 // Export
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -187,10 +187,10 @@ export default function History() {
 
   const getExportData = async () => {
       if (!exportRow) return [];
-      const result = await getHistoryResult(Number(exportRow.id))
-
+      const result = await getHistoryExport(Number(exportRow.id))
+      
       const targets = result.filter((r:any) => r.workId === exportRow.id);
-
+      
       // ✅ 공통 유틸 함수 사용
       return parseResultValueRows(targets, (row: any) => ({
         seq: row.seq,

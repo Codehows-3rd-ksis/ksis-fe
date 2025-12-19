@@ -110,18 +110,18 @@ function Menu() {
                                         onClick={() => navigate(item.path)}
                                         sx={{
                                             height: 80,
-                                            backgroundColor: location.pathname.includes(item.path) ? '#FFE6C5' : 'inherit',
-                                            color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                            backgroundColor: location.pathname.startsWith(item.path) ? '#FFE6C5' : 'inherit',
+                                            color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                             '&:hover': {
-                                              backgroundColor: location.pathname.includes(item.path) ? '#FEC88B' : '#FFE6C5',
-                                              color: location.pathname.includes(item.path) ? '#BB510C' : '#BB510C',
+                                              backgroundColor: location.pathname.startsWith(item.path) ? '#FEC88B' : '#FFE6C5',
+                                              color: location.pathname.startsWith(item.path) ? '#BB510C' : '#BB510C',
                                             },
                                         }}
                                     >
                                         <ListItemIcon 
                                             sx={{ 
                                                 minWidth: 40,
-                                                color: location.pathname.includes(item.path) ? '#BB510C' : 'black',
+                                                color: location.pathname.startsWith(item.path) ? '#BB510C' : 'black',
                                         }}>
                                             {/* {item.icon} */}
                                             {React.cloneElement(item.icon as React.ReactElement<any>, {
@@ -134,7 +134,7 @@ function Menu() {
                                                 primary: {
                                                     sx: {
                                                         fontSize: 20,
-                                                        fontWeight: location.pathname.includes(item.path) ? 700 : 400,
+                                                        fontWeight: location.pathname.startsWith(item.path) ? 700 : 400,
                                                     }
                                                 }
                                             }}
@@ -154,16 +154,16 @@ function Menu() {
                                 onClick={() => navigate(item.path)}
                                 sx={{
                                     height: 80,
-                                    backgroundColor: location.pathname.includes(item.path) ? '#FFE6C5' : 'inherit',
-                                    color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                    backgroundColor: location.pathname.startsWith(item.path) ? '#FFE6C5' : 'inherit',
+                                    color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                     '&:hover': {
-                                        backgroundColor: location.pathname.includes(item.path) ? '#FEC88B' : '#FFE6C5',
-                                        color: location.pathname.includes(item.path) ? '#BB510C' : '#BB510C',
+                                        backgroundColor: location.pathname.startsWith(item.path) ? '#FEC88B' : '#FFE6C5',
+                                        color: location.pathname.startsWith(item.path) ? '#BB510C' : '#BB510C',
                                     },
                                 }}
                             >
                                 <ListItemIcon sx={{
-                                    color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                    color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                 }}>
                                     {/* {item.icon} */}
                                     {React.cloneElement(item.icon as React.ReactElement<any>, {
@@ -176,7 +176,7 @@ function Menu() {
                                         primary: {
                                             sx: {
                                                 fontSize: 20,
-                                                fontWeight: location.pathname.includes(item.path) ? 700 : 400,
+                                                fontWeight: location.pathname.startsWith(item.path) ? 700 : 400,
                                             }
                                         }
                                     }}
