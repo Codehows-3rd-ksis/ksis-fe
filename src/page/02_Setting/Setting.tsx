@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from 'react-router-dom';
 // Mui
 import { Box, Typography } from '@mui/material'
@@ -38,12 +38,8 @@ function Setting() {
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [alertMsg, setAlertMsg] = useState("")
 
-  useEffect(()=> {
-    getTableDatas();
-  }, [searchState])
-
   /**  Table  =========================================== */
-  const getTableDatas = async () => {
+  const getTableDatas = useCallback(async () => {
     try {
         const { type, keyword, page, size } = searchState
         setLoading(true)
@@ -70,7 +66,12 @@ function Setting() {
         setOpenErrorAlert(true)
         setLoading(false)
     }
-  }
+  }, [searchState] )
+
+  useEffect(()=> {
+    getTableDatas();
+  }, [getTableDatas])
+
   const BoardRefresh = () => {
         getTableDatas();
   }
