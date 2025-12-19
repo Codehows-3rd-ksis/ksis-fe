@@ -27,8 +27,8 @@ export const getHistory = async (
 };
 
 // 입력한 workId를 가지는 ResultItem들 가져오기
-export const getHistoryResult = async (workId: number) => {
-  const response = await instance.get(`/history/result/${workId}`);
+export const getHistoryExport = async (workId: number) => {
+  const response = await instance.get(`/history/export/${workId}`);
   return response.data;
 };
 
