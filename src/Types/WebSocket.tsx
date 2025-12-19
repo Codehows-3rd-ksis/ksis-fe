@@ -8,6 +8,7 @@ import { type CrawlingProgress } from "../hooks/useCrawlingProgress";
 // 웹소켓으로 수신되는 크롤링 메시지 프로토콜
 // 크롤링 항목 1개 처리 시마다 전송되며, 집계 데이터 + 개별 항목을 함께 포함
 export interface CrawlingMessage {
+  progress?: number;
   type: "COLLECT_UPDATE";
   workId: number;
   data: Partial<CrawlingProgress>; // CrawlWork 엔티티 집계 데이터 (collectCount, failCount, progress, expectEndAt 등)

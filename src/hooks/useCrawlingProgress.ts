@@ -8,11 +8,11 @@ import { type CrawlingMessage } from "../Types/WebSocket";
 
 export interface CrawlingProgress {
   progress: number;
-  state: string;
-  totalCount: number;
-  collectCount: number;
-  failCount: number;
-  expectEndAt: string;
+  state?: string;
+  totalCount?: number;
+  collectCount?: number;
+  failCount?: number;
+  expectEndAt?: string;
   endAt?: string; // 수집완료 시간 (크롤링 완료 시 웹소켓으로 전송됨)
 }
 
@@ -27,6 +27,7 @@ const useCrawlingProgress = () => {
     setProgressMap((prevMap) => {
       const newMap = new Map(prevMap);
       const { workId, data } = message;
+      console.log(data);
       // 업데이트 전의 현재 진행 상태 (없으면 기본값 사용)
       const currentProgress = newMap.get(workId) || {
         progress: 0,
