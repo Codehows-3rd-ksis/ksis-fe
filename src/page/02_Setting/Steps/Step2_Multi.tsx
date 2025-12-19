@@ -554,27 +554,22 @@ export default React.memo(function Step2_Multi({
             }}>
                 <Box
                   sx={{
-                    // flex: 7,
-                    height: 550,
-                    minHeight: 550,
+                    borderBottom: "2px solid #ccc",
                     display: "flex",
                     gap: 2,
                     pb: 2,
-                    borderBottom: "2px solid #ccc",
+                    minHeight: 550,
+                    minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
+                    // overflowX: "auto" // 화면 작으면 가로 스크롤
                 }}>
                     {/* 스크린샷 */}
                     <Box
                       sx={{
-                        flex: 1,
-                        overflow: "auto",
-                        // maxHeight: 640,
-                        background: "#eaeaea",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                        color: 'black',
+                        flex: "0 0 50%",   // ⭐ 비율 고정
+                        minWidth: 500,
                         position: "relative",
-                        border: "1px solid #ccc",
+                        overflow: "auto",
+                        background: "#eaeaea",
                     }}>
                         {previewData.image ? (
                           <img
@@ -622,7 +617,10 @@ export default React.memo(function Step2_Multi({
                     </Box>
                     {/* HTML 태그 */}
                     <Box sx={{
-                      width: '50%'
+                      flex: "0 0 50%",
+                      minWidth: 500,
+                      display: "flex",
+                      flexDirection: "column",
                     }}>
                       <Box 
                         sx={{ 
@@ -674,14 +672,18 @@ export default React.memo(function Step2_Multi({
                     p: 2,
                     display: "flex",
                     flexDirection: "column",
-                    gap: 6
+                    gap: 6,
+                    color: 'black'
                 }}>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>게시물 영역:</Typography>
+                        <Typography sx={{fontSize: 25, textAlign: 'right'}}>게시물 영역:</Typography>
                         <CustomTextField 
-                          inputWidth='800px' 
+                          fullWidth
                           value={newData.listArea}
                           placeholder="게시물 영역"
                           readOnly={true}
@@ -699,9 +701,12 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black', gap:1
+                        display: "flex",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, width: '210px', textAlign: 'right'}}>페이지네이션 영역:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 205, textAlign: 'right'}}>페이지네이션 영역:</Typography>
                         <CustomSelect
                             height="40px"
                             inputWidth="160px"
@@ -710,7 +715,8 @@ export default React.memo(function Step2_Multi({
                             onChange={handleSelectChange('pagingType')}
                         />
                         <CustomTextField 
-                          inputWidth='630px' 
+                          // inputWidth='630px' 
+                          fullWidth
                           value={newData.pagingArea}
                           placeholder="페이지네이션 영역"
                           readOnly={true}
@@ -727,7 +733,8 @@ export default React.memo(function Step2_Multi({
                           }
                         />
                         <CustomTextField 
-                          inputWidth='300px' 
+                          // inputWidth='300px' 
+                          fullWidth
                           value={newData.pagingNextbtn}
                           placeholder="다음버튼 영역"
                           readOnly={true}
@@ -745,11 +752,15 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>수집할 페이지 수:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 200, textAlign: 'right'}}>수집할 페이지 수:</Typography>
                         <CustomTextField 
-                          inputWidth='800px' 
+                          // inputWidth='800px'
+                          fullWidth 
                           value={newData.maxPage}
                           placeholder="수집할 페이지 수"
                           type="number"
@@ -757,11 +768,15 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>상세 링크 영역:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 200, textAlign: 'right'}}>상세 링크 영역:</Typography>
                         <CustomTextField 
-                          inputWidth='1000px' 
+                          // inputWidth='1000px' 
+                          fullWidth
                           value={newData.linkArea}
                           placeholder="상세 링크 영역"
                           readOnly={true}
@@ -800,26 +815,23 @@ export default React.memo(function Step2_Multi({
                     <br></br>
                     <Box
                     sx={{
-                        height: 550,
-                        minHeight: 550,
                         display: "flex",
                         gap: 2,
-                        pb: 2
+                        pb: 2,
+                        minHeight: 550,
+                        minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
+                        // overflowX: "auto", // 화면 작으면 가로 스크롤
+                        color: 'black'
                       }}
                   >
                       {/* 스크린샷 */}
                       <Box
                           sx={{
-                            flex: 1,
-                            overflow: "auto",
-                            // maxHeight: 640,
-                            background: "#eaeaea",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "flex-start",
-                            color: 'black',
+                            flex: "0 0 50%",   // ⭐ 비율 고정
+                            minWidth: 500,
                             position: "relative",
-                            border: "1px solid #ccc",
+                            overflow: "auto",
+                            background: "#eaeaea",
                       }}>
                           {detailData.image ? (
                             <img
@@ -866,7 +878,10 @@ export default React.memo(function Step2_Multi({
                       </Box>
                       {/* HTML 태그 */}
                       <Box sx={{
-                        width: '50%'
+                        flex: "0 0 50%",
+                        minWidth: 500,
+                        display: "flex",
+                        flexDirection: "column",
                       }}>
                         <Box 
                           sx={{ 
