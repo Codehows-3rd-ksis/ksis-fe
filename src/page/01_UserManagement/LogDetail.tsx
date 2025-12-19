@@ -4,7 +4,7 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
+  // Paper,
   Breadcrumbs,
   Link,
 } from "@mui/material";
@@ -206,7 +206,7 @@ export default function HistoryDetail() {
       <Box
         sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
       >
-        <Paper
+        {/* <Paper
           elevation={3}
           sx={{
             padding: 4,
@@ -215,7 +215,7 @@ export default function HistoryDetail() {
             flexDirection: "column",
             gap: 1,
           }}
-        >
+        > */}
           <Box>
             <Typography
               variant="h6"
@@ -323,7 +323,7 @@ export default function HistoryDetail() {
               닫기
             </Button>
           </Box>
-        </Paper>
+        {/* </Paper> */}
       </Box>
 
       <Alert
