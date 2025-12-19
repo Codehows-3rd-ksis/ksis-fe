@@ -45,7 +45,13 @@ export const getColumns = ({
       if (params.value === "SUCCESS") {
         if(params.row.failCount === 0) return '수집완료';
         else return (
-          <Box sx={{display: 'flex'}}>
+          <Box sx={{
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '100%', 
+            width: '100%',
+          }}>
             <Typography>수집완료(수집실패:</Typography>
             <Typography sx={{ color: 'red'}}>{params.row.failCount}</Typography>
             <Typography>건)</Typography>

@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { Box, Typography } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
+import CustomButton from '../../../component/CustomButton';
 import ScrollTable from '../../../component/ScrollTable';
 import HtmlInspector from '../../../component/HTMLInspector';
 import Alert from '../../../component/Alert';
 import { type ConditionTableRows, getColumns } from '../../../Types/TableHeaders/SettingConditionHeader';
+import { SearchBar } from '../SearchBar';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
@@ -18,6 +20,13 @@ interface HighlightPos {
   width: number;
   height: number;
 }
+type RunSearchParams = {
+  keyword: string;
+  domRefMap: Map<Element, HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  setResults: React.Dispatch<React.SetStateAction<Element[]>>;
+  setIndex: React.Dispatch<React.SetStateAction<number>>;
+};
 const colors = [
   "rgba(255, 235, 59, 0.8)",   // 노란색
   "rgba(100, 181, 246, 0.8)",  // 파란색
@@ -51,6 +60,111 @@ export default React.memo(function Step2_Single({
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [alertMsg, setAlertMsg] = useState('')
 
+    const [searchResults, setSearchResults] = useState<Element[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [searchHighlightSet, setSearchHighlightSet] = useState<Set<Element>>(new Set());
+    const inspectorContainerRef = useRef<HTMLDivElement | null>(null);
+    const domRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
+
+    const runSearchCommon = ({
+      keyword,
+      domRefMap,
+      containerRef,
+      setResults,
+      setIndex,
+    }: RunSearchParams) => {
+      const normalized = keyword.trim().toLowerCase();
+      if (!normalized) return;
+    
+      const results: Element[] = [];
+      const seen = new Set<string>();
+    
+      for (const el of domRefMap.keys()) {
+        const tag = el.tagName.toLowerCase();
+        const id = el.getAttribute("id")?.toLowerCase() || "";
+        const cls = el.getAttribute("class")?.toLowerCase() || "";
+      
+        if (
+          tag.includes(normalized) ||
+          id.includes(normalized) ||
+          cls.includes(normalized)
+        ) {
+          const key = `${tag}#${id}.${cls}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            results.push(el);
+          }
+        }
+      }
+
+      setResults(results);
+      setIndex(0);
+      setSearchHighlightSet(new Set(results));
+    
+      if (results.length > 0) {
+        scrollToElement(results[0], domRefMap, containerRef);
+      } else {
+        setAlertMsg('검색결과가 존재하지 않습니다.')
+        setOpenErrorAlert(true)
+      }
+    };
+
+    const scrollToElement = (
+      el: Element,
+      domRefMap: Map<Element, HTMLDivElement>,
+      containerRef: React.RefObject<HTMLDivElement | null>
+    ) => {
+      const wrapper = domRefMap.get(el);
+      const container = containerRef.current;
+      if (!wrapper || !container) return;
+    
+      const containerRect = container.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+    
+      const top =
+        container.scrollTop +
+        (wrapperRect.top - containerRect.top) -
+        container.clientHeight / 2 
+        // +
+        // wrapperRect.height / 2;
+    
+      container.scrollTo({ top, behavior: "smooth" });
+    };
+    
+    const runMainSearch = useCallback(
+      (keyword: string) => {
+        runSearchCommon({
+          keyword,
+          domRefMap: domRefs.current,
+          containerRef: inspectorContainerRef,
+          setResults: setSearchResults,
+          setIndex: setCurrentIndex,
+        });
+      },
+      []
+    );
+
+    const findNext = () => {
+      if (searchResults.length === 0) return;
+      const nextIndex = (currentIndex + 1) % searchResults.length;
+      setCurrentIndex(nextIndex);
+      scrollToElement(
+        searchResults[nextIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+    const findPrev = () => {
+      if (searchResults.length === 0) return;
+      const prevIndex = (currentIndex - 1 + searchResults.length) % searchResults.length;
+      setCurrentIndex(prevIndex);
+      scrollToElement(
+        searchResults[prevIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+
     const handleAddCondition = () => {
       setCondition(prev => [
         ...prev,
@@ -61,6 +175,7 @@ export default React.memo(function Step2_Single({
           conditionsKey: ""
         }
       ]);
+      setSelectTarget(null)
     };
 
     const handleAreaSelectTable = (rowId: number) => {
@@ -185,7 +300,7 @@ export default React.memo(function Step2_Single({
           )
         );
 
-        setSelectTarget(null)
+        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -246,7 +361,9 @@ export default React.memo(function Step2_Single({
                 {/* 상단 */}
                 <Box
                     sx={{
-                        flex: 7,
+                        // flex: 7,
+                        height: 550,
+                        minHeight: 550,
                         display: "flex",
                         gap: 2,
                         borderBottom: "2px solid #ccc",
@@ -258,7 +375,7 @@ export default React.memo(function Step2_Single({
                         sx={{
                           flex: 1,
                           overflow: "auto",
-                          maxHeight: 640,
+                          // maxHeight: 640,
                           background: "#eaeaea",
                           display: "flex",
                           justifyContent: "center",
@@ -313,11 +430,47 @@ export default React.memo(function Step2_Single({
                         })}
                     </Box>
                     {/* HTML 태그 */}
-                    <HtmlInspector 
-                      html={previewData.html}
-                      onNodeClick={handleInspectorTableClick}
-                      highlightNodes={highlightNodesMap}
-                    />
+                    <Box sx={{
+                      width: '50%'
+                    }}>
+                      <Box 
+                        sx={{ 
+                          display:'flex', 
+                          gap:2, 
+                          height: 60,
+                          alignItems: 'center'
+                      }}>
+                        <SearchBar
+                          placeholder="태그 검색"
+                          onSearch={runMainSearch}
+                        />
+                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1? "#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
+                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : "" } radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        {searchResults.length > 0 ?
+                          <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
+                          : <></>
+                        }
+                      </Box>
+                      <Box 
+                        sx={{
+                          overflow: 'auto',
+                          height: 490,
+                        }}
+                        ref={inspectorContainerRef}
+                        data-scroll-container
+                      >
+                        <HtmlInspector 
+                          html={previewData.html}
+                          onNodeClick={handleInspectorTableClick}
+                          highlightNodes={highlightNodesMap}
+                          searchHighlightSet={searchHighlightSet}
+                          currentSearchEl={searchResults[currentIndex] ?? null}
+                          registerDomRef={(el, div) => {
+                            domRefs.current.set(el, div);
+                          }}
+                        />
+                      </Box>
+                    </Box>
                 </Box>
                 {/* 하단 */}
                 <Box 

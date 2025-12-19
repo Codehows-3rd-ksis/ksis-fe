@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
     Box, Typography, Stepper, Step, StepLabel, 
-    Breadcrumbs, Link, Dialog
+    Breadcrumbs, Link
 } from '@mui/material'
 import CustomButton from '../../component/CustomButton';
 import Alert from "../../component/Alert"
@@ -304,7 +304,10 @@ export default function EditPage() {
                               disabled={
                                 activeStep === 0 ? 
                                   ( isAble === false ? true : false)
-                                  : false
+                                  : 
+                                  (activeStep === 1 ?
+                                  ( condition.length === 0 ? true : false) : false
+                                  )
                               }
                             />
                         </>
@@ -356,32 +359,7 @@ export default function EditPage() {
                   setOpenErrorAlert(false);
                 }}
             />
-            <Dialog 
-                disableRestoreFocus
-                open={loading}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      backgroundColor: 'transparent',
-                      boxShadow: 'none',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: '100vh',
-                      width: '100vw',
-                    }
-                  },
-                  backdrop: {
-                    sx: {
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(2px)', 
-                    }
-                  }
-                }}
-            >
-                <LoadingProgress />
-            </Dialog>
+            <LoadingProgress open={loading}/>
         </Box>
     )
 }

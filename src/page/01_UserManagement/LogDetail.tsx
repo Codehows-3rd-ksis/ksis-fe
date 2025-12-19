@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
+import { useLocation, useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -36,6 +36,9 @@ interface ApiCollectionRow {
 }
 
 export default function HistoryDetail() {
+  const { userId } = useParams();
+  const { state } = useLocation();
+  const username = state?.username;
   const { workId } = useParams<{ workId: string }>();
   const navigate = useNavigate();
 
@@ -99,7 +102,7 @@ export default function HistoryDetail() {
       }
       try {
         const data = await getHistoryDetail(workId);
-
+        
         setDetailData({
           ...data.basicInfo,
           id: data.basicInfo.workId,
@@ -163,24 +166,31 @@ export default function HistoryDetail() {
   return (
     <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
       {/* BreadCrumbs */}
-      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
-          <Link
-            component={RouterLink}
-            to="/history"
-            underline="hover"
-            color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
-            데이터 수집 이력
-          </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
-            상세조회
-          </Typography>
-        </Breadcrumbs>
+      <Box sx={{paddingLeft: 2, marginTop: 1}}>
+          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+              <Link
+                  component={RouterLink}
+                  to="/user"
+                  underline="hover"
+                  color="inherit"
+                  sx={{ fontWeight: 'bold', fontSize: 16 }}
+              >
+                  유저관리
+              </Link>
+              <Link
+                component={RouterLink}
+                to={`/user/${userId}/history`}
+                underline="hover"
+                color="inherit"
+                sx={{ fontWeight: 'bold', fontSize: 16 }}
+                state={{ username }}
+              >
+                {username} 이력
+              </Link>
+              <Typography color="text.primary" sx={{ fontWeight: 'bold', fontSize: 16 }}>
+                  상세 조회
+              </Typography>
+          </Breadcrumbs>
       </Box>
       <Typography
         sx={{
@@ -299,7 +309,9 @@ export default function HistoryDetail() {
           >
             <Button
               variant="contained"
-              onClick={() => navigate("/history")}
+              onClick={() => 
+                navigate(`/user/${userId}/history`, {state: {username: username} })
+              }
               sx={(theme) => ({
                 backgroundColor: theme.palette.grey[500],
                 color: theme.palette.common.white,

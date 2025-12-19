@@ -5,7 +5,7 @@ import CustomTextField from '../../component/CustomTextField';
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
 import Alert from '../../component/Alert';
-import { registUser, getUser } from '../../API/01_UsermanagementApi';
+import { registUser, checkUsername } from '../../API/01_UsermanagementApi';
 
 interface RegPageProps {
     handleDone: () => void;
@@ -99,12 +99,8 @@ export default function RegPage(props: RegPageProps) {
 
     const handleValidate = async () => {
         try {
-            const userData = await getUser();
-            // ID 중복검사, true 일시 중복
-            const findSameUsername = userData.find(
-                (user:any) => user.username === newData.username
-            )
-            // console.log('중복 ID 검사', findSameUsername)
+            const isDuplicate = await checkUsername(newData.username);
+            console.log('isDuplicate', isDuplicate)
 
             const password = newData.password;
             const passwordConfirm = newData.passwordConfirm;
@@ -121,7 +117,7 @@ export default function RegPage(props: RegPageProps) {
 
             const errMsg = []
             if (!isValid_id || isValid_id === null) errMsg.push('아이디 양식')
-            if (findSameUsername) errMsg.push('아이디 중복') 
+            if (isDuplicate.duplicate) errMsg.push(isDuplicate.message) 
             if (!isValidPassword || isValidPassword === null) errMsg.push('비밀번호 양식')
             if (isPasswordMismatch) errMsg.push('비밀번호 불일치')
             if (newData.name === '') errMsg.push('이름 미입력')
@@ -351,7 +347,7 @@ export default function RegPage(props: RegPageProps) {
                     <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>승인상태</Typography>
                     </Box>
-                    <Box sx={{marginRight: '20px'}}>
+                    <Box>
                         <CustomSelect
                           value={newData.state}
                           listItem={stateList}

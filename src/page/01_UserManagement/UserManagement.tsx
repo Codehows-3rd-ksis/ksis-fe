@@ -1,26 +1,36 @@
-import { useState, useEffect} from "react"
+import { useState, useEffect, useCallback} from "react"
 import { useNavigate } from 'react-router-dom';
 // Mui
 import { Box, Dialog, Typography } from '@mui/material'
 // Table
-import CommonTable from "../../component/CommonTable"
+import PaginationServerTable from "../../component/PaginationServerTable"
 import { getColumns, type UserTableRows } from '../../Types/TableHeaders/UserManageHeader'
 // Search
-import SearchHeader from "../../component/SearchHeader"
 import { getUserSearchCategory } from "../../Types/Search"
+import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
 // Pages
 import EditPage from "./EditPage"
 import EditAccountPage from "./EditAccountPage"
 import RegPage from "./RegPage"
 // Comp
 import Alert from "../../component/Alert";
+import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getUser, deleteUser } from "../../API/01_UsermanagementApi";
 
 function UserManagement() {
+  const [loading, setLoading] = useState(false)
+  const [isSearched, setIsSearched] = useState(false);
   // Table
+  const [totalCount, setTotalCount] = useState(0)
+  const [searchState, setSearchState] = useState({
+    type: 'all',
+    keyword: '',
+    page: 0,
+    size: 5,
+  });
   const [baseRows, setBaseRows] = useState<UserTableRows[]>([])
-  const [filteredRows, setFilteredRows] = useState<UserTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<UserTableRows | null>(null)
 
   // Dialog
@@ -40,32 +50,61 @@ function UserManagement() {
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const getTableDatas = async () => {
-      try {
-          const data = await getUser();
+  const getTableDatas = useCallback(async () => {
+    try {
+          setLoading(true)
+          const { type, keyword, page, size } = searchState
 
-          const result = data.map((row: UserTableRows, i: number) => ({
-              ...row,
-              id: row.userId,
-              index: i+1,
+          const res = await getUser(
+            type ?? 'all',
+            keyword ?? '',
+            page, 
+            size
+          )
+          
+          const result = res.content.map((row: UserTableRows, i: number) => ({
+            ...row,
+            id: row.userId,
+            index: page * size + i + 1, // 🔥 전체 기준 index
           }))
+
           setBaseRows(result)
-          setFilteredRows(result)
+          setTotalCount(res.totalElements)
+          setLoading(false)
       }
       catch(err) {
           console.error(err)
           setErrorMsg('get User 실패');
           setOpenErrorAlert(true)
+          setLoading(false)
       }
-  }
+  }, [searchState])
 
   useEffect(()=> {
     getTableDatas();
-  }, [])
+  }, [getTableDatas])
 
   const BoardRefresh = () => {
         getTableDatas();
-    }
+  }
+  
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true)
+    setSearchState(prev => ({
+      ...prev,
+      ...conditions,
+      page: 0,
+    }));
+  };
+  const handleReset = () => {
+    setIsSearched(false)
+    setSearchState({
+      type: 'all',
+      keyword: '',
+      page: 0,
+      size: 5,
+    })
+  }
 
   /**  등록 페이지  =========================================== */
   const handleOpenReg = () => {
@@ -132,8 +171,7 @@ function UserManagement() {
   const handleShowLogOpen = (row: UserTableRows) => {
     setSelectedRow(row)
     // 로그 페이지로 이동
-    navigate('/user/log', {state: {userId: row.userId, username: row.username} })
-    
+    navigate(`/user/${row.userId}/history`, {state: {username: row.username} })
   }
 
   const columns = getColumns({ 
@@ -148,17 +186,42 @@ function UserManagement() {
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           유저관리
         </Typography>
-        <SearchHeader
-          baseRows={baseRows}                 // 전체 데이터 원본
-          setFilteredRows={setFilteredRows}   // 필터링된 데이터 상태 setter
-          getSearchCategory={getUserSearchCategory} // 검색 카테고리 목록
-          onClick={handleOpenReg}             // 등록 버튼 클릭 시 실행할 함수
-          btnName="유저 등록"
-        />
+        <Box sx={{padding: 2}}>
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+            }}
+            totalCount={totalCount}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getUserSearchCategory()}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={true}
+            buttonLabel="유저 등록"
+            onButtonClick={handleOpenReg}
+          />
+        </Box>
 
         {/* 테이블 영역 */}
         <Box sx={{padding: 2}}>
-            <CommonTable columns={columns} rows={filteredRows} />
+            <PaginationServerTable 
+                columns={columns} 
+                rows={baseRows} 
+                page={searchState.page}
+                pageSize={searchState.size}
+                totalCount={totalCount}
+
+                onPageChange={(newPage: number) => {
+                  setSearchState(prev => ({
+                    ...prev,
+                    page: newPage,
+                  }))
+                }}
+            />
         </Box>
 
         {/* 등록 페이지 */}
@@ -231,6 +294,7 @@ function UserManagement() {
             setOpenErrorAlert(false);
           }}
         />
+        <LoadingProgress open={loading} />
     </Box>
   )
 }
