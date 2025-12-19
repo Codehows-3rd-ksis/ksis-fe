@@ -28,7 +28,7 @@ function CommonTable(props: CommonTableProps) {
             onRowSelectionChange?.(selectedIds)
           }}
           initialState={{ pagination: { paginationModel } }}
-          pageSizeOptions={[5, 10]}
+          pageSizeOptions={[3, 5, 10]}
           checkboxSelection={check || false}
           getRowClassName={(params) => {
             const classes = [];

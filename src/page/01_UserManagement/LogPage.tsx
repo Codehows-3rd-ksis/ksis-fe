@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useLocation, Link as RouterLink, useParams } from 'react-router-dom';
 import { Box, Typography, Breadcrumbs, Link,
-    Radio, RadioGroup, FormControl, FormControlLabel
+    Radio, RadioGroup, FormControl, FormControlLabel,
  } from '@mui/material'
  // Table
 import PaginationServerTable from '../../component/PaginationServerTable'
@@ -28,7 +28,8 @@ type SearchState = {
 export default function LogPage () {
     const location = useLocation();
     const navigate = useNavigate();
-    const { userId, username } = location.state || {}
+    const { userId } = useParams();
+    const { username } = location.state || {}
 
     const [loading, setLoading] = useState(false)
     const [isSearched, setIsSearched] = useState(false);
@@ -47,7 +48,7 @@ export default function LogPage () {
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
     
-    const getTableDatas = async () => {
+    const getTableDatas = useCallback(async () => {
         try {
             setLoading(true)
             const { startDate, endDate, type, keyword, page, size } = searchState
@@ -58,7 +59,7 @@ export default function LogPage () {
                 keyword,
                 page, 
                 size,
-                userId
+                Number(userId)
             );
             
             const result = res.content.map((row: UserLogTableRows, i: number) => ({
@@ -77,11 +78,11 @@ export default function LogPage () {
             setOpenErrorAlert(true)
             setLoading(false)
         }
-    }
+    }, [searchState, userId])
     
     useEffect(()=> {
         getTableDatas()
-    }, [searchState])
+    }, [getTableDatas])
     
     const handleSearch = (conditions: SearchConditions) => {
       setIsSearched(true)
@@ -115,8 +116,9 @@ export default function LogPage () {
     };
 
     const handleDetailView = (row: UserLogTableRows) => {
-        console.log('row',row)
-        // 수집이력 상세가 만들어지면 거기에 연결하도록
+        navigate(`/user/${userId}/history/${row.workId}`, {
+          state: { username }
+        });
     }
 
     const columns = getColumns({handleDetailView});
@@ -140,7 +142,7 @@ export default function LogPage () {
                             유저관리
                         </Link>
                         <Typography color="text.primary" sx={{ fontWeight: 'bold', fontSize: 16 }}>
-                            선택유저의 데이터 수집 이력
+                            {username} 의 데이터 수집 이력
                         </Typography>
                     </Breadcrumbs>
             </Box>

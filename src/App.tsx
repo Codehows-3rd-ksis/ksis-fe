@@ -12,6 +12,7 @@ import LoginPage from './page/00_Login/Login'
 //** 유저관리 */
 import UserManagement from "./page/01_UserManagement/UserManagement";
 import UserLog from "./page/01_UserManagement/LogPage"
+import UserLogDetail from "./page/01_UserManagement/LogDetail"
 //** 수집설정 */
 import Setting from "./page/02_Setting/Setting"
 import SettingReg from "./page/02_Setting/RegPage"
@@ -99,9 +100,15 @@ function App() {
                   </ProtectedRoute>
                   } 
                 />
-                <Route path="/user/log" element={
+                <Route path="/user/:userId/history" element={
                   <ProtectedRoute userInfo={user} requiredRole="ROLE_ADMIN">
                     <UserLog />
+                  </ProtectedRoute>
+                  } 
+                />
+                <Route path="/user/:userId/history/:workId" element={
+                  <ProtectedRoute userInfo={user} requiredRole="ROLE_ADMIN">
+                    <UserLogDetail />
                   </ProtectedRoute>
                   } 
                 />
@@ -145,7 +152,7 @@ function App() {
                   </ProtectedRoute>
                   }
                 />
-                <Route path="/history/detail/:workId" element={
+                <Route path="/history/detail/:id" element={
 
                   <ProtectedRoute userInfo={user}>
                     <HistoryDetail />

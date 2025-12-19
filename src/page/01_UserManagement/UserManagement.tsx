@@ -171,8 +171,7 @@ function UserManagement() {
   const handleShowLogOpen = (row: UserTableRows) => {
     setSelectedRow(row)
     // 로그 페이지로 이동
-    navigate('/user/log', {state: {userId: row.userId, username: row.username} })
-    
+    navigate(`/user/${row.userId}/history`, {state: {username: row.username} })
   }
 
   const columns = getColumns({ 
