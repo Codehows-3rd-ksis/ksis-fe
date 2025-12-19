@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -64,7 +64,7 @@ export default function History() {
   const [openErrorAlert, setOpenErrorAlert] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const getTableDatas = async () => {
+  const getTableDatas = useCallback(async () => {
     try {
       setLoading(true)
       const { startDate, endDate, type, keyword, page, size } = searchState
@@ -94,12 +94,11 @@ export default function History() {
       setOpenErrorAlert(true)
       setLoading(false)
     }
-    
-  };
+  }, [searchState]);
 
   useEffect(()=> {
     getTableDatas();
-  }, [searchState])
+  }, [getTableDatas])
 
   const handleSearch = (conditions: SearchConditions) => {
     setIsSearched(true)
