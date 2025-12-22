@@ -92,6 +92,28 @@ export const getColumns = ({
           </Box>
         )
       }
+      else if (params.value === "PARTIAL") {
+        const failCount = params.row.failCount || 0;
+        // console.log(params.row);
+        return (
+          <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+              <Typography>(수집실패:</Typography>
+              <Typography sx={{ color: "red" }}>
+                {failCount}
+              </Typography>
+              <Typography>건)</Typography>
+            </Box>
+          );
+      }
       else return (
         <Box
           sx={{
