@@ -165,6 +165,7 @@ export default function LogPage () {
                 onSearch={handleSearch}
                 onReset={handleReset}
                 showButton={false}
+                placeholder="수집명 입력"
               />
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
@@ -248,7 +249,14 @@ export default function LogPage () {
               />
             </Box>
             <Box sx={{display: 'flex', justifyContent: 'flex-end', padding: 2}}>
-                <CustomButton text="닫기" onClick={handleClose} backgroundColor='#f0f0f0' radius={2}/>
+                <CustomButton 
+                  text="◀ 이전"
+                  backgroundColor="#9E9E9E"
+                  // color="#fff"
+                  onClick={handleClose}
+                  radius={2}
+                  width="80px"
+                />
             </Box>
             {/* Error Alert */}
             <Alert

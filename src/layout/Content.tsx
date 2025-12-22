@@ -18,7 +18,7 @@ function Content({children}:LayoutProps) {
             border: '3px solid #CDBAA6',
             borderRadius: 3,
             boxSizing: 'border-box',
-            overflow: 'hidden',  // 내부에서만 스크롤
+            // overflow: 'hidden', 
         }}
     >
             {children}

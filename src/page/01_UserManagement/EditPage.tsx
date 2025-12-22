@@ -123,7 +123,8 @@ export default function EditPage(props: EditPageProps) {
                 marginRight: '20px',
                 borderRadius: 1,
                 paddingTop: 1,
-                paddingBottom: 1
+                paddingBottom: 1,
+                overflowY: 'auto'
             }}>
                 {/* ID */}
                 <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1}}>

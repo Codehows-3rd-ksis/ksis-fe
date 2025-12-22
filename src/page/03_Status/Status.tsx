@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import { getColumns } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";

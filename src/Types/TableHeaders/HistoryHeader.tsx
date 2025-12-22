@@ -77,7 +77,21 @@ export const getColumns = ({
     align: "center",
     renderCell: (params) => {
       if (params.value === "SUCCESS") {
-        if (params.row.failCount === 0) return "수집완료";
+        if (params.row.failCount === 0) {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+            </Box>
+          )
+        }
         else
           return (
             <Box
@@ -89,15 +103,43 @@ export const getColumns = ({
                 width: "100%",
               }}
             >
-              <Typography>수집완료(수집실패:</Typography>
+              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+              <Typography>(수집실패:</Typography>
               <Typography sx={{ color: "red" }}>
                 {params.row.failCount}
               </Typography>
               <Typography>건)</Typography>
             </Box>
           );
-      } else if (params.value === "FAILED") return "수집실패";
-      else return "진행중";
+      } 
+      else if (params.value === "FAILED") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{ color: 'red'}}>수집실패</Typography>
+          </Box>
+        )
+      }
+      else return (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+            width: "100%",
+          }}
+        >
+          <Typography sx={{ color: '#BB510C'}}>진행중</Typography>
+        </Box>
+      )
     },
   },
   {
