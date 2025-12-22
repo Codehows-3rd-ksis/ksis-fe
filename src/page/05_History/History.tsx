@@ -217,7 +217,12 @@ export default function History() {
   const columns = getColumns({ handleDetailView, handleExport });
 
   return (
-    <Box sx={{ height: "97%" }}>
+    <Box sx={{ 
+      height: "100%",
+      minHeight: 0,
+      display: "flex",
+      flexDirection: "column",
+     }}>
       {/* <Box sx={{ bgcolor: '#FFC98B', height: '120px', borderRadius: '10px 10px 0px 0px', display: 'flex', alignItems: 'center'}}>
             </Box> */}
       <Typography
@@ -310,7 +315,7 @@ export default function History() {
         </Box>
       </Box>
       {/* 테이블 영역 */}
-      <Box sx={{ padding: 2 }}>
+      <Box sx={{ padding: 2, overflowY: 'auto', }}>
         <PaginationServerTable 
             columns={columns} 
             rows={baseRows} 

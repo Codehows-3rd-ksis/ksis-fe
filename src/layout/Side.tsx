@@ -6,19 +6,14 @@ function Side({children}:LayoutProps) {
   return (
     <Box
         sx={{
-            // backgroundColor: '#fff',
-            // height: '100%',
-            // border: '3px solid #CDBAA6', 
-            // borderRadius: 3,
-
             backgroundColor: '#fff',
-            // flex: 1,          
-            height: '100%',
-            minHeight: 0,         // 🔥 필수 (스크롤 방지)
+            flex: 1,            
+            minHeight: 0,       
             border: '3px solid #CDBAA6',
             borderRadius: 3,
             boxSizing: 'border-box',
-            overflow: 'hidden',  // 내부에서만 스크롤
+            display: 'flex',
+            flexDirection: 'column',
         }}
     >
             {children}

@@ -72,7 +72,7 @@ function App() {
       p: 1,
       gap: 1,
       boxSizing: 'border-box',
-      overflow: 'hidden',
+      // overflow: 'hidden',
     }}>
       {shouldHideLayout ? (
         // 로그인 페이지는 단독 표시
@@ -83,7 +83,13 @@ function App() {
       ) : (
         // 나머지 페이지는 Side + Content 포함
         <>
-          <Box sx={{width: '14.5vw',  minWidth: '260px'}}>
+          <Box sx={{
+            width: '14.5vw',
+            minWidth: '260px',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100%', 
+          }}>
             <Side>
               {/* <Menu /> */}
               <ProtectedRoute userInfo={user}>
