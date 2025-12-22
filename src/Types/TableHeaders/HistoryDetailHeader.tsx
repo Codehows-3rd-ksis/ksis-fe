@@ -1,6 +1,6 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { IconButton, Link } from "@mui/material";
+import { IconButton, Link, Typography, Box } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 // --- 기본 정보 컬럼 ---
@@ -19,15 +19,74 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-      if (params.value === "RUNNING") return "진행중";
-      if (params.value === "SUCCESS") return "완료";
-      if (params.value === "FAILED") return "실패";
-      if (params.value === "PARTIAL") {
-        const failCount = params.row.failCount || 0;
-        console.log(params.row);
-        return `수집완료(수집실패:${failCount}건)`;
+      if (params.value === "RUNNING") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{ color: '#BB510C'}}>진행중</Typography>
+          </Box>
+        )
       }
-      return params.value; // 알 수 없는 값은 그대로 표시
+      else if (params.value === "SUCCESS") {
+        return (
+          <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+            </Box>
+        )
+      }
+      else if (params.value === "FAILED") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{ color: 'red'}}>수집실패</Typography>
+          </Box>
+        )
+      }
+      else if (params.value === "PARTIAL") {
+        const failCount = params.row.failCount || 0;
+        // console.log(params.row);
+        return (
+          <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+              <Typography>(수집실패:</Typography>
+              <Typography sx={{ color: "red" }}>
+                {failCount}
+              </Typography>
+              <Typography>건)</Typography>
+            </Box>
+          );
+      }
+      else return params.value; // 알 수 없는 값은 그대로 표시
     },
   },
   {
