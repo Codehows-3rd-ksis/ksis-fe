@@ -271,7 +271,15 @@ function StatusDetail() {
   }, [workId, resetCrawlingState]);
 
   return (
-    <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        color: "black",
+      }}
+    >
       <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
           <Link
@@ -303,152 +311,118 @@ function StatusDetail() {
         데이터 수집 현황 상세조회
       </Typography>
       <Box
-        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+        sx={{
+          padding: 2,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          gap: 4,
+        }}
       >
-        <Paper
-          elevation={3}
-          sx={{ padding: 4, flex: 1, display: "flex", flexDirection: "column", gap: 1 }}
-        >
-          {/* <Box
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            기본 정보
+          </Typography>
+          <CommonTable
+            columns={DETAIL_SETTING_COLUMNS}
+            rows={
+              detailData
+                ? [
+                    {
+                      ...detailData,
+                      progress: currentProgress?.progress ?? 0,
+                      state: currentProgress?.state ?? detailData.state,
+                      failCount: currentProgress?.failCount ?? 0,
+                    },
+                  ]
+                : []
+            }
+            pageSize={1}
+            hideFooter={true}
+          />
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box
             sx={{
               display: "flex",
-              flexDirection: "column",
+              alignItems: "center",
               gap: 1,
-              height: "100%",
             }}
-          > */}
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: "bold", marginBottom: 1 }}
-              >
-                기본 정보
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              수집 실패
+            </Typography>
+            <Typography>
+              {failCount}/{totalCount}
+            </Typography>
+          </Box>
+          <CommonTable
+            columns={FAILURE_COLUMNS}
+            rows={failureRows}
+            pageSize={3}
+          />
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                수집 데이터
               </Typography>
-              <CommonTable
-                columns={DETAIL_SETTING_COLUMNS}
-                rows={
-                  detailData
-                    ? [
-                        {
-                          ...detailData,
-                          progress: currentProgress?.progress ?? 0,
-                          state: currentProgress?.state ?? detailData.state,
-                          failCount: currentProgress?.failCount ?? 0,
-                        },
-                      ]
-                    : []
-                }
-                pageSize={1}
-                hideFooter={true}
-              />
+              <Typography>
+                {collectCount}/{totalCount}
+              </Typography>
             </Box>
-            <Box sx={{ marginTop: 2 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: "10px",
-                    alignItems: "center",
-                    marginBottom: 1,
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    수집 실패
-                  </Typography>
-                  <Typography>
-                    {failCount}/{totalCount}
-                  </Typography>
-                </Box>
-              </Box>
-              <CommonTable
-                columns={FAILURE_COLUMNS}
-                rows={failureRows}
-                pageSize={3}
-                height={267}
-              />
-            </Box>
-            <Box
-              sx={{
-                marginTop: 2,
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                minHeight: 0,
-                overflow: "hidden",
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                    수집 데이터
-                  </Typography>
-                  <Typography>
-                    {collectCount}/{totalCount}
-                  </Typography>
-                </Box>
-                <Typography sx={{ fontWeight: "bold" }}>
-                  수집완료 예상시간 :{" "}
-                  {expectEndAt &&
-                  expectEndAt !== "계산 중..." &&
-                  expectEndAt !== "완료" &&
-                  dayjs(expectEndAt).isValid()
-                    ? dayjs(expectEndAt).format("YY-MM-DD HH:mm")
-                    : expectEndAt}
-                </Typography>
-              </Box>
-              <Box sx={{ flex: 1, minHeight: 0 }}>
-                <CommonTable
-                  columns={collectionColumns}
-                  rows={collectionRowsWithFailure}
-                  pageSize={5}
-                  height="370px"
-                />
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                marginTop: 3,
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 2,
-              }}
-            >
-                          <Button
-                            variant="contained"
-                            onClick={handleBack}
-                            sx={(theme) => ({
-                              backgroundColor: theme.palette.grey[500],
-                              color: theme.palette.common.white,
-                              "&:hover": {
-                                backgroundColor: theme.palette.grey[700], // Darker grey on hover
-                              },
-                            })}
-                          >
-                            닫기
-                          </Button>            </Box>
-          {/* </Box> */}
-        </Paper>
+            <Typography sx={{ fontWeight: "bold" }}>
+              수집완료 예상시간 :{" "}
+              {expectEndAt &&
+              expectEndAt !== "계산 중..." &&
+              expectEndAt !== "완료" &&
+              dayjs(expectEndAt).isValid()
+                ? dayjs(expectEndAt).format("YY-MM-DD HH:mm")
+                : expectEndAt}
+            </Typography>
+          </Box>
+          <CommonTable
+            columns={collectionColumns}
+            rows={collectionRowsWithFailure}
+            pageSize={5}
+          />
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={handleBack}
+            sx={(theme) => ({
+              backgroundColor: theme.palette.grey[500],
+              color: theme.palette.common.white,
+              "&:hover": {
+                backgroundColor: theme.palette.grey[700], // Darker grey on hover
+              },
+            })}
+          >
+            닫기
+          </Button>{" "}
+        </Box>
       </Box>
     </Box>
   );

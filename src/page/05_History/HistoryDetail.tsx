@@ -4,7 +4,7 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
+  // Paper,
   Breadcrumbs,
   Link,
 } from "@mui/material";
@@ -161,7 +161,15 @@ export default function HistoryDetail() {
 
   // --- JSX ---
   return (
-    <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        color: "black",
+      }}
+    >
       {/* BreadCrumbs */}
       <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
@@ -194,124 +202,112 @@ export default function HistoryDetail() {
         데이터 수집이력 상세 조회
       </Typography>
       <Box
-        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+        sx={{
+          padding: 2,
+          display: "flex",
+          flexDirection: "column",
+          color: "black",
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          gap: 4,
+        }}
       >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-          }}
-        >
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: "bold", marginBottom: 1 }}
-            >
-              기본 정보
-            </Typography>
-            <CommonTable
-              columns={DETAIL_SETTING_COLUMNS}
-              rows={detailData ? [detailData] : []}
-              pageSize={1}
-              hideFooter={true}
-            />
-          </Box>
+        {/* Work */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            기본 정보
+          </Typography>
+          <CommonTable
+            columns={DETAIL_SETTING_COLUMNS}
+            rows={detailData ? [detailData] : []}
+            pageSize={1}
+            hideFooter={true}
+          />
+        </Box>
 
-          <Box sx={{ marginTop: 2 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 1,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  수집 실패
-                </Typography>
-                <Typography>
-                  {failCount}/{totalCount}
-                </Typography>
-              </Box>
-              <CustomButton
-                text="일괄재수집"
-                width="100px"
-                onClick={handleBatchRecollectClick}
-                radius={2}
-                disabled={failCount === 0}
-              />
-            </Box>
-            <CommonTable
-              columns={failureColumns}
-              rows={failureRows}
-              pageSize={3}
-              height={267}
-            />
-          </Box>
-
+        {/* 실패 */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Box
             sx={{
-              marginTop: 2,
-              flex: 1,
               display: "flex",
-              flexDirection: "column",
-              minHeight: 0,
-              overflow: "hidden",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                marginBottom: 1,
-              }}
-            >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                수집 데이터
+                수집 실패
               </Typography>
               <Typography>
-                {collectCount}/{totalCount}
+                {failCount}/{totalCount}
               </Typography>
             </Box>
-            <Box sx={{ flex: 1, minHeight: 0 }}>
-              <CommonTable
-                columns={collectionColumns}
-                rows={collectionRows}
-                pageSize={5}
-                height="370px"
-              />
-            </Box>
+            <CustomButton
+              text="일괄재수집"
+              width="100px"
+              onClick={handleBatchRecollectClick}
+              radius={2}
+              disabled={failCount === 0}
+            />
           </Box>
-
+          <CommonTable
+            columns={failureColumns}
+            rows={failureRows}
+            pageSize={3}
+          />
+        </Box>
+        {/* 수집데이터 */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Text */}
           <Box
             sx={{
-              marginTop: 3,
               display: "flex",
-              justifyContent: "flex-end",
-              gap: 2,
+              alignItems: "center",
+              gap: 1,
             }}
           >
-            <Button
-              variant="contained"
-              onClick={() => navigate("/history")}
-              sx={(theme) => ({
-                backgroundColor: theme.palette.grey[500],
-                color: theme.palette.common.white,
-                "&:hover": {
-                  backgroundColor: theme.palette.grey[700], // Darker grey on hover
-                },
-              })}
-            >
-              닫기
-            </Button>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              수집 데이터
+            </Typography>
+            <Typography>
+              {collectCount}/{totalCount}
+            </Typography>
           </Box>
-        </Paper>
+          {/* Table */}
+          <CommonTable
+            columns={collectionColumns}
+            rows={collectionRows}
+            pageSize={5}
+            // height="370px"
+          />
+        </Box>
+        {/* 닫기버튼 */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={() => navigate("/history")}
+            sx={(theme) => ({
+              backgroundColor: theme.palette.grey[500],
+              color: theme.palette.common.white,
+              "&:hover": {
+                backgroundColor: theme.palette.grey[700], // Darker grey on hover
+              },
+            })}
+          >
+            닫기
+          </Button>
+        </Box>
       </Box>
 
       <Alert

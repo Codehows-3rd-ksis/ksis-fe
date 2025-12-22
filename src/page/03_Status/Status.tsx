@@ -189,38 +189,39 @@ function Status() {
   }, [readyState, subscribe]);
 
   return (
-    <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        color: "black",
+      }}
+    >
       <Typography
         sx={{
           fontSize: 60,
           fontWeight: "bold",
           color: "black",
           paddingLeft: 2,
-          marginTop: 20,
+          marginTop: 5,
         }}
       >
         데이터 수집 현황
       </Typography>
       <Box
-        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+        sx={{
+          padding: 2,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+        }}
       >
-        <Paper
-          elevation={3}
-          sx={{ padding: 4, flex: 1, display: "flex", flexDirection: "column" }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              height: "100%",
-            }}
-          >
-            <Box sx={{ padding: 2, marginTop: "auto", marginBottom: "auto" }}>
-              <CommonTable columns={columns} rows={displayRows} />
-            </Box>
-          </Box>
-        </Paper>
+        <Box sx={{ marginTop: 13 }}>
+          <CommonTable columns={columns} rows={displayRows} />
+        </Box>
       </Box>
 
       <Alert
