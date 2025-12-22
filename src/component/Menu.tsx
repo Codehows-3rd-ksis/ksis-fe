@@ -44,7 +44,7 @@ function Menu() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',  // ✅ 상단(로고+메뉴)과 하단(유저영역) 분리
-            height: '98vh',
+            height: '100%',
             minWidth: '260px',
             boxSizing: 'border-box'
         }}>
