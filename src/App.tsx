@@ -64,7 +64,16 @@ function App() {
 
 
   return (
-    <Box sx={{ width: '100vw', display: 'flex', backgroundColor: '#FEF4EA' }}>
+    <Box sx={{ 
+      width: '100vw',
+      height: '100vh',   // 🔥 여기에만 100vh
+      display: 'flex',
+      backgroundColor: '#FEF4EA',
+      p: 1,
+      gap: 1,
+      boxSizing: 'border-box',
+      // overflow: 'hidden',
+    }}>
       {shouldHideLayout ? (
         // 로그인 페이지는 단독 표시
         <Routes>
@@ -74,7 +83,13 @@ function App() {
       ) : (
         // 나머지 페이지는 Side + Content 포함
         <>
-          <Box sx={{width: '14.5vw', padding: 1, minWidth: '260px'}}>
+          <Box sx={{
+            width: '14.5vw',
+            minWidth: '260px',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100%', 
+          }}>
             <Side>
               {/* <Menu /> */}
               <ProtectedRoute userInfo={user}>
@@ -82,7 +97,7 @@ function App() {
               </ProtectedRoute>
             </Side>
           </Box>
-          <Box sx={{width: '84.5vw', padding: 1}}>
+          <Box sx={{width: '84.5vw'}}>
             <Content>
               <Routes>
                 <Route

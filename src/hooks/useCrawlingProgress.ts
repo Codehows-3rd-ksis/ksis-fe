@@ -1,10 +1,8 @@
 import { useState, useCallback } from "react";
 import { type CrawlingMessage } from "../Types/WebSocket";
 
-/**
- * 크롤링 진행 상태(progress, count) 관리 훅
- * - WebSocket 메시지를 통해 백엔드에서 계산된 진행 상태를 저장하고 업데이트
- */
+/* 실시간 크롤링 진행 상태(진행도, 상태, 갯수, 예상시간, 수집완료시간)만 관리     cf. 실시간 데이터는 StatusDetail에서 관리
+Status, StatusDetal에서 Websocket progress 사용 */
 
 export interface CrawlingProgress {
   progress: number;

@@ -217,9 +217,12 @@ export default function History() {
   const columns = getColumns({ handleDetailView, handleExport });
 
   return (
-    <Box sx={{ height: "97%" }}>
-      {/* <Box sx={{ bgcolor: '#FFC98B', height: '120px', borderRadius: '10px 10px 0px 0px', display: 'flex', alignItems: 'center'}}>
-            </Box> */}
+    <Box sx={{ 
+      height: "100%",
+      minHeight: 0,
+      display: "flex",
+      flexDirection: "column",
+     }}>
       <Typography
         sx={{
           fontSize: 60,
@@ -248,6 +251,7 @@ export default function History() {
           onSearch={handleSearch}
           onReset={handleReset}
           showButton={false}
+          placeholder="수집명 입력"
         />
       </Box>
       
@@ -310,7 +314,7 @@ export default function History() {
         </Box>
       </Box>
       {/* 테이블 영역 */}
-      <Box sx={{ padding: 2 }}>
+      <Box sx={{ padding: 2, overflowY: 'auto', }}>
         <PaginationServerTable 
             columns={columns} 
             rows={baseRows} 

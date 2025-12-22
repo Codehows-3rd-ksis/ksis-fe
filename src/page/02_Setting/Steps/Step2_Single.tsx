@@ -361,28 +361,21 @@ export default React.memo(function Step2_Single({
                 {/* 상단 */}
                 <Box
                     sx={{
-                        // flex: 7,
-                        height: 550,
-                        minHeight: 550,
+                        borderBottom: "2px solid #ccc",
                         display: "flex",
                         gap: 2,
-                        borderBottom: "2px solid #ccc",
                         pb: 2,
-                        overflow: 'auto'
+                        minHeight: 550,
+                        minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
                 }}>
                     {/* 스크린샷 */}
                     <Box
                         sx={{
-                          flex: 1,
-                          overflow: "auto",
-                          // maxHeight: 640,
-                          background: "#eaeaea",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "flex-start",
-                          color: 'black',
+                          flex: "0 0 50%",   // ⭐ 비율 고정
+                          minWidth: 500,
                           position: "relative",
-                          border: "1px solid #ccc",
+                          overflow: "auto",
+                          background: "#eaeaea",
                     }}>
                         {previewData.image ? (
                           <img
@@ -431,7 +424,10 @@ export default React.memo(function Step2_Single({
                     </Box>
                     {/* HTML 태그 */}
                     <Box sx={{
-                      width: '50%'
+                      flex: "0 0 50%",
+                      minWidth: 500,
+                      display: "flex",
+                      flexDirection: "column",
                     }}>
                       <Box 
                         sx={{ 
@@ -475,14 +471,15 @@ export default React.memo(function Step2_Single({
                 {/* 하단 */}
                 <Box 
                   sx={{
-                    flex: 3,
-                    mt: 2,
-                    background: "#f7f7f7",
-                    borderRadius: 2,
-                    p: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2
+                      height: 350,
+                      minHeight: 350,
+                      mt: 2,
+                      background: "#f7f7f7",
+                      borderRadius: 2,
+                      p: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2
                   }}
                 >
                     <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
@@ -495,7 +492,7 @@ export default React.memo(function Step2_Single({
                         rows={conditionData}
                         columns={conditionColumns}
                         processRowUpdate={processRowUpdate}
-                        maxHeight={320}
+                        maxHeight={300}
                     />
                 </Box>
             </Box>

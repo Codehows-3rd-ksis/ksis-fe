@@ -28,7 +28,7 @@ function UserManagement() {
     type: 'all',
     keyword: '',
     page: 0,
-    size: 5,
+    size: 10,
   });
   const [baseRows, setBaseRows] = useState<UserTableRows[]>([])
   const [selectedRow, setSelectedRow] = useState<UserTableRows | null>(null)
@@ -102,7 +102,7 @@ function UserManagement() {
       type: 'all',
       keyword: '',
       page: 0,
-      size: 5,
+      size: 10,
     })
   }
 
@@ -182,7 +182,12 @@ function UserManagement() {
   });
 
   return (
-    <Box sx={{ height: '97%'}}>
+    <Box sx={{ 
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      minHeight: 0,
+    }}>
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           유저관리
         </Typography>
@@ -207,7 +212,7 @@ function UserManagement() {
         </Box>
 
         {/* 테이블 영역 */}
-        <Box sx={{padding: 2}}>
+        <Box sx={{padding: 2, overflowY: 'auto',}}>
             <PaginationServerTable 
                 columns={columns} 
                 rows={baseRows} 

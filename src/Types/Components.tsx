@@ -10,6 +10,7 @@ export interface TextField_Type {
     type?: 'text' | 'number' | 'password';
     disabled?: boolean;
     placeholder?: string;
+    fullWidth?: boolean;
     // TextField sx
     border?: string;
     inputWidth?: string;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import { getColumns } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
@@ -22,12 +22,12 @@ function Status() {
   const userRole = useAuthStore((state) => state.user?.role);
   const { readyState, connect, subscribe } = useWebSocketStore();
   const { progressMap, handleCrawlingProgress, resetCrawlingState } =
-    useCrawlingProgress();
+    useCrawlingProgress(); //"진행상황" 실시간 업데이트
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
   // 데이터 State
-  const [baseRows, setBaseRows] = useState<StatusTableRows[]>([]);
-  const [displayRows, setDisplayRows] = useState<StatusTableRows[]>([]);
+  const [baseRows, setBaseRows] = useState<StatusTableRows[]>([]); // API 호출 데이터
+  const [displayRows, setDisplayRows] = useState<StatusTableRows[]>([]); //API + Websocket 데이터
 
   // UI State
   const [alertOpen, setAlertOpen] = useState(false);
@@ -35,16 +35,14 @@ function Status() {
 
   // 현황 목록 조회 API
   const fetchStatusList = useCallback(async () => {
-    console.log("API 호출 시작");
     try {
       const data = await getStatusList();
-      console.log("API 응답:", data);
+
       const result = data.map((row: StatusTableRows) => ({
         ...row,
         id: row.workId,
       }));
       setBaseRows(result);
-      console.log("baseRows 업데이트 완료");
     } catch (error) {
       alert("수집 현황 목록을 불러오는 데 실패했습니다.");
       console.error("수집 현황 목록 조회 실패:", error);
@@ -63,7 +61,6 @@ function Status() {
     }
   };
 
-  // 이벤트 핸들러
   const handleDetailOpen = (row: StatusTableRows) => {
     navigate(`/status/detail/${row.workId}`);
   };
@@ -85,27 +82,27 @@ function Status() {
     setSelectedRow(null);
   };
 
-  // 컬럼 정의
   const columns = getColumns({ handleDetailOpen, handleStopClick });
 
-  // API 응답(baseRows)과 웹소켓(progressMap) 상태 동기화
-  // 완료되거나 없어진 작업을 progressMap에서 제거
   useEffect(() => {
-    if (baseRows.length === 0) return; // baseRows가 아직 로드되지 않았으면 실행하지 않음
+    //데이터 로딩 확인
+    if (baseRows.length === 0) return;
 
-    const validWorkIds = new Set(baseRows.map((row) => row.workId)); //baseRows에서 유효한 작업id목록 추출
+    //메모리 정리
+    const validWorkIds = new Set(baseRows.map((row) => row.workId));
     progressMap.forEach((_, workId) => {
       if (!validWorkIds.has(workId)) {
-        resetCrawlingState(workId); //progressMap에 없으면 메모리에서 제거
+        resetCrawlingState(workId); //목록에서 사라진 작업은 progressMap에서 삭제
       }
     });
 
+    //데이터 병합 [ 목록데이터(baseRows) + Websocket(progressInfo) ]
     setDisplayRows([
       ...baseRows.map((row) => {
         const progressInfo = progressMap.get(row.workId);
-        if (!progressInfo) return row;
+        if (!progressInfo) return row; // 없으면 API원본 그대로
 
-        //workid 있으면 progress, state 업데이트
+        //progressInfo 있으면 업데이트
         return {
           ...row,
           progress: progressInfo.progress,
@@ -116,13 +113,8 @@ function Status() {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseRows, progressMap]);
 
-  // useEffect(() => {
-  //   console.log(displayRows);
-  // }, [displayRows]);
-
   // 초기 데이터 로드
   useEffect(() => {
-    console.log("[useEffect] fetchStatusList 실행됨");
     fetchStatusList();
   }, [fetchStatusList]);
 
@@ -133,16 +125,14 @@ function Status() {
     }
   }, [userId, connect]);
 
-  // WebSocket 구독 (크롤링 진행 상태)
+  // WebSocket 구독 (progressInfo)
   useEffect(() => {
     if (readyState === ReadyState.OPEN && userId && !subscriptionRef.current) {
-      // 역할에 따라 구독 경로 분기
       const destination =
         userRole === "ROLE_ADMIN"
           ? `/topic/crawling-progress` // 관리자: 공개 토픽 (모든 크롤링 작업)
           : `/user/queue/crawling-progress`; // 일반 유저: 개인 큐 (자신의 작업만)
 
-      console.log(`[WebSocket] 구독 시작: ${destination}`);
       subscriptionRef.current = subscribe(destination, (message) => {
         const crawlingMessage: CrawlingMessage = JSON.parse(message.body);
 
@@ -166,7 +156,7 @@ function Status() {
             const progressInfo = progressMap.get(row.workId);
             if (!progressInfo) return row;
 
-            //workid 있으면 progress, state 업데이트
+            //workid 있으면 progressInfo 업데이트
             return {
               ...row,
               progress: progressInfo.progress,
@@ -178,49 +168,50 @@ function Status() {
       });
     }
 
+    //cleanup 함수
     return () => {
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = undefined;
-        console.log("[WebSocket] 구독 해제: Status Page");
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyState, subscribe]);
 
   return (
-    <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        color: "black",
+      }}
+    >
       <Typography
         sx={{
           fontSize: 60,
           fontWeight: "bold",
           color: "black",
           paddingLeft: 2,
-          marginTop: 20,
+          marginTop: 5,
         }}
       >
         데이터 수집 현황
       </Typography>
       <Box
-        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+        sx={{
+          padding: 2,
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+        }}
       >
-        <Paper
-          elevation={3}
-          sx={{ padding: 4, flex: 1, display: "flex", flexDirection: "column" }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              height: "100%",
-            }}
-          >
-            <Box sx={{ padding: 2, marginTop: "auto", marginBottom: "auto" }}>
-              <CommonTable columns={columns} rows={displayRows} />
-            </Box>
-          </Box>
-        </Paper>
+        <Box sx={{ marginTop: 13 }}>
+          <CommonTable columns={columns} rows={displayRows} />
+        </Box>
       </Box>
 
       <Alert

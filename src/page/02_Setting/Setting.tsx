@@ -24,7 +24,7 @@ function Setting() {
     type: 'all',
     keyword: '',
     page: 0,
-    size: 5,
+    size: 10,
   });
   const [totalCount, setTotalCount] = useState(0)
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([])
@@ -90,7 +90,7 @@ function Setting() {
       type: 'all',
       keyword: '',
       page: 0,
-      size: 5,
+      size: 10,
     })
   }
 
@@ -137,7 +137,12 @@ function Setting() {
   const columns = getColumns({ handleEditOpen, handleDeleteOpen, handleRunCrawl });
 
   return (
-    <Box sx={{ height: '97%'}}>
+    <Box sx={{ 
+      height: "100%",
+      minHeight: 0,
+      display: "flex",
+      flexDirection: "column",
+    }}>
         <Typography sx={{fontSize: 60, fontWeight: 'bold', color: 'black', paddingLeft: 2, marginTop: 5}}>
           데이터 수집 설정
         </Typography>
@@ -162,7 +167,7 @@ function Setting() {
           />
         </Box>
         {/* 테이블 영역 */}
-        <Box sx={{padding: 2}}>
+        <Box sx={{padding: 2, overflowY: 'auto'}}>
             <PaginationServerTable 
                 columns={columns} 
                 rows={baseRows} 
