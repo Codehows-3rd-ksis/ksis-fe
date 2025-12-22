@@ -17,6 +17,7 @@
  */
 export const parseResultValue = (resultValue: string): Record<string, any> => {
   try {
+    if(!resultValue) return {};
     const parsedValue = JSON.parse(resultValue);
 
     // 배열이 아닌 경우 배열로 변환
