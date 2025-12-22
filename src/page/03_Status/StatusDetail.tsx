@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Button, Breadcrumbs, Link } from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
+import CustomButton from "../../component/CustomButton";
 import { type StatusTableRows } from "../../API/03_StatusApi";
 import {
   type FailureRow,
@@ -385,19 +386,14 @@ function StatusDetail() {
             gap: 2,
           }}
         >
-          <Button
-            variant="contained"
+          <CustomButton 
+            text="◀ 이전"
+            backgroundColor="#9E9E9E"
+            // color="#fff"
             onClick={handleBack}
-            sx={(theme) => ({
-              backgroundColor: theme.palette.grey[500],
-              color: theme.palette.common.white,
-              "&:hover": {
-                backgroundColor: theme.palette.grey[700], // Darker grey on hover
-              },
-            })}
-          >
-            닫기
-          </Button>{" "}
+            radius={2}
+            width="80px"
+          />
         </Box>
       </Box>
     </Box>
