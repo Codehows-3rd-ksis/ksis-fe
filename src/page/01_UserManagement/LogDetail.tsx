@@ -1,5 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import { useLocation, useParams, useNavigate, Link as RouterLink } from "react-router-dom";
+import {
+  useLocation,
+  useParams,
+  useNavigate,
+  Link as RouterLink,
+} from "react-router-dom";
 import {
   Box,
   Typography,
@@ -102,7 +107,7 @@ export default function LogDetail() {
       }
       try {
         const data = await getHistoryDetail(workId);
-        
+
         setDetailData({
           ...data.basicInfo,
           id: data.basicInfo.workId,
@@ -162,40 +167,45 @@ export default function LogDetail() {
     }
   }, [workId]);
 
-  
   return (
-    <Box sx={{ 
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      minHeight: 0,
-    }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+        color: "black",
+      }}
+    >
       {/* BreadCrumbs */}
-      <Box sx={{paddingLeft: 2, marginTop: 1}}>
-          <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
-              <Link
-                  component={RouterLink}
-                  to="/user"
-                  underline="hover"
-                  color="inherit"
-                  sx={{ fontWeight: 'bold', fontSize: 16 }}
-              >
-                  유저관리
-              </Link>
-              <Link
-                component={RouterLink}
-                to={`/user/${userId}/history`}
-                underline="hover"
-                color="inherit"
-                sx={{ fontWeight: 'bold', fontSize: 16 }}
-                state={{ username }}
-              >
-                {username} 이력
-              </Link>
-              <Typography color="text.primary" sx={{ fontWeight: 'bold', fontSize: 16 }}>
-                  상세 조회
-              </Typography>
-          </Breadcrumbs>
+      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
+        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+          <Link
+            component={RouterLink}
+            to="/user"
+            underline="hover"
+            color="inherit"
+            sx={{ fontWeight: "bold", fontSize: 16 }}
+          >
+            유저관리
+          </Link>
+          <Link
+            component={RouterLink}
+            to={`/user/${userId}/history`}
+            underline="hover"
+            color="inherit"
+            sx={{ fontWeight: "bold", fontSize: 16 }}
+            state={{ username }}
+          >
+            {username} 이력
+          </Link>
+          <Typography
+            color="text.primary"
+            sx={{ fontWeight: "bold", fontSize: 16 }}
+          >
+            상세 조회
+          </Typography>
+        </Breadcrumbs>
       </Box>
       <Typography
         sx={{
@@ -209,117 +219,116 @@ export default function LogDetail() {
         데이터 수집이력 상세 조회
       </Typography>
       <Box
-        sx={{ 
-          padding: 2, 
-          display: "flex", 
-          flexDirection: "column", 
-          color: 'black',
+        sx={{
+          padding: 2,
+          display: "flex",
+          flexDirection: "column",
+          color: "black",
           flex: 1,
           minHeight: 0,
-          overflowY: 'auto',
-          gap: 2
+          overflowY: "auto",
+          gap: 4,
         }}
       >
-          {/* Work */}
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: "bold" }}
-            >
-              기본 정보
-            </Typography>
-            <CommonTable
-              columns={DETAIL_SETTING_COLUMNS}
-              rows={detailData ? [detailData] : []}
-              pageSize={1}
-              hideFooter={true}
-            />
-          </Box>
+        {/* Work */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            기본 정보
+          </Typography>
+          <CommonTable
+            columns={DETAIL_SETTING_COLUMNS}
+            rows={detailData ? [detailData] : []}
+            pageSize={1}
+            hideFooter={true}
+          />
+        </Box>
 
-          {/* 실패 */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  수집 실패
-                </Typography>
-                <Typography>
-                  {failCount}/{totalCount}
-                </Typography>
-              </Box>
-              <CustomButton
-                text="일괄재수집"
-                width="100px"
-                onClick={handleBatchRecollectClick}
-                radius={2}
-                disabled={failCount === 0}
-              />
-            </Box>
-            <CommonTable
-              columns={failureColumns}
-              rows={failureRows}
-              pageSize={3}
-            />
-          </Box>
-          {/* 수집데이터 */}
+        {/* 실패 */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Box
             sx={{
               display: "flex",
-              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            {/* Text */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                수집 데이터
+                수집 실패
               </Typography>
               <Typography>
-                {collectCount}/{totalCount}
+                {failCount}/{totalCount}
               </Typography>
             </Box>
-            {/* Table */}
-            <CommonTable
-              columns={collectionColumns}
-              rows={collectionRows}
-              pageSize={5}
-              // height="370px"
+            <CustomButton
+              text="일괄재수집"
+              width="100px"
+              onClick={handleBatchRecollectClick}
+              radius={2}
+              disabled={failCount === 0}
             />
           </Box>
-          {/* 닫기버튼 */}
+          <CommonTable
+            columns={failureColumns}
+            rows={failureRows}
+            pageSize={3}
+          />
+        </Box>
+        {/* 수집데이터 */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Text */}
           <Box
             sx={{
               display: "flex",
-              justifyContent: "flex-end",
+              alignItems: "center",
+              gap: 1,
             }}
           >
-            <Button
-              variant="contained"
-              onClick={() => 
-                navigate(`/user/${userId}/history`, {state: {username: username} })
-              }
-              sx={(theme) => ({
-                backgroundColor: theme.palette.grey[500],
-                color: theme.palette.common.white,
-                "&:hover": {
-                  backgroundColor: theme.palette.grey[700], // Darker grey on hover
-                },
-              })}
-            >
-              닫기
-            </Button>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              수집 데이터
+            </Typography>
+            <Typography>
+              {collectCount}/{totalCount}
+            </Typography>
           </Box>
+          {/* Table */}
+          <CommonTable
+            columns={collectionColumns}
+            rows={collectionRows}
+            pageSize={5}
+            // height="370px"
+          />
+        </Box>
+        {/* 닫기버튼 */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Button
+            variant="contained"
+            onClick={() =>
+              navigate(`/user/${userId}/history`, {
+                state: { username: username },
+              })
+            }
+            sx={(theme) => ({
+              backgroundColor: theme.palette.grey[500],
+              color: theme.palette.common.white,
+              "&:hover": {
+                backgroundColor: theme.palette.grey[700], // Darker grey on hover
+              },
+            })}
+          >
+            닫기
+          </Button>
+        </Box>
       </Box>
 
       <Alert
