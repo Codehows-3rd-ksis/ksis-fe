@@ -30,7 +30,6 @@ export interface StatusDetailResponse {
   failureList: Array<{ itemId: number; seq: number; url: string }>;
 
   collectionData: {
-    columns: Array<{ field: string; headerName: string }>;
     rows: Array<{
       itemId: number;
       seq: number;

@@ -179,6 +179,7 @@ export default function RegPage(props: RegPageProps) {
                 paddingTop: 1,
                 paddingBottom: 1,
                 borderRadius: 1,
+                overflowY: 'auto'
             }}>
                 {/* ID */}
                 <Box sx={{display: 'flex', justifyContent: 'space-around', gap: 2, padding: 1, }}>

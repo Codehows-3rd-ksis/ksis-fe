@@ -29,6 +29,7 @@ interface SearchBarSetProps {
 
   totalCount?: number;
   searchCategories?: SearchCategory[];
+  placeholder?: string;
 
   showButton?: boolean;
   buttonLabel?: string;
@@ -46,6 +47,7 @@ export default function SearchBarSet({
   showCount,
   totalCount,
   searchCategories = [],
+  placeholder = "검색어 입력",
   showButton,
   buttonLabel = "등록",
   buttonWidth,
@@ -145,7 +147,7 @@ export default function SearchBarSet({
             <CustomTextField
               value={localValue.keyword}
               onChange={(e) => updateLocal("keyword", e.target.value)}
-              placeholder="검색어 입력"
+              placeholder={placeholder}
               inputWidth="250px"
               height="40px"
               boxMinWidth="250px"

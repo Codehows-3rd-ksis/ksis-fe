@@ -43,13 +43,17 @@ function Menu() {
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',  // ✅ 상단(로고+메뉴)과 하단(유저영역) 분리
-            height: '98vh',
-            minWidth: '260px',
-            boxSizing: 'border-box'
+            flex: 1,
+            minHeight: 0,   
+            gap: 5
         }}>
             {/* --- 상단 영역 (로고 + 메뉴) --- */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <Box sx={{ 
+                display: 'flex',
+                flexDirection: 'column', 
+                gap: 2,
+                p: 2 
+            }}>
                 {/* 로고 */}
                 <Box sx={{ textAlign: 'center', marginTop: '30px', marginRight: '10px' }}>
                 <img
@@ -58,7 +62,7 @@ function Menu() {
                     style={{ width: '80%', height: 'auto' }}
                 />
                 </Box>
-
+                {/* User Profile */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -66,11 +70,8 @@ function Menu() {
                     bgcolor: '#F8F8F5',
                     color: 'black',
                     borderRadius: '0 0 10px 10px',
-                    p: 1,
-                    marginLeft: 1,
-                    marginRight: 2,
                     boxShadow: 1,
-                    height: 100
+                    minHeight: 100
                   }}
                 >
                   <Box sx={{paddingLeft: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
@@ -91,13 +92,19 @@ function Menu() {
                         }}
                     />
                   </Box>
+                </Box>
             </Box>
 
-                {/* 메뉴 */}
+            {/* 메뉴 */}                        
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                p: 2
+              }}
+            >
                 <Paper sx={{ 
-                    // width: '100%',
-                    marginLeft: 1,
-                    marginRight: 2,
                     minWidth: '240px',
                 }}>
                     {/* ✅ 관리자 전용 메뉴 */}
@@ -188,7 +195,7 @@ function Menu() {
                     </MenuList>
                     <Divider />
                 </Paper>
-            </Box>
+            </Box>    
         </Box>
     )
 }

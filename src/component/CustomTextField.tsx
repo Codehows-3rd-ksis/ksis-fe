@@ -6,7 +6,7 @@ import {type TextField_Type} from '../Types/Components'
 export default function CustomTextField(props: TextField_Type) {
     const {
         boxMinWidth, // Box sx
-        value, label, variant, type, disabled, placeholder,// TextField attr
+        value, label, variant, type, disabled, placeholder, fullWidth,// TextField attr
         border, inputWidth, // TextField sx
         radius,  height, fontSize, // input sx
         readOnly,  step, startAdornment, endAdornment, // input attr
@@ -14,16 +14,18 @@ export default function CustomTextField(props: TextField_Type) {
         } = props
     return (
         <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1, 
-          boxMinWidth: boxMinWidth || '320px'
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            minWidth: fullWidth ? undefined : (boxMinWidth || '320px'),
+            width: fullWidth ? '100%' : 'auto',  
         }}>
             <TextField 
+                fullWidth={fullWidth}   
                 sx={{
                     backgroundColor: 'white', 
                     border: border || '', 
-                    width: inputWidth || '246px', 
+                    width: fullWidth ? '100%' : (inputWidth || '246px'), 
                     minWidth: '246px',
                     borderRadius: radius || 1,
                 }}
@@ -51,7 +53,7 @@ export default function CustomTextField(props: TextField_Type) {
                         sx: {
                             borderRadius: radius || 1, 
                             height: height || '40px',
-                            fontSize: fontSize || '16px'
+                            fontSize: fontSize || '16px',
                         }, 
                     },
                 }}
