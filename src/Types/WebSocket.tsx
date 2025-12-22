@@ -13,7 +13,6 @@ export interface CrawlingMessage {
   workId: number;
   data: Partial<CrawlingProgress>; // CrawlWork 엔티티 집계 데이터 (collectCount, failCount, progress, expectEndAt 등)
   crawlResultItem?: {
-    id: number;
     itemId: number;
     seq: number;
     resultValue: any;
