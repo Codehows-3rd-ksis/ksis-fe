@@ -3,7 +3,7 @@ import { DataGrid, type GridRowId, type GridRowSelectionModel} from '@mui/x-data
 import {type CommonTableProps } from '../Types/Table'
 
 function CommonTable(props: CommonTableProps) {
-    const {columns, rows, selectedRows, pageSize, height, width, check, hideFooter, onRowClick, onRowSelectionChange} = props
+    const {columns, rows, selectedRows, pageSize, height, width, check, hideFooter, disableHover, onRowClick, onRowSelectionChange} = props
 
     const paginationModel = { page: 0, pageSize: pageSize || 10 };
 
@@ -81,7 +81,7 @@ function CommonTable(props: CommonTableProps) {
               },
               // 마우스오버 색변경
               '& .MuiDataGrid-row:hover': {
-                backgroundColor: '#FFEFD6 !important',
+                backgroundColor: disableHover ? 'inherit' : '#FFEFD6 !important',
               },
               // 포커스 제거
               '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {

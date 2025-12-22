@@ -314,6 +314,7 @@ function StatusDetail() {
             }
             pageSize={1}
             hideFooter={true}
+            disableHover={true}
           />
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -343,6 +344,7 @@ function StatusDetail() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: 1,
             }}
           >
             <Box
@@ -373,6 +375,7 @@ function StatusDetail() {
             columns={collectionColumns}
             rows={collectionRows}
             pageSize={5}
+            disableHover={true}
           />
         </Box>
         <Box

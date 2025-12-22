@@ -1,11 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Breadcrumbs,
-  Link,
-} from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
@@ -221,6 +216,7 @@ export default function HistoryDetail() {
             rows={detailData ? [detailData] : []}
             pageSize={1}
             hideFooter={true}
+            disableHover={true}
           />
         </Box>
 
@@ -260,6 +256,7 @@ export default function HistoryDetail() {
           sx={{
             display: "flex",
             flexDirection: "column",
+            gap: 1,
           }}
         >
           {/* Text */}
@@ -282,6 +279,7 @@ export default function HistoryDetail() {
             columns={collectionColumns}
             rows={collectionRows}
             pageSize={5}
+            disableHover={true}
             // height="370px"
           />
         </Box>
@@ -292,11 +290,11 @@ export default function HistoryDetail() {
             justifyContent: "flex-end",
           }}
         >
-          <CustomButton 
+          <CustomButton
             text="◀ 이전"
             backgroundColor="#9E9E9E"
             // color="#fff"
-            onClick={()=> navigate("/history")}
+            onClick={() => navigate("/history")}
             radius={2}
             width="80px"
           />

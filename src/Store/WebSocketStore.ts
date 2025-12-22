@@ -1,7 +1,5 @@
-/**
- * STOMP over WebSocket 기반 실시간 크롤링 상태 관리
- * - 자동 재연결, JWT 인증, 사용자별 큐 구독 지원
- */
+/* STOMP over WebSocket 기반 실시간 크롤링 상태 관리
+ 자동 재연결, JWT 인증, 사용자별 큐 구독 지원*/
 
 import { create } from "zustand";
 import SockJS from "sockjs-client";
