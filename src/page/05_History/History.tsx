@@ -251,6 +251,7 @@ export default function History() {
           onSearch={handleSearch}
           onReset={handleReset}
           showButton={false}
+          placeholder="수집명 입력"
         />
       </Box>
       

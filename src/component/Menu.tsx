@@ -51,7 +51,8 @@ function Menu() {
             <Box sx={{ 
                 display: 'flex',
                 flexDirection: 'column', 
-                gap: 2 
+                gap: 2,
+                p: 2 
             }}>
                 {/* 로고 */}
                 <Box sx={{ textAlign: 'center', marginTop: '30px', marginRight: '10px' }}>
@@ -69,11 +70,8 @@ function Menu() {
                     bgcolor: '#F8F8F5',
                     color: 'black',
                     borderRadius: '0 0 10px 10px',
-                    p: 1,
-                    marginLeft: 1,
-                    marginRight: 2,
                     boxShadow: 1,
-                    height: 100
+                    minHeight: 100
                   }}
                 >
                   <Box sx={{paddingLeft: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
@@ -103,12 +101,10 @@ function Menu() {
                 flex: 1,
                 minHeight: 0,
                 overflowY: 'auto',
+                p: 2
               }}
             >
                 <Paper sx={{ 
-                    // width: '100%',
-                    marginLeft: 1,
-                    marginRight: 2,
                     minWidth: '240px',
                 }}>
                     {/* ✅ 관리자 전용 메뉴 */}

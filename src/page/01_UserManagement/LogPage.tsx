@@ -165,6 +165,7 @@ export default function LogPage () {
                 onSearch={handleSearch}
                 onReset={handleReset}
                 showButton={false}
+                placeholder="수집명 입력"
               />
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
