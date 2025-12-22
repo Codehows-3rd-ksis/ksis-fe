@@ -1,10 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Typography,
-  Button,
-  // Paper,
   Breadcrumbs,
   Link,
 } from "@mui/material";
@@ -59,11 +57,11 @@ export default function HistoryDetail() {
   const collectCount = detailData?.collectCount ?? 0;
 
   // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = (itemId: string, seq: string) => {
+  const handleRecollectClick = useCallback((itemId: string, seq: string) => {
     setSelectedRecollect({ itemId, seq });
     setAlertType("single");
     setAlertOpen(true);
-  };
+  }, []);
 
   const handleBatchRecollectClick = () => {
     setAlertType("batch");
@@ -294,19 +292,14 @@ export default function HistoryDetail() {
             justifyContent: "flex-end",
           }}
         >
-          <Button
-            variant="contained"
-            onClick={() => navigate("/history")}
-            sx={(theme) => ({
-              backgroundColor: theme.palette.grey[500],
-              color: theme.palette.common.white,
-              "&:hover": {
-                backgroundColor: theme.palette.grey[700], // Darker grey on hover
-              },
-            })}
-          >
-            닫기
-          </Button>
+          <CustomButton 
+            text="◀ 이전"
+            backgroundColor="#9E9E9E"
+            // color="#fff"
+            onClick={()=> navigate("/history")}
+            radius={2}
+            width="80px"
+          />
         </Box>
       </Box>
 

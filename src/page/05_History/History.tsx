@@ -223,8 +223,6 @@ export default function History() {
       display: "flex",
       flexDirection: "column",
      }}>
-      {/* <Box sx={{ bgcolor: '#FFC98B', height: '120px', borderRadius: '10px 10px 0px 0px', display: 'flex', alignItems: 'center'}}>
-            </Box> */}
       <Typography
         sx={{
           fontSize: 60,

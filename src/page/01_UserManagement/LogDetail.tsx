@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   useLocation,
   useParams,
@@ -8,8 +8,6 @@ import {
 import {
   Box,
   Typography,
-  Button,
-  // Paper,
   Breadcrumbs,
   Link,
 } from "@mui/material";
@@ -67,11 +65,14 @@ export default function LogDetail() {
   const collectCount = detailData?.collectCount ?? 0;
 
   // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = (itemId: string, seq: string) => {
-    setSelectedRecollect({ itemId, seq });
-    setAlertType("single");
-    setAlertOpen(true);
-  };
+  const handleRecollectClick = useCallback(
+    (itemId: string, seq: string) => {
+      setSelectedRecollect({ itemId, seq });
+      setAlertType("single");
+      setAlertOpen(true);
+    },
+    []
+  );
 
   const handleBatchRecollectClick = () => {
     setAlertType("batch");
@@ -311,23 +312,18 @@ export default function LogDetail() {
             justifyContent: "flex-end",
           }}
         >
-          <Button
-            variant="contained"
-            onClick={() =>
+          <CustomButton 
+            text="◀ 이전"
+            backgroundColor="#9E9E9E"
+            // color="#fff"
+            onClick={()=>
               navigate(`/user/${userId}/history`, {
                 state: { username: username },
               })
             }
-            sx={(theme) => ({
-              backgroundColor: theme.palette.grey[500],
-              color: theme.palette.common.white,
-              "&:hover": {
-                backgroundColor: theme.palette.grey[700], // Darker grey on hover
-              },
-            })}
-          >
-            닫기
-          </Button>
+            radius={2}
+            width="80px"
+          />
         </Box>
       </Box>
 
