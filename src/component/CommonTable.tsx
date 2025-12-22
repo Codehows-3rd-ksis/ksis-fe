@@ -42,7 +42,7 @@ function CommonTable(props: CommonTableProps) {
               classes.push('row-inactive')
             }
             // 3) 실패 row
-            if(params.row.isFailure) {
+            if(params.row.state === 'FAILED') {
               classes.push('row-failure')
             }
 

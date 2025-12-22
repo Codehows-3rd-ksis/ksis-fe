@@ -1,13 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Breadcrumbs,
-  Link,
-} from "@mui/material";
+import { Box, Typography, Button, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import { type StatusTableRows } from "../../API/03_StatusApi";
@@ -47,11 +40,9 @@ function StatusDetail() {
     useCrawlingProgress();
   const subscriptionRef = useRef<Subscription | undefined>(undefined);
 
-  // 데이터 상태
+  // 데이터
   const [detailData, setDetailData] = useState<StatusTableRows | null>(null);
   const [failureRows, setFailureRows] = useState<FailureRow[]>([]);
-
-  // 파싱된 수집 데이터 (동적 필드: title, writer 등)
   const [collectionRows, setCollectionRows] = useState<
     Array<Record<string, any>>
   >([]);
@@ -61,28 +52,11 @@ function StatusDetail() {
   const collectionIdSet = useRef(new Set<number>());
   const failureIdSet = useRef(new Set<number>());
 
-  // 진행도 정보 (Source of Truth for counts)
+  // 진행도 정보
   const currentProgress = progressMap.get(workId) ?? null;
-
-  // 실패 여부가 포함된 수집 데이터 (state 기반)
-  const collectionRowsWithFailure = collectionRows.map((row) => {
-    // id가 없는 경우 디버깅
-    if (!row.id && !row.itemId) {
-      console.error("❌ id가 없는 row 발견:", row);
-    }
-    return {
-      ...row,
-      id: row.id || row.itemId, // id 보장
-      isFailure: row.state === "FAILED",
-    };
-  });
-
-  // UI 표시용 값 (currentProgress를 신뢰)
   const totalCount = currentProgress?.totalCount ?? 0;
   const collectCount = currentProgress?.collectCount ?? 0;
   const failCount = currentProgress?.failCount ?? 0;
-
-  // 완료 예상시간
   const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
   // const progress = currentProgress?.progress ?? 0;
 
@@ -103,26 +77,25 @@ function StatusDetail() {
     try {
       const data = await getStatusDetail(workId);
 
-      // 기본 정보 설정 (MUI DataGrid를 위해 id 추가)
+      // 기본 정보 (MUI DataGrid를 위해 id 추가)
       setDetailData({ ...data.basicInfo, id: data.basicInfo.workId });
 
-      // 실패 목록 설정
+      // 실패 목록
       const failureList = data.failureList.map((row: any) => ({
         id: row.id || row.itemId,
         seq: row.seq,
         url: row.url,
       }));
       setFailureRows(failureList);
-      failureList.forEach((row) => failureIdSet.current.add(row.id));
+      failureList.forEach((row) => failureIdSet.current.add(row.id)); // 중복 방지
 
-      // ✅ 초기 수집 데이터 파싱 (이미 수집된 데이터 표시)
+      // 수집 데이터
       if (data.collectionData.rows.length > 0) {
+        // 파싱(SUCCESS:데이터 전달, FAILED:null)
         const parsedRows = data.collectionData.rows.map((row: any) => {
-          // SUCCESS일 때만 resultValue 파싱, FAILED는 동적 컬럼 데이터 비움
-          // state 필드가 없으면 SUCCESS로 간주 (백엔드 호환성)
           const rowId = row.id || row.itemId;
           let additionalData = {};
-          if (!row.state || row.state === "SUCCESS") {
+          if (row.state === "SUCCESS") {
             if (typeof row.resultValue === "string") {
               additionalData = parseResultValue(row.resultValue);
             } else {
@@ -134,18 +107,18 @@ function StatusDetail() {
             id: rowId,
             itemId: rowId,
             seq: row.seq,
-            state: row.state || "SUCCESS",
+            state: row.state,
             ...additionalData,
           };
         });
 
         setCollectionRows(parsedRows);
-        parsedRows.forEach((row) => collectionIdSet.current.add(row.id));
+        parsedRows.forEach((row) => collectionIdSet.current.add(row.id)); // 중복 방지
 
-        // ✅ API 데이터에서 컬럼 생성 (완료된 작업 조회 시)
+        // API 데이터에서 컬럼 생성 (완료된 작업 조회 시)
         // 첫 번째 SUCCESS 행으로 동적 컬럼 생성
         const firstSuccessRow = parsedRows.find(
-          (row) => !row.state || row.state === "SUCCESS"
+          (row) => row.state === "SUCCESS"
         );
         if (firstSuccessRow) {
           setCollectionColumns(createColumnsFromParsedRow(firstSuccessRow));
@@ -398,7 +371,7 @@ function StatusDetail() {
           </Box>
           <CommonTable
             columns={collectionColumns}
-            rows={collectionRowsWithFailure}
+            rows={collectionRows}
             pageSize={5}
           />
         </Box>
