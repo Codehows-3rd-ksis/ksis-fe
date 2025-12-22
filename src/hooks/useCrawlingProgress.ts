@@ -25,7 +25,7 @@ const useCrawlingProgress = () => {
     setProgressMap((prevMap) => {
       const newMap = new Map(prevMap);
       const { workId, data } = message;
-      console.log(data);
+
       // 업데이트 전의 현재 진행 상태 (없으면 기본값 사용)
       const currentProgress = newMap.get(workId) || {
         progress: 0,

@@ -83,7 +83,7 @@ function StatusDetail() {
 
       // 실패 목록
       const failureList = data.failureList.map((row: any) => ({
-        id: row.id || row.itemId,
+        id: row.itemId,
         seq: row.seq,
         url: row.url,
       }));
@@ -94,7 +94,7 @@ function StatusDetail() {
       if (data.collectionData.rows.length > 0) {
         // 파싱(SUCCESS:데이터 전달, FAILED:null)
         const parsedRows = data.collectionData.rows.map((row: any) => {
-          const rowId = row.id || row.itemId;
+          const rowId = row.itemId;
           let additionalData = {};
           if (row.state === "SUCCESS") {
             if (typeof row.resultValue === "string") {
@@ -175,9 +175,9 @@ function StatusDetail() {
           const item = data.crawlResultItem;
 
           // collectionRows: 모든 항목 추가 (FAILED는 seq만, SUCCESS는 전체 데이터)
-          const itemId = item.id || item.itemId;
+          const itemId = item.itemId;
           if (!collectionIdSet.current.has(itemId)) {
-            collectionIdSet.current.add(itemId);
+            collectionIdSet.current.add(itemId); // 중복 방지
 
             // SUCCESS일 때만 resultValue 파싱, FAILED는 비움
             let additionalData = {};
@@ -386,7 +386,7 @@ function StatusDetail() {
             gap: 2,
           }}
         >
-          <CustomButton 
+          <CustomButton
             text="◀ 이전"
             backgroundColor="#9E9E9E"
             // color="#fff"

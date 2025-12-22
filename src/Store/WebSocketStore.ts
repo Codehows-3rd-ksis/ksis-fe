@@ -84,7 +84,7 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
     newStompClient.connect(
       headers,
       () => {
-        console.log("[WebSocket] 연결 성공");
+        //console.log("[WebSocket] 연결 성공");
         set({
           readyState: ReadyState.OPEN,
           stompClient: newStompClient,
@@ -99,7 +99,7 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
           const delay = Math.min(1000 * Math.pow(2, nextAttempts), 30000);
 
           if (nextAttempts < state.maxReconnectAttempts) {
-            console.log(`[WebSocket] ${delay / 1000}초 후 재연결 시도...`);
+            //console.log(`[WebSocket] ${delay / 1000}초 후 재연결 시도...`);
             const timeoutId = setTimeout(() => get().connect(url), delay);
             return {
               readyState: ReadyState.CLOSED,
@@ -132,7 +132,7 @@ const useWebSocketStore = create<WebSocketState>((set, get) => ({
           stompClient: null,
           reconnectAttempts: 0,
         });
-        console.log("[WebSocket] 연결 종료");
+        //console.log("[WebSocket] 연결 종료");
       });
     } else {
       set({
