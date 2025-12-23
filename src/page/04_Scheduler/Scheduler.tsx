@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Box, Typography } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import SearchBarSet from "../../component/SearchBarSet";
+import type { SearchConditions } from "../../component/SearchBarSet";
 import {
   getColumns,
   type SchedulerTableRows,
@@ -14,6 +15,13 @@ export default function Scheduler() {
   const navigate = useNavigate();
   const [baseRows, setBaseRows] = useState<SchedulerTableRows[]>([]);
   const [filteredRows, setFilteredRows] = useState<SchedulerTableRows[]>([]);
+  const [isSearched, setIsSearched] = useState(false);
+  const [searchState, setSearchState] = useState<SearchConditions>({
+    startDate: "",
+    endDate: "",
+    type: "all",
+    keyword: "",
+  });
   const [selectedRow, setSelectedRow] = useState<SchedulerTableRows | null>(
     null
   );
@@ -63,11 +71,61 @@ export default function Scheduler() {
     setFilteredRows(data);
   }, []);
 
-  // const BoardRefresh = async () => {
+  // const fetchSchedulerList = async () => {
   //   const data = await getSchedulers();  // API 호출
   //   setBaseRows(data);
   //   setFilteredRows(data);
   // };
+
+  // 검색 필터링
+  const filterRows = useCallback(
+    (conditions: SearchConditions) => {
+      let result = [...baseRows];
+
+      // 날짜 범위 필터링
+      if (conditions.startDate) {
+        result = result.filter(
+          (row) => row.startDate >= (conditions.startDate ?? "")
+        );
+      }
+      if (conditions.endDate) {
+        result = result.filter(
+          (row) => row.endDate <= (conditions.endDate ?? "")
+        );
+      }
+
+      // 키워드 필터링
+      if (conditions.keyword) {
+        const keyword = conditions.keyword.toLowerCase();
+        result = result.filter((row) => {
+          if (conditions.type === "settingName" || conditions.type === "all") {
+            return row.settingName.toLowerCase().includes(keyword);
+          }
+          return true;
+        });
+      }
+
+      setFilteredRows(result);
+    },
+    [baseRows]
+  );
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true);
+    setSearchState(conditions);
+    filterRows(conditions);
+  };
+
+  const handleReset = () => {
+    setIsSearched(false);
+    setSearchState({
+      startDate: "",
+      endDate: "",
+      type: "all",
+      keyword: "",
+    });
+    setFilteredRows(baseRows);
+  };
 
   /**  수정 페이지  =========================================== */
   const handleEditOpen = (row: SchedulerTableRows) => {
@@ -124,13 +182,14 @@ export default function Scheduler() {
         }}
       >
         <SearchBarSet
-          baseRows={baseRows}
-          setFilteredRows={setFilteredRows}
-          dateField="startDate"
+          value={searchState}
+          onSearch={handleSearch}
+          onReset={handleReset}
+          totalCount={filteredRows.length}
           showDateRange={true}
           showKeyword={true}
           showSearchType={true}
-          showCount={true}
+          showCount={isSearched}
           searchCategories={getSchedulerSearchCategory()}
           showButton={true}
           buttonLabel="스케줄 등록"

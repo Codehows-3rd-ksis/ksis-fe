@@ -7,7 +7,7 @@ export interface TextField_Type {
   value?: number | string;
   label?: string;
   variant?: "outlined" | "filled" | "standard" | undefined;
-  type?: "text" | "number" | "password";
+  type?: "text" | "number" | "password" | "date";
   disabled?: boolean;
   placeholder?: string;
   fullWidth?: boolean;

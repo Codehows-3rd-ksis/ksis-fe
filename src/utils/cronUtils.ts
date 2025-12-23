@@ -40,13 +40,13 @@ export interface CronConfig {
   daysOfWeek: DayOfWeek[]; // 매주일 때 복수 요일 가능
 }
 /**
- * Cron 표현식 생성
+ * Cron 표현식 생성 (Quartz 표준 형식)
  * @example
  * generateCronExpression({ type: 'weekly', hour: 9, minute: 0, daysOfWeek: [1, 3, 5] })
  * // => "0 0 9 ? * MON,WED,FRI"
  *
  * generateCronExpression({ type: '1st-week', hour: 9, minute: 0, daysOfWeek: [1] })
- * // => "0 0 9 ? * 1#MON"
+ * // => "0 0 9 ? * MON#1"
  */
 export const generateCronExpression = (config: CronConfig): string => {
   const { type, hour, minute, daysOfWeek } = config;
@@ -59,17 +59,17 @@ export const generateCronExpression = (config: CronConfig): string => {
     // 매주: MON,WED,FRI 형태
     dayPart = daysOfWeek.map((d) => DAY_OF_WEEK_EN[d]).join(",");
   } else if (type === "1st-week") {
-    // 첫번째 주: 1#MON,1#WED,1#FRI 형태
-    dayPart = daysOfWeek.map((d) => `1#${DAY_OF_WEEK_EN[d]}`).join(",");
+    // 첫번째 주: MON#1,WED#1,FRI#1 형태 (Quartz 표준)
+    dayPart = daysOfWeek.map((d) => `${DAY_OF_WEEK_EN[d]}#1`).join(",");
   } else if (type === "2nd-week") {
-    dayPart = daysOfWeek.map((d) => `2#${DAY_OF_WEEK_EN[d]}`).join(",");
+    dayPart = daysOfWeek.map((d) => `${DAY_OF_WEEK_EN[d]}#2`).join(",");
   } else if (type === "3rd-week") {
-    dayPart = daysOfWeek.map((d) => `3#${DAY_OF_WEEK_EN[d]}`).join(",");
+    dayPart = daysOfWeek.map((d) => `${DAY_OF_WEEK_EN[d]}#3`).join(",");
   } else if (type === "4th-week") {
-    dayPart = daysOfWeek.map((d) => `4#${DAY_OF_WEEK_EN[d]}`).join(",");
+    dayPart = daysOfWeek.map((d) => `${DAY_OF_WEEK_EN[d]}#4`).join(",");
   } else if (type === "last-week") {
-    // 마지막 주: LMON,LWED,LFRI 형태
-    dayPart = daysOfWeek.map((d) => `L${DAY_OF_WEEK_EN[d]}`).join(",");
+    // 마지막 주: MONL,WEDL,FRIL 형태 (Quartz 표준)
+    dayPart = daysOfWeek.map((d) => `${DAY_OF_WEEK_EN[d]}L`).join(",");
   }
 
   // Spring Cron: 초 분 시 일 월 요일
@@ -77,10 +77,13 @@ export const generateCronExpression = (config: CronConfig): string => {
 };
 
 /**
- * Cron 표현식 파싱 (수정 페이지에서 사용)
+ * Cron 표현식 파싱 (수정 페이지에서 사용, Quartz 표준 형식)
  * @example
  * parseCronExpression("0 30 9 ? * MON,WED,FRI")
  * // => { type: 'weekly', hour: 9, minute: 30, daysOfWeek: [1, 3, 5] }
+ *
+ * parseCronExpression("0 0 9 ? * MON#1,WED#1")
+ * // => { type: '1st-week', hour: 9, minute: 0, daysOfWeek: [1, 3] }
  */
 export const parseCronExpression = (cron: string): CronConfig | null => {
   const parts = cron.split(" ");
@@ -103,11 +106,11 @@ export const parseCronExpression = (cron: string): CronConfig | null => {
     };
   }
 
-  // N번째 주 (1#MON,1#WED,1#FRI)
+  // N번째 주 (MON#1,WED#1,FRI#1 - Quartz 표준)
   if (dowStr.includes("#")) {
     const parts = dowStr.split(",");
     const firstPart = parts[0].split("#");
-    const weekNum = parseInt(firstPart[0], 10);
+    const weekNum = parseInt(firstPart[1], 10); // #뒤의 숫자가 주차
 
     // 숫자를 타입으로 변환
     const weekTypeMap: { [key: number]: ScheduleType } = {
@@ -117,9 +120,9 @@ export const parseCronExpression = (cron: string): CronConfig | null => {
       4: "4th-week",
     };
 
-    // 각 부분에서 요일만 추출
+    // 각 부분에서 요일만 추출 (#앞이 요일)
     const days = parts.map((part) => {
-      const dayStr = part.split("#")[1];
+      const dayStr = part.split("#")[0];
       return DAY_OF_WEEK_EN.indexOf(dayStr as any) as DayOfWeek;
     });
 
@@ -131,11 +134,11 @@ export const parseCronExpression = (cron: string): CronConfig | null => {
     };
   }
 
-  // 마지막 주 (LMON,LWED,LFRI)
-  if (dowStr.startsWith("L")) {
+  // 마지막 주 (MONL,WEDL,FRIL - Quartz 표준)
+  if (dowStr.includes("L") && !dowStr.includes("#")) {
     const parts = dowStr.split(",");
     const days = parts.map((part) => {
-      const dayStr = part.substring(1);
+      const dayStr = part.replace("L", ""); // L 제거
       return DAY_OF_WEEK_EN.indexOf(dayStr as any) as DayOfWeek;
     });
 
@@ -155,6 +158,9 @@ export const parseCronExpression = (cron: string): CronConfig | null => {
  * @example
  * formatCronToKorean("0 0 9 ? * MON,WED,FRI")
  * // => "매주 월요일, 수요일, 금요일"
+ *
+ * formatCronToKorean("0 0 9 ? * MON#1,WED#1")
+ * // => "첫번째 주 월요일, 수요일"
  */
 export const formatCronToKorean = (cron: string): string => {
   const config = parseCronExpression(cron);

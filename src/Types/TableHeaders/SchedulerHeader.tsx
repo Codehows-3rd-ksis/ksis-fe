@@ -23,7 +23,6 @@ export const getColumns = ({
   handleEditOpen,
   handleDeleteOpen,
 }: SchedulerTableColumnHandlers): GridColDef[] => [
-  { field: "id", headerName: "ID", width: 90, hide: true },
   {
     field: "period",
     headerName: "기간",

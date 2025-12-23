@@ -21,7 +21,7 @@ export const getSettingSearchCategory = (): SearchCategory[] => [
 
 export const getSchedulerSearchCategory = (): SearchCategory[] => [
   { id: 0, name: "전체", value: "all" },
-  { id: 1, name: "수집명", value: "settingName" },
+  { id: 1, name: "데이터수집명", value: "settingName" },
   { id: 2, name: "주기", value: "cycle" },
-  { id: 3, name: "시간", value: "startAt" },
+  { id: 3, name: "수집시간", value: "startAt" },
 ];
