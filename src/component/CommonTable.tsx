@@ -29,7 +29,7 @@ function CommonTable(props: CommonTableProps) {
     ids: new Set(selectedRows?.map((r) => r.id) ?? []),
   };
 
-  <Paper sx={{ height: height, width: width || "100%" }}>
+  return <Paper sx={{ height: height, width: width || "100%" }}>
     <DataGrid
       rows={rows}
       columns={columns}

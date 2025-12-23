@@ -5,12 +5,7 @@ import {
   useNavigate,
   Link as RouterLink,
 } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Breadcrumbs,
-  Link,
-} from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
@@ -65,14 +60,11 @@ export default function LogDetail() {
   const collectCount = detailData?.collectCount ?? 0;
 
   // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = useCallback(
-    (itemId: string, seq: string) => {
-      setSelectedRecollect({ itemId, seq });
-      setAlertType("single");
-      setAlertOpen(true);
-    },
-    []
-  );
+  const handleRecollectClick = useCallback((itemId: string, seq: string) => {
+    setSelectedRecollect({ itemId, seq });
+    setAlertType("single");
+    setAlertOpen(true);
+  }, []);
 
   const handleBatchRecollectClick = () => {
     setAlertType("batch");
@@ -312,11 +304,11 @@ export default function LogDetail() {
             justifyContent: "flex-end",
           }}
         >
-          <CustomButton 
+          <CustomButton
             text="◀ 이전"
             backgroundColor="#9E9E9E"
             // color="#fff"
-            onClick={()=>
+            onClick={() =>
               navigate(`/user/${userId}/history`, {
                 state: { username: username },
               })
