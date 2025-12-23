@@ -22,7 +22,7 @@ import {
   parseCronExpression,
   type ScheduleType,
   type DayOfWeek,
-} from "./utils/cronUtils";
+} from "../../utils/cronUtils";
 import {
   updateSchedule,
   type CreateScheduleRequest,
@@ -262,7 +262,9 @@ export default function EditPage() {
       </Box>
 
       {/* 폼 영역 */}
-      <Box sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+      >
         <Paper
           elevation={3}
           sx={{
@@ -272,212 +274,212 @@ export default function EditPage() {
             padding: 4,
           }}
         >
-        <Typography
-          sx={{
-            fontSize: 25,
-            fontWeight: "bold",
-            color: "black",
-            mt: 1,
-          }}
-        >
-          스케줄 설정
-        </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            backgroundColor: "#f9f3ecff",
-            display: "flex",
-            flexDirection: "column",
-            gap: 3,
-            padding: 4,
-            boxSizing: "border-box",
-            mt: 3,
-          }}
-        >
-          {/* 수집기간 */}
-          <Box
-            className="수집기간"
+          <Typography
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
+              fontSize: 25,
+              fontWeight: "bold",
               color: "black",
+              mt: 1,
             }}
           >
-            <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
-            >
-              수집 기간 :
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-              <CustomTextField
-                height="50px"
-                value={startDate}
-                inputWidth="280px"
-                type="date"
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <Typography sx={{ fontSize: 20 }}>~</Typography>
-              <CustomTextField
-                height="50px"
-                value={endDate}
-                inputWidth="280px"
-                type="date"
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </Box>
-          </Box>
-
-          {/* 수집주기 */}
-          <Box
-            className="수집주기"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              color: "black",
-            }}
-          >
-            <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
-            >
-              수집 주기 :
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-              <CustomSelect
-                inputWidth="150px"
-                height="50px"
-                value={scheduleType}
-                listItem={scheduleTypeList}
-                onChange={(e) => {
-                  setScheduleType(e.target.value as ScheduleType);
-                  setSelectedDays([1]);
-                }}
-              />
-
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                <FormGroup row>
-                  {dayOfWeekNames.map((name, index) => (
-                    <FormControlLabel
-                      key={index}
-                      control={
-                        <Checkbox
-                          checked={selectedDays.includes(index as DayOfWeek)}
-                          onChange={() => handleDayToggle(index as DayOfWeek)}
-                          sx={{
-                            color: "gray",
-                            "&.Mui-checked": {
-                              color: "#F5A623",
-                            },
-                          }}
-                        />
-                      }
-                      label={name}
-                    />
-                  ))}
-                </FormGroup>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* 수집 시간 */}
+            스케줄 설정
+          </Typography>
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              gap: 2,
-              color: "black",
               width: "100%",
+              backgroundColor: "#f9f3ecff",
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+              padding: 4,
+              boxSizing: "border-box",
+              mt: 3,
             }}
           >
+            {/* 수집기간 */}
             <Box
-              className="수집시간"
-              sx={{ display: "flex", flexDirection: "row", gap: 2 }}
+              className="수집기간"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                color: "black",
+              }}
             >
               <Typography
                 sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
               >
-                수집 시간 :
+                수집 기간 :
               </Typography>
-
               <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                <CustomSelect
-                  inputWidth="120px"
+                <CustomTextField
                   height="50px"
-                  value={hour}
-                  listItem={hourList}
-                  onChange={(e) => setHour(e.target.value as number)}
+                  value={startDate}
+                  inputWidth="280px"
+                  type="date"
+                  onChange={(e) => setStartDate(e.target.value)}
                 />
-                <CustomSelect
-                  inputWidth="120px"
+                <Typography sx={{ fontSize: 20 }}>~</Typography>
+                <CustomTextField
                   height="50px"
-                  value={minute}
-                  listItem={minuteList}
-                  onChange={(e) => setMinute(e.target.value as number)}
+                  value={endDate}
+                  inputWidth="280px"
+                  type="date"
+                  onChange={(e) => setEndDate(e.target.value)}
                 />
               </Box>
             </Box>
 
-            {/* 미리보기 */}
+            {/* 수집주기 */}
             <Box
-              className="미리보기"
+              className="수집주기"
               sx={{
-                padding: 2,
-                borderRadius: 1,
-                maxWidth: "800px",
-              }}
-            >
-              <Typography sx={{ fontSize: 16, color: "#555" }}>
-                <strong>미리보기:</strong> {previewCron()}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* 데이터 설정 테이블 */}
-        <Box
-          sx={{
-            mt: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 25,
-                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
                 color: "black",
               }}
             >
-              데이터 수집 설정 목록
-            </Typography>
-            <SearchBarSet
-              baseRows={settingList}
-              setFilteredRows={setFilteredRows}
-              showSearchType={true}
-              searchCategories={getSettingSearchCategory()}
-              showKeyword={true}
-            ></SearchBarSet>
+              <Typography
+                sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+              >
+                수집 주기 :
+              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                <CustomSelect
+                  inputWidth="150px"
+                  height="50px"
+                  value={scheduleType}
+                  listItem={scheduleTypeList}
+                  onChange={(e) => {
+                    setScheduleType(e.target.value as ScheduleType);
+                    setSelectedDays([1]);
+                  }}
+                />
+
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  <FormGroup row>
+                    {dayOfWeekNames.map((name, index) => (
+                      <FormControlLabel
+                        key={index}
+                        control={
+                          <Checkbox
+                            checked={selectedDays.includes(index as DayOfWeek)}
+                            onChange={() => handleDayToggle(index as DayOfWeek)}
+                            sx={{
+                              color: "gray",
+                              "&.Mui-checked": {
+                                color: "#F5A623",
+                              },
+                            }}
+                          />
+                        }
+                        label={name}
+                      />
+                    ))}
+                  </FormGroup>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* 수집 시간 */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                gap: 2,
+                color: "black",
+                width: "100%",
+              }}
+            >
+              <Box
+                className="수집시간"
+                sx={{ display: "flex", flexDirection: "row", gap: 2 }}
+              >
+                <Typography
+                  sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+                >
+                  수집 시간 :
+                </Typography>
+
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <CustomSelect
+                    inputWidth="120px"
+                    height="50px"
+                    value={hour}
+                    listItem={hourList}
+                    onChange={(e) => setHour(e.target.value as number)}
+                  />
+                  <CustomSelect
+                    inputWidth="120px"
+                    height="50px"
+                    value={minute}
+                    listItem={minuteList}
+                    onChange={(e) => setMinute(e.target.value as number)}
+                  />
+                </Box>
+              </Box>
+
+              {/* 미리보기 */}
+              <Box
+                className="미리보기"
+                sx={{
+                  padding: 2,
+                  borderRadius: 1,
+                  maxWidth: "800px",
+                }}
+              >
+                <Typography sx={{ fontSize: 16, color: "#555" }}>
+                  <strong>미리보기:</strong> {previewCron()}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
-          <CommonTable
-            columns={settingColumns}
-            rows={filteredRows}
-            onRowClick={handleSettingRowClick}
-            selectedRows={settingId ? [{ id: settingId }] : []}
-            height={300}
-          />
-        </Box>
+
+          {/* 데이터 설정 테이블 */}
+          <Box
+            sx={{
+              mt: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 25,
+                  fontWeight: "bold",
+                  color: "black",
+                }}
+              >
+                데이터 수집 설정 목록
+              </Typography>
+              <SearchBarSet
+                baseRows={settingList}
+                setFilteredRows={setFilteredRows}
+                showSearchType={true}
+                searchCategories={getSettingSearchCategory()}
+                showKeyword={true}
+              ></SearchBarSet>
+            </Box>
+            <CommonTable
+              columns={settingColumns}
+              rows={filteredRows}
+              onRowClick={handleSettingRowClick}
+              selectedRows={settingId ? [{ id: settingId }] : []}
+              height={300}
+            />
+          </Box>
         </Paper>
       </Box>
       {/* 하단 버튼 */}
