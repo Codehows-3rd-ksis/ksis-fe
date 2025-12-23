@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react'
-import { Box, Typography, InputAdornment, type SelectChangeEvent, } from '@mui/material'
+import React, { useState, useRef, useCallback } from 'react'
+import { Box, Typography, InputAdornment, type SelectChangeEvent } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomTextField from '../../../component/CustomTextField';
 import CustomButton from '../../../component/CustomButton';
@@ -10,6 +10,7 @@ import Alert from '../../../component/Alert';
 import { type NewData } from '../RegPage';
 import { type ConditionTableRows, getColumns } from '../../../Types/TableHeaders/SettingConditionHeader';
 import { getDetailPreview } from '../../../API/02_SettingApi';
+import { SearchBar } from '../SearchBar';
 
 interface PreviewData {
   image?: string;   // base64 이미지 형태
@@ -23,6 +24,15 @@ interface HighlightPos {
   width: number;
   height: number;
 }
+type RunSearchParams = {
+  type: "main" | "detail";
+  keyword: string;
+  domRefMap: Map<Element, HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  setResults: React.Dispatch<React.SetStateAction<Element[]>>;
+  setIndex: React.Dispatch<React.SetStateAction<number>>;
+};
+
 const colors = [
   "rgba(255, 235, 59, 0.8)",   // 노란색
   "rgba(100, 181, 246, 0.8)",  // 파란색
@@ -81,6 +91,168 @@ export default React.memo(function Step2_Multi({
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [alertMsg, setAlertMsg] = useState('')
 
+    const [searchResults, setSearchResults] = useState<Element[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [searchHighlightSet, setSearchHighlightSet] = useState<Set<Element>>(new Set());
+    const inspectorContainerRef = useRef<HTMLDivElement | null>(null);
+    const domRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
+    
+    const [searchDetailResults, setSearchDetailResults] = useState<Element[]>([]);
+    const [currentDetailIndex, setCurrentDetailIndex] = useState(0);
+    const [searchDetailHighlightSet, setSearchDetailHighlightSet] = useState<Set<Element>>(new Set());
+    const detailInspectorContainerRef = useRef<HTMLDivElement>(null);
+    const detailDomRefs = useRef<Map<Element, HTMLDivElement>>(new Map());
+
+    const runSearchCommon = ({
+      type,
+      keyword,
+      domRefMap,
+      containerRef,
+      setResults,
+      setIndex,
+    }: RunSearchParams) => {
+      const normalized = keyword.trim().toLowerCase();
+      if (!normalized) return;
+    
+      const results: Element[] = [];
+      const seen = new Set<string>();
+    
+      for (const el of domRefMap.keys()) {
+        const tag = el.tagName.toLowerCase();
+        const id = el.getAttribute("id")?.toLowerCase() || "";
+        const cls = el.getAttribute("class")?.toLowerCase() || "";
+
+        // ✅ 모든 attribute 검색
+        const attr = Array.from(el.attributes).some(attr => {
+          const name = attr.name.toLowerCase();
+          const value = attr.value.toLowerCase();
+          return (
+            name.includes(normalized) ||
+            value.includes(normalized)
+          );
+        });
+      
+        if (
+          tag.includes(normalized) ||
+          id.includes(normalized) ||
+          cls.includes(normalized) 
+          || attr
+        ) {
+          const key = `${tag}#${id}.${cls}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            results.push(el);
+          }
+        }
+      }
+    
+      setResults(results);
+      setIndex(0);
+
+      if(type === "main") {
+        // ✅ 검색 하이라이트용
+        setSearchHighlightSet(new Set(results));
+      } else {
+        setSearchDetailHighlightSet(new Set(results));
+      }
+    
+      if (results.length > 0) {
+        scrollToElement(results[0], domRefMap, containerRef);
+      } else {
+        setAlertMsg('검색결과가 존재하지 않습니다.')
+        setOpenErrorAlert(true)
+      }
+    };
+
+    const scrollToElement = (
+      el: Element,
+      domRefMap: Map<Element, HTMLDivElement>,
+      containerRef: React.RefObject<HTMLDivElement | null>
+    ) => {
+      const wrapper = domRefMap.get(el);
+      const container = containerRef.current;
+      if (!wrapper || !container) return;
+    
+      const containerRect = container.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+    
+      const top =
+        container.scrollTop +
+        (wrapperRect.top - containerRect.top) -
+        container.clientHeight / 2 
+        // +
+        // wrapperRect.height / 2;
+    
+      container.scrollTo({ top, behavior: "smooth" });
+    };
+
+    const runMainSearch = useCallback(
+      (keyword: string) => {
+        runSearchCommon({
+          type: "main",
+          keyword,
+          domRefMap: domRefs.current,
+          containerRef: inspectorContainerRef,
+          setResults: setSearchResults,
+          setIndex: setCurrentIndex,
+        });
+      },
+      []
+    );
+    const runDetailSearch = useCallback(
+      (keyword: string) => {
+        runSearchCommon({
+          type: "detail",
+          keyword,
+          domRefMap: detailDomRefs.current,
+          containerRef: detailInspectorContainerRef,
+          setResults: setSearchDetailResults,
+          setIndex: setCurrentDetailIndex,
+        });
+      },
+      []
+    );
+    const findNext = () => {
+      if (searchResults.length === 0) return;
+      const nextIndex = (currentIndex + 1) % searchResults.length;
+      setCurrentIndex(nextIndex);
+      scrollToElement(
+        searchResults[nextIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+    const findPrev = () => {
+      if (searchResults.length === 0) return;
+      const prevIndex = (currentIndex - 1 + searchResults.length) % searchResults.length;
+      setCurrentIndex(prevIndex);
+      scrollToElement(
+        searchResults[prevIndex],
+        domRefs.current,
+        inspectorContainerRef
+      );
+    };
+    const findNextDetail = () => {
+      if (searchDetailResults.length === 0) return;
+      const nextIndex = (currentDetailIndex + 1) % searchDetailResults.length;
+      setCurrentDetailIndex(nextIndex);
+      scrollToElement(
+        searchDetailResults[nextIndex],
+        detailDomRefs.current,
+        detailInspectorContainerRef
+      );
+    };
+    const findPrevDetail = () => {
+      if (searchDetailResults.length === 0) return;
+      const prevIndex = (currentDetailIndex - 1 + searchDetailResults.length) % searchDetailResults.length;
+      setCurrentDetailIndex(prevIndex);
+      scrollToElement(
+        searchDetailResults[prevIndex],
+        detailDomRefs.current,
+        detailInspectorContainerRef
+      );
+    };
+
     const handleAddCondition = () => {
       setCondition(prev => [
         ...prev,
@@ -91,6 +263,7 @@ export default React.memo(function Step2_Multi({
           conditionsKey: ""
         }
       ]);
+      setSelectTarget(null)
     };
 
     const handleInputChange = (key: keyof typeof newData, value: string) => {
@@ -108,7 +281,6 @@ export default React.memo(function Step2_Multi({
     (event: SelectChangeEvent<string | number>) => {
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
     };
-
     const handleAreaSelect = (target: any) => {
       setSelectTarget(target);
     };
@@ -183,6 +355,8 @@ export default React.memo(function Step2_Multi({
     // 다중페이지 영역선택 클릭시
     const handleInspectorClick = (element: Element) => {
       try {
+        if(selectTarget === null) return;
+
         const selector = getCssSelector(element);
         if(selector === null) return;
 
@@ -234,7 +408,7 @@ export default React.memo(function Step2_Multi({
           [`${selectTarget}`]: isToggleOff ? "" : selector,
         }));
 
-        setSelectTarget(null)
+        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -247,6 +421,8 @@ export default React.memo(function Step2_Multi({
     // 추출조건 테이블 내 영역선택 버튼 클릭시
     const handleInspectorTableClick = (element: Element) => {
       try {
+        if(selectTarget === null) return;
+
         const selector = getCssSelector(element);
         if(selector === null) return;       
         // 로컬 preview(domRects)에서 selector로 rect 검색
@@ -298,7 +474,7 @@ export default React.memo(function Step2_Multi({
           )
         );
 
-        setSelectTarget(null)
+        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -312,8 +488,7 @@ export default React.memo(function Step2_Multi({
 
     const handleDetailLoad = async () => {
         try {
-          // const resPreview2 = await getPreview2(detailUrl) 
-          // setDetailPreview(resPreview2)
+          setSelectTarget(null)
           if(!newData.listArea || !newData.linkArea) {
             return;
           }
@@ -379,27 +554,22 @@ export default React.memo(function Step2_Multi({
             }}>
                 <Box
                   sx={{
-                    // flex: 7,
-                    height: 550,
-                    minHeight: 550,
+                    borderBottom: "2px solid #ccc",
                     display: "flex",
                     gap: 2,
                     pb: 2,
-                    borderBottom: "2px solid #ccc",
+                    minHeight: 550,
+                    minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
+                    // overflowX: "auto" // 화면 작으면 가로 스크롤
                 }}>
                     {/* 스크린샷 */}
                     <Box
                       sx={{
-                        flex: 1,
-                        overflow: "auto",
-                        maxHeight: 640,
-                        background: "#eaeaea",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                        color: 'black',
+                        flex: "0 0 50%",   // ⭐ 비율 고정
+                        minWidth: 500,
                         position: "relative",
-                        border: "1px solid #ccc",
+                        overflow: "auto",
+                        background: "#eaeaea",
                     }}>
                         {previewData.image ? (
                           <img
@@ -446,11 +616,51 @@ export default React.memo(function Step2_Multi({
                         })}
                     </Box>
                     {/* HTML 태그 */}
-                    <HtmlInspector 
-                      html={previewData.html}
-                      onNodeClick={handleInspectorClick}
-                      highlightNodes={highlightNodesMap}
-                    />
+                    <Box sx={{
+                      flex: "0 0 50%",
+                      minWidth: 500,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}>
+                      <Box 
+                        sx={{ 
+                          display:'flex', 
+                          gap:2, 
+                          height: 60,
+                          alignItems: 'center'
+                      }}>
+                        <SearchBar
+                          placeholder="태그 검색"
+                          onSearch={runMainSearch}
+                        />
+                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
+                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        {searchResults.length > 0 ?
+                          <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
+                          : <></>
+                        }
+                      </Box>
+                      <Box 
+                        sx={{
+                          overflow: 'auto',
+                          height: 490,
+                        }}
+                        ref={inspectorContainerRef}
+                        data-scroll-container
+                      >
+                        <HtmlInspector 
+                          html={previewData.html}
+                          onNodeClick={handleInspectorClick}
+                          highlightNodes={highlightNodesMap}
+                          searchHighlightSet={searchHighlightSet}
+                          currentSearchEl={searchResults[currentIndex] ?? null}
+                          registerDomRef={(el, div) => {
+                            domRefs.current.set(el, div);
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
                 </Box>
                 <Box 
                   sx={{
@@ -462,14 +672,18 @@ export default React.memo(function Step2_Multi({
                     p: 2,
                     display: "flex",
                     flexDirection: "column",
-                    gap: 6
+                    gap: 6,
+                    color: 'black'
                 }}>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>게시물 영역:</Typography>
+                        <Typography sx={{fontSize: 25, textAlign: 'right'}}>게시물 영역:</Typography>
                         <CustomTextField 
-                          inputWidth='800px' 
+                          fullWidth
                           value={newData.listArea}
                           placeholder="게시물 영역"
                           readOnly={true}
@@ -487,9 +701,12 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black', gap:1
+                        display: "flex",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, width: '210px', textAlign: 'right'}}>페이지네이션 영역:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 205, textAlign: 'right'}}>페이지네이션 영역:</Typography>
                         <CustomSelect
                             height="40px"
                             inputWidth="160px"
@@ -498,7 +715,8 @@ export default React.memo(function Step2_Multi({
                             onChange={handleSelectChange('pagingType')}
                         />
                         <CustomTextField 
-                          inputWidth='630px' 
+                          // inputWidth='630px' 
+                          fullWidth
                           value={newData.pagingArea}
                           placeholder="페이지네이션 영역"
                           readOnly={true}
@@ -515,7 +733,8 @@ export default React.memo(function Step2_Multi({
                           }
                         />
                         <CustomTextField 
-                          inputWidth='300px' 
+                          // inputWidth='300px' 
+                          fullWidth
                           value={newData.pagingNextbtn}
                           placeholder="다음버튼 영역"
                           readOnly={true}
@@ -533,11 +752,15 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>수집할 페이지 수:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 200, textAlign: 'right'}}>수집할 페이지 수:</Typography>
                         <CustomTextField 
-                          inputWidth='800px' 
+                          // inputWidth='800px'
+                          fullWidth 
                           value={newData.maxPage}
                           placeholder="수집할 페이지 수"
                           type="number"
@@ -545,11 +768,15 @@ export default React.memo(function Step2_Multi({
                         />
                     </Box>
                     <Box sx={{
-                        display: 'flex', width: '100%', alignContent: 'center', color: 'black'
+                        display: "grid",
+                        gridTemplateColumns: "220px 1fr",
+                        alignItems: "center",
+                        gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, marginRight: 1, width: '210px', textAlign: 'right'}}>상세 링크 영역:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 200, textAlign: 'right'}}>상세 링크 영역:</Typography>
                         <CustomTextField 
-                          inputWidth='1000px' 
+                          // inputWidth='1000px' 
+                          fullWidth
                           value={newData.linkArea}
                           placeholder="상세 링크 영역"
                           readOnly={true}
@@ -575,7 +802,7 @@ export default React.memo(function Step2_Multi({
                                       setLoading(true)
                                       handleDetailLoad()
                                     }}
-                                    backgroundColor='#BABABA'
+                                    backgroundColor={isDetail? '#BABABA' : ''}
                                     width='200px'
                                 />
                             </InputAdornment>  
@@ -588,26 +815,23 @@ export default React.memo(function Step2_Multi({
                     <br></br>
                     <Box
                     sx={{
-                        height: 550,
-                        minHeight: 550,
                         display: "flex",
                         gap: 2,
-                        pb: 2
+                        pb: 2,
+                        minHeight: 550,
+                        minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
+                        // overflowX: "auto", // 화면 작으면 가로 스크롤
+                        color: 'black'
                       }}
                   >
                       {/* 스크린샷 */}
                       <Box
                           sx={{
-                            flex: 1,
-                            overflow: "auto",
-                            maxHeight: 640,
-                            background: "#eaeaea",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "flex-start",
-                            color: 'black',
+                            flex: "0 0 50%",   // ⭐ 비율 고정
+                            minWidth: 500,
                             position: "relative",
-                            border: "1px solid #ccc",
+                            overflow: "auto",
+                            background: "#eaeaea",
                       }}>
                           {detailData.image ? (
                             <img
@@ -653,24 +877,63 @@ export default React.memo(function Step2_Multi({
                           })}
                       </Box>
                       {/* HTML 태그 */}
-                      <HtmlInspector 
-                        html={detailData.html}
-                        onNodeClick={handleInspectorTableClick}
-                        highlightNodes={highlightNodesMap}
-                      />
+                      <Box sx={{
+                        flex: "0 0 50%",
+                        minWidth: 500,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}>
+                        <Box 
+                          sx={{ 
+                            display:'flex', 
+                            gap:2, 
+                            height: 60,
+                            alignItems: 'center'
+                        }}>
+                          <SearchBar
+                            placeholder="태그 검색"
+                            onSearch={runDetailSearch}
+                          />
+                          <CustomButton text="<" width="40px" backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
+                          <CustomButton text=">" width="40px" backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
+                          {searchDetailResults.length > 0 ?
+                            <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
+                            : <></>
+                          }
+                        </Box>
+                        <Box 
+                          sx={{
+                            overflow: 'auto',
+                            height: 490,
+                          }}
+                          ref={detailInspectorContainerRef}
+                          data-scroll-container
+                        >
+                          <HtmlInspector 
+                            html={detailData.html}
+                            onNodeClick={handleInspectorTableClick}
+                            highlightNodes={highlightNodesMap}
+                            searchHighlightSet={searchDetailHighlightSet}
+                            currentSearchEl={searchDetailResults[currentDetailIndex] ?? null}
+                            registerDomRef={(el, div) => {
+                              detailDomRefs.current.set(el, div);
+                            }}
+                          />
+                        </Box>
+                      </Box>
                     </Box>
                     <Box 
-                    sx={{
-                      height: 350,
-                      minHeight: 350,
-                      mt: 2,
-                      background: "#f7f7f7",
-                      borderRadius: 2,
-                      p: 2,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 2
-                  }}>
+                        sx={{
+                          height: 350,
+                          minHeight: 350,
+                          mt: 2,
+                          background: "#f7f7f7",
+                          borderRadius: 2,
+                          p: 2,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2
+                    }}>
                       <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
                           <Typography sx={{ fontSize: 22, fontWeight: "bold" }}>
                               조건 행 추가
@@ -681,7 +944,7 @@ export default React.memo(function Step2_Multi({
                               rows={conditionData}
                               columns={conditionColumns}
                               processRowUpdate={processRowUpdate}
-                              maxHeight={320}
+                              maxHeight={300}
                       />
                     </Box>
                   </>

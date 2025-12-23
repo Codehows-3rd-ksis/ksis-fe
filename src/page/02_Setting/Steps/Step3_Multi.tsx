@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Card } from "@mui/material";
 import ScrollTable from "../../../component/ScrollTable";
 
 import { type ConditionTableRows } from '../../../Types/TableHeaders/SettingConditionHeader';
@@ -58,52 +58,61 @@ export default function Step3_Multi({
 
   return (
     <>
-      <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 10 }}>
-          <Box>
-              <Typography sx={{ fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
-              <Box sx={{ display: 'flex', justifyContent:'space-around'}}>
-                      <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2, minWidth: '155px'}}>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집명</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>User-agent</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>데이터 수집간격(s)</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>URL</Typography>
-                      </Box>
-                      <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.settingName || "입력되지 않음"}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{selectedUserAgentName}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.rate}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.url}</Typography>
-                      </Box>
-                  <Box sx={{ display: 'flex'}}>
-                      <Box sx={{ borderRight: '2px solid', textAlign: 'end', bgcolor: 'rgba(245,166,35,0.49)', padding: 2, display: 'flex', flexDirection: 'column', gap: 2, minWidth: '155px'}}>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>게시물 영역</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>페이지네이션 타입</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>페이지네이션 영역</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>다음버튼 영역</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>수집할 페이지 수</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>상세 링크 영역</Typography>
-                      </Box>
-                      <Box sx={{ padding: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.listArea || "입력되지 않음"}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{selectedPagingTypeName}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.pagingArea || "입력되지 않음"}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.pagingNextbtn || "입력되지 않음"}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.maxPage}</Typography>
-                          <Typography sx={{ fontSize: 20, minHeight: '60px'}}>{newData.linkArea || "입력되지 않음"}</Typography>
-                      </Box>
+      <Box sx={{ color: 'black', paddingLeft: 2, display:'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{display: 'flex', gap: 2}}>
+          <Box sx={{flex:4}}>
+              <Typography sx={{ paddingLeft: 1, fontSize: 30, fontWeight: 600 }}>기본 설정</Typography>
+              <Card sx={{bgcolor: '#f8f8f5'}}>
+                  <Box sx={{p: 2}}>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>데이터 수집명</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.settingName || "입력되지 않음"}</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>User-agent</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{selectedUserAgentName}</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>데이터 수집간격(s)</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.rate}</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>URL</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.url}</Typography>
                   </Box>
-              </Box>
+              </Card>
           </Box>
-          <Box>
-              <Typography sx={{ fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
-              <Box sx={{ paddingRight: 4}}>
-                  <ScrollTable
-                      rows={condition}
-                      columns={reviewColumns}
-                      maxHeight={320}
-                  />
-              </Box>
+          <Box sx={{flex: 6}}>
+              <Typography sx={{ paddingLeft: 1, fontSize: 30, fontWeight: 600 }}>다중 설정</Typography>
+              <Card sx={{bgcolor: '#f8f8f5'}}>
+                  <Box sx={{p: 2}}>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>게시물 영역</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.listArea || "입력되지 않음"}</Typography>
+                    <Box sx={{display: 'flex', gap: 2}}>
+                      <Box sx={{flex: 1}}>
+                        <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>페이지네이션 타입</Typography>
+                        <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{selectedPagingTypeName}</Typography>
+                      </Box>
+                      <Box sx={{flex: 1}}>
+                        <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>수집할 페이지 수</Typography>
+                        <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.maxPage}</Typography>
+                      </Box>
+                    </Box>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>페이지네이션 영역</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.pagingArea || "입력되지 않음"}</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>다음버튼 영역</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.pagingNextbtn || "입력되지 않음"}</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', fontWeight: 'bold'}}>상세 링크 영역</Typography>
+                    <Typography sx={{ paddingLeft: 1, alignContent: 'center', fontSize: 20, minHeight: '40px', border: '2px solid #cdbaa6', borderRadius: '5px', bgcolor: '#fff'}}>{newData.linkArea || "입력되지 않음"}</Typography>
+                  </Box>
+              </Card>
           </Box>
+        </Box>
+        <Box>
+            <Typography sx={{ paddingLeft: 1, fontSize: 30, fontWeight: 600 }}>추출 설정</Typography>
+            <Card sx={{bgcolor: '#f8f8f5', minHeight: 350, maxHeight: 420}}>
+              <Box sx={{p: 2}}>
+                <ScrollTable
+                    rows={condition}
+                    columns={reviewColumns}
+                    maxHeight={400}
+                />
+              </Box>
+            </Card>
+        </Box>
       </Box>
     </>
   );

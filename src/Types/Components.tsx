@@ -1,25 +1,31 @@
 import type { SelectChangeEvent } from "@mui/material";
 
 export interface TextField_Type {
-  // Input
+  // Box sx
+  boxMinWidth?: string;
+  // TextField attr
   value?: number | string;
   label?: string;
   variant?: "outlined" | "filled" | "standard" | undefined;
+  type?: "text" | "number" | "password";
+  disabled?: boolean;
+  placeholder?: string;
+  fullWidth?: boolean;
+  // TextField sx
   border?: string;
-  radius?: number | string;
   inputWidth?: string;
+  // input attr
+  readOnly?: boolean;
+  step?: number;
+  startAdornment?: React.ReactNode;
+  endAdornment?: React.ReactNode;
+  // input sx
+  radius?: number | string;
   height?: string;
   fontSize?: string;
-  disabled?: boolean;
-  // required?: boolean;
-  placeholder?: string;
-  readOnly?: boolean;
-  type?: "text" | "number" | "password" | "date";
-  step?: number;
-    onChange?: React.ChangeEventHandler<HTMLInputElement>;
-    startAdornment?: React.ReactNode; 
-    endAdornment?: React.ReactNode;
-    boxMinWidth?: string;
+  // func
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onEnter?: () => void;
 }
 
 export interface Button_Type {
@@ -38,15 +44,29 @@ export interface Button_Type {
   disabled?: boolean;
 }
 export interface IconButton_Type {
-    width? : string;
-    height? : string;
-    fontSize? : string;
-    color? : string;
-    fontWeight? : string;
-    backgroundColor? : string;
-    border? : string;
-    onClick? : React.MouseEventHandler<HTMLButtonElement>,
-    icon?: 'add' | 'search' | 'reset' | 'visible' | 'invisible' | 'edit' | 'delete' | 'log' | 'run' | 'stop' | 'close' | 'logout' | 'export' | 'account'
+  width?: string;
+  height?: string;
+  fontSize?: string;
+  color?: string;
+  fontWeight?: string;
+  backgroundColor?: string;
+  border?: string;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  icon?:
+    | "add"
+    | "search"
+    | "reset"
+    | "visible"
+    | "invisible"
+    | "edit"
+    | "delete"
+    | "log"
+    | "run"
+    | "stop"
+    | "close"
+    | "logout"
+    | "export"
+    | "account";
 }
 
 export interface SearchBar_Type {

@@ -31,9 +31,18 @@ export const runCrawl = async (settingId: number) => {
   return response.data;
 };
 
+// export const getSetting = async () => {
+  // const response = await instance.get(`/setting`);
 // 조회
-export const getSetting = async () => {
-  const response = await instance.get(`/setting`);
+  export const getSetting = async (type: string, keyword: string, page: number, size: number) => {
+  const response = await instance.get(`/setting`, {
+    params: {
+      type,
+      keyword,
+      page,
+      size,
+    },
+  });
   return response.data;
 };
 

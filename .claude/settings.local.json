@@ -1,8 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(cat:*)"
-    ],
+    "allow": ["Bash(npm run build:*)", "mcp__ide__getDiagnostics"],
     "deny": [],
     "ask": []
   }

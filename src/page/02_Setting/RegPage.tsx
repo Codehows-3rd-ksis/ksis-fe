@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
     Box, Typography, Stepper, Step, StepLabel, 
-    Breadcrumbs, Link, Dialog
+    Breadcrumbs, Link
 } from '@mui/material'
 import CustomButton from '../../component/CustomButton';
 import Alert from "../../component/Alert"
@@ -169,7 +169,14 @@ export default function RegPage() {
     }
 
     return (
-        <Box sx={{ height: '97%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ 
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          color: "black",
+          gap: 1
+        }}>
             {/* BreadCrumbs */}
             <Box sx={{paddingLeft: 2, marginTop: 1}}>
                 <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
@@ -220,7 +227,9 @@ export default function RegPage() {
             </Box>
 
             <Box sx={{
-                height: 'calc(97% - 96px)',
+                flex: 1,              
+                minHeight: 0,
+                // height: 'calc(97% - 96px)',
                 border: '2px solid #abababff',
                 marginLeft: '20px',
                 marginRight: '20px',
@@ -294,7 +303,15 @@ export default function RegPage() {
                 </>
                 )}
             </Box>
-            <Box sx={{display: 'flex', justifyContent: 'space-between', paddingLeft: 2.5, paddingRight: 2.5, marginTop: 2 }}>
+            <Box sx={{
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              paddingLeft: 2.5, 
+              paddingRight: 2.5, 
+              paddingBottom: 2,
+              marginTop: 2, 
+              flexShrink: 0,
+            }}>
                 <CustomButton text="닫기" radius={2} backgroundColor='#BABABA' onClick={()=>setOpenCloseAlert(true)} />
                 <Box sx={{display: 'flex', gap: 2}}>
                     {activeStep > 0 && <CustomButton text="◀ 이전" onClick={handleBack} radius={2} backgroundColor='#BABABA'/>}
@@ -304,7 +321,10 @@ export default function RegPage() {
                               disabled={
                                 activeStep === 0 ? 
                                   ( isAble === false ? true : false)
-                                  : false
+                                  : 
+                                  (activeStep === 1 ?
+                                  ( condition.length === 0 ? true : false) : false
+                                  )
                               }
                             />
                         </>
@@ -356,32 +376,7 @@ export default function RegPage() {
                   setOpenErrorAlert(false);
                 }}
             />
-            <Dialog 
-                disableRestoreFocus
-                open={loading}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      backgroundColor: 'transparent',
-                      boxShadow: 'none',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      height: '100vh',
-                      width: '100vw',
-                    }
-                  },
-                  backdrop: {
-                    sx: {
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      backdropFilter: 'blur(2px)', 
-                    }
-                  }
-                }}
-            >
-                <LoadingProgress />
-            </Dialog>
+            <LoadingProgress open={loading} />
         </Box>
     )
 }

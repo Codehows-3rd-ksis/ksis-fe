@@ -1,6 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
+import {
+  useLocation,
+  useParams,
+  useNavigate,
+  Link as RouterLink,
+} from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Breadcrumbs,
+  Link,
+} from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
@@ -28,7 +38,10 @@ interface ApiCollectionRow {
   resultValue: string; // 파싱 전의 원본 JSON 문자열
 }
 
-export default function HistoryDetail() {
+export default function LogDetail() {
+  const { userId } = useParams();
+  const { state } = useLocation();
+  const username = state?.username;
   const { workId } = useParams<{ workId: string }>();
   const navigate = useNavigate();
 
@@ -52,11 +65,14 @@ export default function HistoryDetail() {
   const collectCount = detailData?.collectCount ?? 0;
 
   // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = useCallback((itemId: string, seq: string) => {
-    setSelectedRecollect({ itemId, seq });
-    setAlertType("single");
-    setAlertOpen(true);
-  }, []);
+  const handleRecollectClick = useCallback(
+    (itemId: string, seq: string) => {
+      setSelectedRecollect({ itemId, seq });
+      setAlertType("single");
+      setAlertOpen(true);
+    },
+    []
+  );
 
   const handleBatchRecollectClick = () => {
     setAlertType("batch");
@@ -152,7 +168,6 @@ export default function HistoryDetail() {
     }
   }, [workId]);
 
-  // --- JSX ---
   return (
     <Box
       sx={{
@@ -168,18 +183,28 @@ export default function HistoryDetail() {
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
           <Link
             component={RouterLink}
-            to="/history"
+            to="/user"
             underline="hover"
             color="inherit"
             sx={{ fontWeight: "bold", fontSize: 16 }}
           >
-            데이터 수집 이력
+            유저관리
+          </Link>
+          <Link
+            component={RouterLink}
+            to={`/user/${userId}/history`}
+            underline="hover"
+            color="inherit"
+            sx={{ fontWeight: "bold", fontSize: 16 }}
+            state={{ username }}
+          >
+            {username} 이력
           </Link>
           <Typography
             color="text.primary"
             sx={{ fontWeight: "bold", fontSize: 16 }}
           >
-            상세조회
+            상세 조회
           </Typography>
         </Breadcrumbs>
       </Box>
@@ -216,7 +241,6 @@ export default function HistoryDetail() {
             rows={detailData ? [detailData] : []}
             pageSize={1}
             hideFooter={true}
-            disableHover={true}
           />
         </Box>
 
@@ -256,7 +280,6 @@ export default function HistoryDetail() {
           sx={{
             display: "flex",
             flexDirection: "column",
-            gap: 1,
           }}
         >
           {/* Text */}
@@ -279,7 +302,6 @@ export default function HistoryDetail() {
             columns={collectionColumns}
             rows={collectionRows}
             pageSize={5}
-            disableHover={true}
             // height="370px"
           />
         </Box>
@@ -290,11 +312,15 @@ export default function HistoryDetail() {
             justifyContent: "flex-end",
           }}
         >
-          <CustomButton
+          <CustomButton 
             text="◀ 이전"
             backgroundColor="#9E9E9E"
             // color="#fff"
-            onClick={() => navigate("/history")}
+            onClick={()=>
+              navigate(`/user/${userId}/history`, {
+                state: { username: username },
+              })
+            }
             radius={2}
             width="80px"
           />

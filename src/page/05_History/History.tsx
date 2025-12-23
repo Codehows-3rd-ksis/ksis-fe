@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -11,101 +11,121 @@ import {
   MenuItem,
   ListItemText,
 } from "@mui/material";
-import CommonTable from "../../component/CommonTable";
+// Table
+import PaginationServerTable from "../../component/PaginationServerTable";
 import {
   getColumns,
   type HistoryTableRows,
 } from "../../Types/TableHeaders/HistoryHeader";
+// Comp
+import Alert from "../../component/Alert";
+import LoadingProgress from "../../component/LoadingProgress";
+// Search
 import SearchBarSet from "../../component/SearchBarSet";
-import { getHistory, getHistoryResult } from "../../API/05_HistoryApi";
+import type { SearchConditions } from "../../component/SearchBarSet";
+// Api
+import { getHistory, getHistoryExport } from "../../API/05_HistoryApi";
+// Export
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import Alert from '../../component/Alert';
+// Parse
+import { parseResultValueRows } from "../../utils/resultValueParser";
+
+type HistorySearchState = {
+  startDate: string | null;
+  endDate: string | null;
+  type: string;
+  keyword: string;
+  page: number;
+  size: number;
+};
 
 export default function History() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [isSearched, setIsSearched] = useState(false);
+  // Table
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchState, setSearchState] = useState<HistorySearchState>({
+    startDate: "",
+    endDate: "",
+    type: "all",
+    keyword: "",
+    page: 0,
+    size: 10,
+  });
   const [baseRows, setBaseRows] = useState<HistoryTableRows[]>([]);
-  const [filteredRows, setFilteredRows] = useState<HistoryTableRows[]>([]);
-  const [radioFilteredRows, setRadioFilteredRows] = useState<HistoryTableRows[]>([]);
-  const [filterType, setFilterType] = useState("all");
 
+  // 메뉴 anchor
   const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
   const [exportRow, setExportRow] = useState<HistoryTableRows | null>(null);
+  // Alert
   const [openErrorAlert, setOpenErrorAlert] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
-    getTableDatas();
-  }, []);
-
-  useEffect(() => {
-    let currentRows = [...baseRows];
-    if (filterType !== "all") {
-      currentRows = currentRows.filter((row) => row.type === filterType);
-    }
-    setRadioFilteredRows(currentRows);
-  }, [baseRows, filterType]);
-
-  const DAY_MAP: any = {
-    MON: "월요일", TUE: "화요일", WED: "수요일", THU: "목요일", FRI: "금요일", SAT: "토요일", SUN: "일요일",
-  };
-  const WEEK_INDEX_MAP: any = { 1: "첫번째", 2: "두번째", 3: "세번째", 4: "네번째" };
-
-  function parseCronWeekDay(cron: string) {
-    if (!cron) return { week: "", day: "" };
-    const f = cron.split(" ");
-    const dayOfWeekField = f[5];
-    const isLastWeek = dayOfWeekField.includes("L");
-    const isNthWeek = dayOfWeekField.includes("#");
-    if (isLastWeek || isNthWeek) {
-      if (dayOfWeekField.includes(",")) {
-        const parts = dayOfWeekField.split(",");
-        const part = parts[0];
-        if (part.startsWith("L")) {
-          const dow = part.substring(1);
-          return { week: "마지막", day: DAY_MAP[dow] || "" };
-        }
-        if (part.includes("#")) {
-          const [weekIdx, dow] = part.split("#");
-          return { week: WEEK_INDEX_MAP[Number(weekIdx)] || "", day: DAY_MAP[dow] || "" };
-        }
-      } else {
-        if (dayOfWeekField.startsWith("L")) {
-          const dow = dayOfWeekField.substring(1);
-          return { week: "마지막", day: DAY_MAP[dow] || "" };
-        }
-        if (dayOfWeekField.includes("#")) {
-          const [weekIdx, dow] = dayOfWeekField.split("#");
-          return { week: WEEK_INDEX_MAP[Number(weekIdx)] || "", day: DAY_MAP[dow] || "" };
-        }
-      }
-    } else {
-      const dayParts = dayOfWeekField.split(",");
-      const days = dayParts.map((d) => DAY_MAP[d] || "").filter((d) => d !== "");
-      return { week: "매주", day: days.join(", ") };
-    }
-    return { week: "", day: "" };
-  }
-
-  const getTableDatas = async () => {
+  const getTableDatas = useCallback(async () => {
     try {
-      const data = await getHistory();
-      const res = data.map((row: HistoryTableRows, i: number) => {
-        let cycle = "";
-        if (row.cronExpression) {
-          const { week, day } = parseCronWeekDay(row.cronExpression);
-          cycle = `${week} ${day}`.trim();
-        }
-        const period = row.startDate && row.endDate ? `${row.startDate} ~ ${row.endDate}` : "";
-        return { ...row, cycle, period, index: i + 1, id: row.workId };
-      });
-      setBaseRows(res);
-      setFilteredRows(res); // Initialize filteredRows as well
+      setLoading(true);
+      const { startDate, endDate, type, keyword, page, size } = searchState;
+
+      const res = await getHistory(
+        startDate ?? "",
+        endDate ?? "",
+        type,
+        keyword,
+        page,
+        size
+      );
+
+      const result = res.content.map((row: HistoryTableRows, i: number) => ({
+        ...row,
+        id: row.workId,
+        index: page * size + i + 1, // 🔥 전체 기준 index
+      }));
+
+      setBaseRows(result);
+      setTotalCount(res.totalElements);
+      setLoading(false);
     } catch (err) {
       console.error(err);
       setErrorMsg("유저이력 조회 실패");
       setOpenErrorAlert(true);
+      setLoading(false);
     }
+  }, [searchState]);
+
+  useEffect(() => {
+    getTableDatas();
+  }, [getTableDatas]);
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setIsSearched(true);
+    setSearchState((prev) => ({
+      ...prev,
+      ...conditions,
+      page: 0,
+    }));
+  };
+  const handleReset = () => {
+    setIsSearched(false);
+    setSearchState({
+      startDate: "",
+      endDate: "",
+      type: "all",
+      keyword: "",
+      page: 0,
+      size: 10,
+    });
+  };
+  // 라디오 선택 변경시 호출될 함수
+  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setIsSearched(true);
+    setSearchState((prev) => ({
+      ...prev,
+      type: value,
+      page: 0,
+    }));
   };
 
   const handleDetailView = (row: HistoryTableRows) => {
@@ -121,12 +141,10 @@ export default function History() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   const exportJSON = (jsonData: any, filename: string) => {
     const jsonString = JSON.stringify(jsonData, null, 2);
     downloadFile(jsonString, filename + ".json", "application/json");
   };
-
   const exportCSV = (jsonData: any, filename: string) => {
     const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
     const headers = Object.keys(arr[0]).join(",");
@@ -134,42 +152,19 @@ export default function History() {
     const csv = headers + "\n" + rows;
     downloadFile(csv, filename + ".csv", "text/csv;charset=utf-8;");
   };
-
   const exportExcel = (jsonData: any, filename: string) => {
     const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
     const worksheet = XLSX.utils.json_to_sheet(arr);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    saveAs(blob, filename + ".xlsx");
-  };
-
-  const flattenResult = (rows: any[]) => {
-    return rows.map(item => {
-      let parsedValue;
-      try {
-        parsedValue = JSON.parse(item.resultValue);
-      } catch (e) {
-        parsedValue = [];
-        console.error("result_value JSON parse error", e);
-      }
-      const valueArray = Array.isArray(parsedValue) ? parsedValue : [parsedValue];
-      const flat = valueArray.reduce((acc: any, obj: any) => {
-        if (typeof obj === 'object' && obj !== null) {
-          Object.entries(obj).forEach(([key, val]) => {
-            acc[key] = val;
-          });
-        }
-        return acc;
-      }, {});
-      return { seq: item.seq, page_url: item.pageUrl, ...flat };
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
     });
-  };
-
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setFilterType(value);
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, filename + ".xlsx");
   };
 
   const handleExport = (row: HistoryTableRows, event?: any) => {
@@ -179,75 +174,208 @@ export default function History() {
 
   const getExportData = async () => {
     if (!exportRow) return [];
-    const result = await getHistoryResult(Number(exportRow.id));
+    const result = await getHistoryExport(Number(exportRow.id));
+
     const targets = result.filter((r: any) => r.workId === exportRow.id);
-    return flattenResult(targets);
+
+    //  공통 유틸 함수 사용
+    return parseResultValueRows(targets, (row: any) => ({
+      seq: row.seq,
+      page_url: row.pageUrl,
+    }));
   };
 
   const handleExport_Excel = async () => {
     if (!exportRow) return;
     const exportData = await getExportData();
-    exportExcel(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0, 12)})_수집이력`);
+    exportExcel(
+      exportData,
+      `${exportRow.settingName}(${new Date()
+        .toLocaleString()
+        .slice(0, 12)})_수집이력`
+    );
   };
 
   const handleExport_CSV = async () => {
     if (!exportRow) return;
     const exportData = await getExportData();
-    exportCSV(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0, 12)})_수집이력`);
+    exportCSV(
+      exportData,
+      `${exportRow.settingName}(${new Date()
+        .toLocaleString()
+        .slice(0, 12)})_수집이력`
+    );
   };
 
   const handleExport_Json = async () => {
     if (!exportRow) return;
     const exportData = await getExportData();
-    exportJSON(exportData, `${exportRow.settingName}(${new Date().toLocaleString().slice(0, 12)})_수집이력`);
+    exportJSON(
+      exportData,
+      `${exportRow.settingName}(${new Date()
+        .toLocaleString()
+        .slice(0, 12)})_수집이력`
+    );
   };
 
   const columns = getColumns({ handleDetailView, handleExport });
 
   return (
-    <Box sx={{ height: "97%" }}>
-      <Typography sx={{ fontSize: 60, fontWeight: "bold", color: "black", paddingLeft: 2, marginTop: 5 }}>
+    <Box
+      sx={{
+        height: "100%",
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: 60,
+          fontWeight: "bold",
+          color: "black",
+          paddingLeft: 2,
+          marginTop: 5,
+        }}
+      >
         데이터 수집이력
       </Typography>
 
-      <SearchBarSet
-        baseRows={radioFilteredRows}
-        setFilteredRows={setFilteredRows}
-        dateField="startAt"
-        showDateRange={true}
-        showKeyword={true}
-        showCount={true}
-      />
-      
+      <Box sx={{ padding: 2 }}>
+        <SearchBarSet
+          value={{
+            type: searchState.type,
+            keyword: searchState.keyword,
+            startDate: searchState.startDate,
+            endDate: searchState.endDate,
+          }}
+          totalCount={totalCount}
+          showDateRange={true}
+          showKeyword={true}
+          showSearchType={false}
+          showCount={isSearched}
+          onSearch={handleSearch}
+          onReset={handleReset}
+          showButton={false}
+          placeholder="수집명 입력"
+        />
+      </Box>
+
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <Box sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}>
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}
+        >
           <FormControl>
-            <RadioGroup row value={filterType} onChange={handleFilterChange} sx={{ color: "black" }}>
-              <FormControlLabel value="all" control={<Radio sx={{ color: "gray", "&.Mui-checked": { color: "#BB510C" } }} />} label="전체" />
-              <FormControlLabel value="스케줄링" control={<Radio sx={{ color: "gray", "&.Mui-checked": { color: "#BB510C" } }} />} label="스케줄링" />
-              <FormControlLabel value="수동실행" control={<Radio sx={{ color: "gray", "&.Mui-checked": { color: "#BB510C" } }} />} label="수동실행" />
+            <RadioGroup
+              row
+              value={searchState.type}
+              onChange={handleFilterChange}
+              sx={{ color: "black" }}
+            >
+              <FormControlLabel
+                value="all"
+                control={
+                  <Radio
+                    sx={{
+                      color: "gray",
+                      "&.Mui-checked": {
+                        color: "#BB510C",
+                      },
+                    }}
+                  />
+                }
+                label="전체"
+              />
+              <FormControlLabel
+                value="스케줄링"
+                control={
+                  <Radio
+                    sx={{
+                      color: "gray",
+                      "&.Mui-checked": {
+                        color: "#BB510C",
+                      },
+                    }}
+                  />
+                }
+                label="스케줄링"
+              />
+              <FormControlLabel
+                value="수동실행"
+                control={
+                  <Radio
+                    sx={{
+                      color: "gray",
+                      "&.Mui-checked": {
+                        color: "#BB510C",
+                      },
+                    }}
+                  />
+                }
+                label="수동실행"
+              />
             </RadioGroup>
           </FormControl>
         </Box>
       </Box>
-      
-      <Box sx={{ padding: 2 }}>
-        <CommonTable columns={columns} rows={filteredRows} />
+      {/* 테이블 영역 */}
+      <Box sx={{ padding: 2, overflowY: "auto" }}>
+        <PaginationServerTable
+          columns={columns}
+          rows={baseRows}
+          page={searchState.page}
+          pageSize={searchState.size}
+          totalCount={totalCount}
+          onPageChange={(newPage: number) => {
+            setSearchState((prev) => ({
+              ...prev,
+              page: newPage,
+            }));
+          }}
+        />
       </Box>
 
-      <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
-        <MenuItem onClick={() => { setExportAnchor(null); handleExport_Excel(); }}>
+      <Menu
+        anchorEl={exportAnchor}
+        open={Boolean(exportAnchor)}
+        onClose={() => setExportAnchor(null)}
+      >
+        <MenuItem
+          onClick={() => {
+            setExportAnchor(null);
+            handleExport_Excel();
+          }}
+        >
           <ListItemText>엑셀(xlsx)</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { setExportAnchor(null); handleExport_CSV(); }}>
+        <MenuItem
+          onClick={() => {
+            setExportAnchor(null);
+            handleExport_CSV();
+          }}
+        >
           <ListItemText>CSV</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => { setExportAnchor(null); handleExport_Json(); }}>
+        <MenuItem
+          onClick={() => {
+            setExportAnchor(null);
+            handleExport_Json();
+          }}
+        >
           <ListItemText>JSON</ListItemText>
         </MenuItem>
       </Menu>
 
-      <Alert open={openErrorAlert} text={errorMsg} type="error" onConfirm={() => setOpenErrorAlert(false)} />
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
+      <LoadingProgress open={loading} />
     </Box>
   );
 }

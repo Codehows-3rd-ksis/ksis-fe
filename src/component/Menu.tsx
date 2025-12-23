@@ -43,13 +43,17 @@ function Menu() {
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',  // ✅ 상단(로고+메뉴)과 하단(유저영역) 분리
-            height: '98vh',
-            minWidth: '260px',
-            boxSizing: 'border-box'
+            flex: 1,
+            minHeight: 0,   
+            gap: 5
         }}>
             {/* --- 상단 영역 (로고 + 메뉴) --- */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <Box sx={{ 
+                display: 'flex',
+                flexDirection: 'column', 
+                gap: 2,
+                p: 2 
+            }}>
                 {/* 로고 */}
                 <Box sx={{ textAlign: 'center', marginTop: '30px', marginRight: '10px' }}>
                 <img
@@ -58,7 +62,7 @@ function Menu() {
                     style={{ width: '80%', height: 'auto' }}
                 />
                 </Box>
-
+                {/* User Profile */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -66,11 +70,8 @@ function Menu() {
                     bgcolor: '#F8F8F5',
                     color: 'black',
                     borderRadius: '0 0 10px 10px',
-                    p: 1,
-                    marginLeft: 1,
-                    marginRight: 2,
                     boxShadow: 1,
-                    height: 100
+                    minHeight: 100
                   }}
                 >
                   <Box sx={{paddingLeft: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
@@ -91,13 +92,19 @@ function Menu() {
                         }}
                     />
                   </Box>
+                </Box>
             </Box>
 
-                {/* 메뉴 */}
+            {/* 메뉴 */}                        
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                p: 2
+              }}
+            >
                 <Paper sx={{ 
-                    // width: '100%',
-                    marginLeft: 1,
-                    marginRight: 2,
                     minWidth: '240px',
                 }}>
                     {/* ✅ 관리자 전용 메뉴 */}
@@ -110,18 +117,18 @@ function Menu() {
                                         onClick={() => navigate(item.path)}
                                         sx={{
                                             height: 80,
-                                            backgroundColor: location.pathname.includes(item.path) ? '#FFE6C5' : 'inherit',
-                                            color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                            backgroundColor: location.pathname.startsWith(item.path) ? '#FFE6C5' : 'inherit',
+                                            color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                             '&:hover': {
-                                              backgroundColor: location.pathname.includes(item.path) ? '#FEC88B' : '#FFE6C5',
-                                              color: location.pathname.includes(item.path) ? '#BB510C' : '#BB510C',
+                                              backgroundColor: location.pathname.startsWith(item.path) ? '#FEC88B' : '#FFE6C5',
+                                              color: location.pathname.startsWith(item.path) ? '#BB510C' : '#BB510C',
                                             },
                                         }}
                                     >
                                         <ListItemIcon 
                                             sx={{ 
                                                 minWidth: 40,
-                                                color: location.pathname.includes(item.path) ? '#BB510C' : 'black',
+                                                color: location.pathname.startsWith(item.path) ? '#BB510C' : 'black',
                                         }}>
                                             {/* {item.icon} */}
                                             {React.cloneElement(item.icon as React.ReactElement<any>, {
@@ -134,7 +141,7 @@ function Menu() {
                                                 primary: {
                                                     sx: {
                                                         fontSize: 20,
-                                                        fontWeight: location.pathname.includes(item.path) ? 700 : 400,
+                                                        fontWeight: location.pathname.startsWith(item.path) ? 700 : 400,
                                                     }
                                                 }
                                             }}
@@ -154,16 +161,16 @@ function Menu() {
                                 onClick={() => navigate(item.path)}
                                 sx={{
                                     height: 80,
-                                    backgroundColor: location.pathname.includes(item.path) ? '#FFE6C5' : 'inherit',
-                                    color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                    backgroundColor: location.pathname.startsWith(item.path) ? '#FFE6C5' : 'inherit',
+                                    color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                     '&:hover': {
-                                        backgroundColor: location.pathname.includes(item.path) ? '#FEC88B' : '#FFE6C5',
-                                        color: location.pathname.includes(item.path) ? '#BB510C' : '#BB510C',
+                                        backgroundColor: location.pathname.startsWith(item.path) ? '#FEC88B' : '#FFE6C5',
+                                        color: location.pathname.startsWith(item.path) ? '#BB510C' : '#BB510C',
                                     },
                                 }}
                             >
                                 <ListItemIcon sx={{
-                                    color: location.pathname.includes(item.path) ? '#BB510C' : 'inherit',
+                                    color: location.pathname.startsWith(item.path) ? '#BB510C' : 'inherit',
                                 }}>
                                     {/* {item.icon} */}
                                     {React.cloneElement(item.icon as React.ReactElement<any>, {
@@ -176,7 +183,7 @@ function Menu() {
                                         primary: {
                                             sx: {
                                                 fontSize: 20,
-                                                fontWeight: location.pathname.includes(item.path) ? 700 : 400,
+                                                fontWeight: location.pathname.startsWith(item.path) ? 700 : 400,
                                             }
                                         }
                                     }}
@@ -188,7 +195,7 @@ function Menu() {
                     </MenuList>
                     <Divider />
                 </Paper>
-            </Box>
+            </Box>    
         </Box>
     )
 }

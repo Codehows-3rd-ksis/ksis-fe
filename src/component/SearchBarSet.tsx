@@ -1,5 +1,5 @@
 import { Box, Typography, InputAdornment } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -17,25 +17,19 @@ export type SearchConditions = {
   type: string;
 };
 
-const INITIAL_CONDITIONS: SearchConditions = {
-  startDate: null,
-  endDate: null,
-  keyword: "",
-  type: "all",
-};
-
-interface SearchBarSetProps<T extends object = object> {
-  baseRows?: T[];
-  filteredRows?: T[];
-  setFilteredRows?: React.Dispatch<React.SetStateAction<T[]>>;
-  dateField?: keyof T;
+interface SearchBarSetProps {
+  value: SearchConditions;
+  onSearch: (conditions: SearchConditions) => void;
+  onReset?: () => void;
 
   showDateRange?: boolean;
   showKeyword?: boolean;
   showSearchType?: boolean;
   showCount?: boolean;
 
+  totalCount?: number;
   searchCategories?: SearchCategory[];
+  placeholder?: string;
 
   showButton?: boolean;
   buttonLabel?: string;
@@ -43,87 +37,39 @@ interface SearchBarSetProps<T extends object = object> {
   onButtonClick?: () => void;
 }
 
-export default function SearchBarSet<T extends object = object>({
-  baseRows,
-  filteredRows,
-  setFilteredRows,
-  dateField,
+export default function SearchBarSet({
+  value,
+  onSearch,
+  onReset,
   showDateRange,
   showKeyword,
   showSearchType,
   showCount,
+  totalCount,
   searchCategories = [],
+  placeholder = "검색어 입력",
   showButton,
   buttonLabel = "등록",
   buttonWidth,
   onButtonClick,
-}: SearchBarSetProps<T>) {
-  const [conditions, setConditions] =
-    useState<SearchConditions>(INITIAL_CONDITIONS);
+}: SearchBarSetProps) {
+  const [localValue, setLocalValue] = useState<SearchConditions>(value);
 
-  const updateConditions = (key: string, value: any) => {
-    setConditions((prev) => ({ ...prev, [key]: value }));
-  };
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
-  const handleSearch = (searchConditions = conditions) => {
-    if (!baseRows || !setFilteredRows) {
-      return;
-    }
-
-    const filtered = baseRows.filter((row) => {
-      // 날짜 범위 필터링
-      if (
-        dateField &&
-        (searchConditions.startDate || searchConditions.endDate)
-      ) {
-        const rowDate = dayjs(String(row[dateField])).format("YYYY-MM-DD");
-
-        if (
-          searchConditions.startDate &&
-          rowDate < searchConditions.startDate
-        ) {
-          return false; //시작일 이전은 제외
-        }
-        if (searchConditions.endDate && rowDate > searchConditions.endDate) {
-          return false; // 종료일 이후는 제외
-        }
-      }
-
-      // 키워드 필터링
-      if (searchConditions.keyword.trim() !== "") {
-        const keyword = searchConditions.keyword.toLowerCase();
-        const searchType = searchConditions.type;
-
-        const hasKeyword =
-          searchType === "all"
-            ? Object.values(row).some(
-                (value) =>
-                  typeof value === "string" &&
-                  value.toLowerCase().includes(keyword)
-              )
-            : typeof row[searchType as keyof T] === "string" &&
-              (row[searchType as keyof T] as string)
-                .toLowerCase()
-                .includes(keyword);
-
-        if (!hasKeyword) return false;
-      }
-
-      return true;
-    });
-
-    setFilteredRows(filtered);
-  };
-
-  const handleReset = () => {
-    setConditions(INITIAL_CONDITIONS);
-    handleSearch(INITIAL_CONDITIONS);
+  const updateLocal = (key: keyof SearchConditions, val: any) => {
+    setLocalValue((prev) => ({
+      ...prev,
+      [key]: val,
+    }));
   };
 
   return (
     <Box
       sx={{
-        bgcolor: "#dbdbdbff",
+        bgcolor: "white",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -133,9 +79,9 @@ export default function SearchBarSet<T extends object = object>({
       }}
     >
       <Box>
-        {showCount && filteredRows && (
+        {showCount && (
           <Typography sx={{ color: "black", fontWeight: 700 }}>
-            검색결과 : {filteredRows.length} 건 입니다.
+            검색결과 : {totalCount} 건 입니다.
           </Typography>
         )}
       </Box>
@@ -148,30 +94,35 @@ export default function SearchBarSet<T extends object = object>({
                 label="시작일자"
                 format="YYYY-MM-DD"
                 value={
-                  conditions.startDate ? dayjs(conditions.startDate) : null
+                  localValue.startDate ? dayjs(localValue.startDate) : null
                 }
                 onChange={(v) =>
-                  updateConditions(
-                    "startDate",
-                    v ? v.format("YYYY-MM-DD") : null
-                  )
+                  updateLocal("startDate", v ? v.format("YYYY-MM-DD") : null)
                 }
                 slotProps={{
                   textField: {
                     size: "small",
+                    sx: {
+                      backgroundColor: "#fff",
+                      borderRadius: 1,
+                    },
                   },
                 }}
               />
               <DatePicker
                 label="종료일자"
                 format="YYYY-MM-DD"
-                value={conditions.endDate ? dayjs(conditions.endDate) : null}
+                value={localValue.endDate ? dayjs(localValue.endDate) : null}
                 onChange={(v) =>
-                  updateConditions("endDate", v ? v.format("YYYY-MM-DD") : null)
+                  updateLocal("endDate", v ? v.format("YYYY-MM-DD") : null)
                 }
                 slotProps={{
                   textField: {
                     size: "small",
+                    sx: {
+                      backgroundColor: "#fff",
+                      borderRadius: 1,
+                    },
                   },
                 }}
               />
@@ -183,8 +134,8 @@ export default function SearchBarSet<T extends object = object>({
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {showSearchType && (
             <CustomSelect
-              value={conditions.type}
-              onChange={(e) => updateConditions("type", e.target.value)}
+              value={localValue.type}
+              onChange={(e) => updateLocal("type", e.target.value)}
               listItem={searchCategories}
               inputWidth="120px"
               height="40px"
@@ -194,9 +145,9 @@ export default function SearchBarSet<T extends object = object>({
           {/* 키워드 검색 */}
           {showKeyword && (
             <CustomTextField
-              value={conditions.keyword}
-              onChange={(e) => updateConditions("keyword", e.target.value)}
-              placeholder="검색어 입력"
+              value={localValue.keyword}
+              onChange={(e) => updateLocal("keyword", e.target.value)}
+              placeholder={placeholder}
               inputWidth="250px"
               height="40px"
               boxMinWidth="250px"
@@ -204,14 +155,12 @@ export default function SearchBarSet<T extends object = object>({
                 <InputAdornment position="end">
                   <CustomIconButton
                     icon="search"
-                    onClick={() => handleSearch()}
+                    onClick={() => onSearch(localValue)}
                   />
-                  <CustomIconButton
-                    icon="reset"
-                    onClick={() => handleReset()}
-                  />
+                  <CustomIconButton icon="reset" onClick={onReset} />
                 </InputAdornment>
               }
+              onEnter={() => onSearch(localValue)}
             />
           )}
         </Box>
@@ -221,6 +170,8 @@ export default function SearchBarSet<T extends object = object>({
             text={buttonLabel}
             width={buttonWidth}
             onClick={onButtonClick}
+            radius={2}
+            height="40px"
           />
         )}
       </Box>

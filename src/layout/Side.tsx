@@ -7,9 +7,13 @@ function Side({children}:LayoutProps) {
     <Box
         sx={{
             backgroundColor: '#fff',
-            height: '98vh',
-            border: '3px solid #CDBAA6', 
+            flex: 1,            
+            minHeight: 0,       
+            border: '3px solid #CDBAA6',
             borderRadius: 3,
+            boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column',
         }}
     >
             {children}
