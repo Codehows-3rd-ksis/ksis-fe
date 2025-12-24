@@ -5,18 +5,31 @@
 
 import instance from "./AxiosInstance";
 
+import type { WeekOfMonth, DayOfWeekEN } from "../utils/cronUtils";
+
 /**
  * 스케줄 데이터 인터페이스
  */
 export interface Schedule {
-  id: number;
-  settingId: number; // 어떤 데이터 수집 설정을 스케줄링할지
+  scheduleId: number;
   settingName: string;
+  settingId: number;
+  userId: number;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
-  cronExpression: string;
-  createdAt?: string;
-  updatedAt?: string;
+  cronExpression: string; // 시간 정보만 (0 0 9 * * ?)
+  daysOfWeek: string; // "MON,WED,FRI" (문자열)
+  weekOfMonth: WeekOfMonth; // "0": 매주 | "1"~"4": n번째 주 | "L": 마지막 주
+  createAt: string;
+  updateAt: string;
+  isDelete: string;
+}
+
+export interface ScheduleResponse {
+  content: Schedule[];
+  page: number;
+  size: number;
+  totalElements: number;
 }
 
 /**
@@ -26,14 +39,32 @@ export interface CreateScheduleRequest {
   settingId: number;
   startDate: string;
   endDate: string;
-  cronExpression: string;
+  cronExpression: string; // 시간 정보만 (0 0 9 * * ?)
+  daysOfWeek: DayOfWeekEN[]; // ["MON", "WED", "FRI"]
+  weekOfMonth: WeekOfMonth; // "0": 매주 | "1"~"4": n번째 주 | "L": 마지막 주
 }
 
 /**
  * 스케줄 목록 조회
  */
-export const getSchedules = async (): Promise<Schedule[]> => {
-  const response = await instance.get<Schedule[]>("/scheduler");
+export const getSchedules = async (
+  startDate: string,
+  endDate: string,
+  type: string,
+  keyword: string,
+  page: number,
+  size: number
+): Promise<ScheduleResponse> => {
+  const response = await instance.get<ScheduleResponse>("/scheduler", {
+    params: {
+      startDate,
+      endDate,
+      type,
+      keyword,
+      page,
+      size,
+    },
+  });
   return response.data;
 };
 

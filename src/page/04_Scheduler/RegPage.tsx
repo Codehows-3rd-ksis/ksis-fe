@@ -13,22 +13,29 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import type { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import type { GridRowParams } from "@mui/x-data-grid";
 import CustomButton from "../../component/CustomButton";
 import CustomSelect from "../../component/CustomSelect";
-import CommonTable from "../../component/CommonTable";
+import PaginationServerTable from "../../component/PaginationServerTable";
 import Alert from "../../component/Alert";
 import {
-  generateCronExpression,
-  formatCronToKorean,
-  type ScheduleType,
-  type DayOfWeek,
+  generateTimeCron,
+  formatScheduleToKorean,
+  DAY_OF_WEEK_EN,
+  DAY_OF_WEEK_KR,
+  WEEK_OF_MONTH_OPTIONS,
+  HOUR_OPTIONS,
+  MINUTE_OPTIONS,
+  type WeekOfMonth,
+  type DayOfWeekIndex,
 } from "../../utils/cronUtils";
 import { createSchedule } from "../../API/04_SchedulerApi";
 import type { CreateScheduleRequest } from "../../API/04_SchedulerApi";
-// import { getSettings, type Setting } from "./03_SettingApi";
 import { getSetting } from "../../API/02_SettingApi";
-import { type SettingTableRows } from "../../Types/TableHeaders/SettingHeader";
+import {
+  type SettingTableRows,
+  getSettingSelectColumns,
+} from "../../Types/TableHeaders/SettingHeader";
 import SearchBarSet from "../../component/SearchBarSet";
 import type { SearchConditions } from "../../component/SearchBarSet";
 import { getSettingSearchCategory } from "../../Types/Search";
@@ -43,107 +50,67 @@ export default function RegPage() {
   const [settingId, setSettingId] = useState<number | "">("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [scheduleType, setScheduleType] = useState<ScheduleType>("weekly");
-  const [selectedDays, setSelectedDays] = useState<DayOfWeek[]>([1]);
+  const [weekOfMonth, setWeekOfMonth] = useState<WeekOfMonth>("0");
+  const [selectedDays, setSelectedDays] = useState<DayOfWeekIndex[]>([1]);
   const [hour, setHour] = useState(9);
   const [minute, setMinute] = useState(0);
 
-  const [settingList, setSettingList] = useState<SettingTableRows[]>([]);
-  const [filteredRows, setFilteredRows] = useState<SettingTableRows[]>([]);
-  const [searchState, setSearchState] = useState<SearchConditions>({
-    startDate: "",
-    endDate: "",
+  // 설정 목록 테이블
+  const [rows, setRows] = useState<SettingTableRows[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchState, setSearchState] = useState({
     type: "all",
     keyword: "",
+    page: 0,
+    size: 5,
   });
 
-  useEffect(() => {
-    fetchSettingList();
-  }, []);
-
-  const fetchSettingList = async () => {
+  // 설정 목록 불러오기
+  const fetchSettingList = useCallback(async () => {
     try {
-      const res = await getSetting("", "", 0, 100);
+      const { type, keyword, page, size } = searchState;
+      const res = await getSetting(type, keyword, page, size);
       const data = res.content.map((row: SettingTableRows) => ({
         ...row,
         id: row.settingId,
       }));
-      setSettingList(data);
-      setFilteredRows(data);
+      setRows(data);
+      setTotalCount(res.totalElements);
     } catch (error) {
       console.error("Failed to fetch setting list:", error);
     }
-  };
+  }, [searchState]);
 
-  // 검색 필터링
-  const filterRows = useCallback(
-    (conditions: SearchConditions) => {
-      let result = [...settingList];
+  useEffect(() => {
+    fetchSettingList();
+  }, [fetchSettingList]);
 
-      if (conditions.keyword) {
-        const keyword = conditions.keyword.toLowerCase();
-        result = result.filter((row) => {
-          if (conditions.type === "settingName" || conditions.type === "all") {
-            return row.settingName?.toLowerCase().includes(keyword);
-          }
-          if (conditions.type === "url") {
-            return row.url?.toLowerCase().includes(keyword);
-          }
-          return true;
-        });
-      }
-
-      setFilteredRows(result);
-    },
-    [settingList]
-  );
-
+  // 검색
   const handleSearch = (conditions: SearchConditions) => {
-    setSearchState(conditions);
-    filterRows(conditions);
+    setSearchState((prev) => ({
+      ...prev,
+      type: conditions.type ?? "all",
+      keyword: conditions.keyword ?? "",
+      page: 0,
+    }));
   };
 
   const handleReset = () => {
     setSearchState({
-      startDate: "",
-      endDate: "",
       type: "all",
       keyword: "",
+      page: 0,
+      size: 5,
     });
-    setFilteredRows(settingList);
+  };
+
+  // 페이지 변경
+  const handlePageChange = (newPage: number) => {
+    setSearchState((prev) => ({ ...prev, page: newPage }));
   };
 
   // 데이터 설정 테이블 컬럼 정의
-  const settingColumns: GridColDef[] = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 100,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "settingName",
-      headerName: "데이터수집명",
-      flex: 1,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "url",
-      headerName: "URL",
-      flex: 1,
-      align: "center",
-      headerAlign: "center",
-    },
-    {
-      field: "userAgent",
-      headerName: "USER-AGENT",
-      flex: 1,
-      align: "center",
-      headerAlign: "center",
-    },
-  ];
+  const settingColumns = getSettingSelectColumns();
 
   // 행 클릭 시 해당 설정 선택/취소
   const handleSettingRowClick = (params: GridRowParams) => {
@@ -158,73 +125,30 @@ export default function RegPage() {
     }
   };
 
-  const scheduleTypeList = [
-    { value: "weekly", name: "매주" },
-    { value: "1st-week", name: "첫번째 주" },
-    { value: "2nd-week", name: "두번째 주" },
-    { value: "3rd-week", name: "세번째 주" },
-    { value: "4th-week", name: "네번째 주" },
-    { value: "last-week", name: "마지막 주" },
-  ];
-
-  const dayOfWeekNames = [
-    "일요일",
-    "월요일",
-    "화요일",
-    "수요일",
-    "목요일",
-    "금요일",
-    "토요일",
-  ];
-
-  const hourList = Array.from({ length: 24 }, (_, i) => ({
-    value: i,
-    name: `${i}시`,
-  }));
-
-  const minuteList = [
-    { value: 0, name: "0분" },
-    { value: 10, name: "10분" },
-    { value: 20, name: "20분" },
-    { value: 30, name: "30분" },
-    { value: 40, name: "40분" },
-    { value: 50, name: "50분" },
-  ];
-
-  const handleDayToggle = (day: DayOfWeek) => {
+  const handleDayToggle = (day: DayOfWeekIndex) => {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
   const previewCron = () => {
-    try {
-      const cronExpression = generateCronExpression({
-        type: scheduleType,
-        hour,
-        minute,
-        daysOfWeek: selectedDays,
-      });
-      return `${formatCronToKorean(cronExpression)} ${hour}시 ${minute}분`;
-    } catch {
-      return "올바른 값을 입력해주세요";
+    if (selectedDays.length === 0) {
+      return "요일을 선택해주세요";
     }
+    const daysOfWeekEN = selectedDays.map((d) => DAY_OF_WEEK_EN[d]);
+    const scheduleText = formatScheduleToKorean(daysOfWeekEN, weekOfMonth);
+    return `${scheduleText} ${hour}시 ${minute}분`;
   };
 
   const handleRegist = async () => {
     try {
-      const cronExpression = generateCronExpression({
-        type: scheduleType,
-        hour,
-        minute,
-        daysOfWeek: selectedDays,
-      });
-
       const requestData: CreateScheduleRequest = {
         settingId: settingId as number,
         startDate,
         endDate,
-        cronExpression,
+        cronExpression: generateTimeCron(hour, minute),
+        daysOfWeek: selectedDays.map((d) => DAY_OF_WEEK_EN[d]),
+        weekOfMonth,
       };
 
       await createSchedule(requestData);
@@ -378,23 +302,27 @@ export default function RegPage() {
               <CustomSelect
                 inputWidth="120px"
                 height="50px"
-                value={scheduleType}
-                listItem={scheduleTypeList}
+                value={weekOfMonth}
+                listItem={[...WEEK_OF_MONTH_OPTIONS]}
                 onChange={(e) => {
-                  setScheduleType(e.target.value as ScheduleType);
+                  setWeekOfMonth(e.target.value as WeekOfMonth);
                   setSelectedDays([1]);
                 }}
               />
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <FormGroup row>
-                  {dayOfWeekNames.map((name, index) => (
+                  {DAY_OF_WEEK_KR.map((name, index) => (
                     <FormControlLabel
                       key={index}
                       control={
                         <Checkbox
-                          checked={selectedDays.includes(index as DayOfWeek)}
-                          onChange={() => handleDayToggle(index as DayOfWeek)}
+                          checked={selectedDays.includes(
+                            index as DayOfWeekIndex
+                          )}
+                          onChange={() =>
+                            handleDayToggle(index as DayOfWeekIndex)
+                          }
                           sx={{
                             color: "gray",
                             "&.Mui-checked": {
@@ -438,14 +366,14 @@ export default function RegPage() {
                   inputWidth="120px"
                   height="50px"
                   value={hour}
-                  listItem={hourList}
+                  listItem={HOUR_OPTIONS}
                   onChange={(e) => setHour(e.target.value as number)}
                 />
                 <CustomSelect
                   inputWidth="120px"
                   height="50px"
                   value={minute}
-                  listItem={minuteList}
+                  listItem={[...MINUTE_OPTIONS]}
                   onChange={(e) => setMinute(e.target.value as number)}
                 />
               </Box>
@@ -502,12 +430,15 @@ export default function RegPage() {
               showKeyword={true}
             />
           </Box>
-          <CommonTable
+          <PaginationServerTable
             columns={settingColumns}
-            rows={filteredRows}
+            rows={rows}
+            page={searchState.page}
+            pageSize={searchState.size}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
             onRowClick={handleSettingRowClick}
             selectedRows={settingId ? [{ id: settingId }] : []}
-            pageSize={5}
           />
         </Box>
       </Box>

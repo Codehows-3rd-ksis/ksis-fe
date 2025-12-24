@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Box, Typography } from "@mui/material";
-import CommonTable from "../../component/CommonTable";
+import PaginationServerTable from "../../component/PaginationServerTable";
 import SearchBarSet from "../../component/SearchBarSet";
 import type { SearchConditions } from "../../component/SearchBarSet";
 import {
@@ -10,110 +10,86 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getSchedulerSearchCategory } from "../../Types/Search";
 import Alert from "../../component/Alert";
+import {
+  parseTimeCron,
+  formatScheduleToKorean,
+  type DayOfWeekEN,
+} from "../../utils/cronUtils";
+import { getSchedules, deleteSchedule, type Schedule } from "../../API/04_SchedulerApi";
 
 export default function Scheduler() {
   const navigate = useNavigate();
-  const [baseRows, setBaseRows] = useState<SchedulerTableRows[]>([]);
-  const [filteredRows, setFilteredRows] = useState<SchedulerTableRows[]>([]);
   const [isSearched, setIsSearched] = useState(false);
-  const [searchState, setSearchState] = useState<SearchConditions>({
+
+  // Table
+  const [rows, setRows] = useState<SchedulerTableRows[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchState, setSearchState] = useState({
     startDate: "",
     endDate: "",
     type: "all",
     keyword: "",
+    page: 0,
+    size: 10,
   });
-  const [selectedRow, setSelectedRow] = useState<SchedulerTableRows | null>(
-    null
-  );
+  const [selectedRow, setSelectedRow] = useState<SchedulerTableRows | null>(null);
 
   // Alert
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
   const [openDelDoneAlert, setOpenDelDoneAlert] = useState(false);
 
+  // 데이터 조회
+  const fetchSchedulerList = useCallback(async () => {
+    try {
+      const { startDate, endDate, type, keyword, page, size } = searchState;
+      const response = await getSchedules(startDate, endDate, type, keyword, page, size);
+
+      const data: SchedulerTableRows[] = response.content.map((item: Schedule) => {
+        const time = parseTimeCron(item.cronExpression);
+        const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[];
+        return {
+          id: item.scheduleId,
+          scheduleId: item.scheduleId,
+          settingName: item.settingName,
+          settingId: item.settingId,
+          userId: item.userId,
+          startDate: item.startDate,
+          endDate: item.endDate,
+          cronExpression: item.cronExpression,
+          daysOfWeek: item.daysOfWeek,
+          weekOfMonth: item.weekOfMonth,
+          createAt: item.createAt,
+          updateAt: item.updateAt,
+          startAt: time
+            ? `${String(time.hour).padStart(2, "0")}:${String(time.minute).padStart(2, "0")}`
+            : "",
+          period: `${item.startDate} ~ ${item.endDate}`,
+          cycle: formatScheduleToKorean(daysArray, item.weekOfMonth),
+        };
+      });
+
+      setRows(data);
+      setTotalCount(response.totalElements);
+    } catch (error) {
+      console.error("Failed to fetch scheduler list:", error);
+    }
+  }, [searchState]);
+
   useEffect(() => {
-    // Mock data for the scheduler
-    const data: SchedulerTableRows[] = [
-      {
-        id: 1,
-        settingName: "창원시청 공지사항 수집",
-        startAt: "09:00",
-        period: "2025-10-23 ~ 2025-11-23",
-        cycle: "매주 월,수,금",
-        settingId: 1,
-        startDate: "2025-10-23",
-        endDate: "2025-11-23",
-        cronExpression: "0 0 9 ? * MON,WED,FRI",
-      },
-      {
-        id: 2,
-        settingName: "정기 뉴스레터 발송",
-        startAt: "10:00",
-        period: "2025-11-01 ~ 2025-12-31",
-        cycle: "첫번째 금요일",
-        settingId: 2,
-        startDate: "2025-11-01",
-        endDate: "2025-12-31",
-        cronExpression: "0 0 10 1 * ?",
-      },
-      {
-        id: 3,
-        settingName: "데이터베이스 백업",
-        startAt: "02:00",
-        period: "2025-09-01 ~ 2025-12-01",
-        cycle: "마지막 월요일, 목요일",
-        settingId: 3,
-        startDate: "2025-09-01",
-        endDate: "2025-12-01",
-        cronExpression: "0 0 2 ? * *",
-      },
-    ];
-    setBaseRows(data);
-    setFilteredRows(data);
-  }, []);
+    fetchSchedulerList();
+  }, [fetchSchedulerList]);
 
-  // const fetchSchedulerList = async () => {
-  //   const data = await getSchedulers();  // API 호출
-  //   setBaseRows(data);
-  //   setFilteredRows(data);
-  // };
-
-  // 검색 필터링
-  const filterRows = useCallback(
-    (conditions: SearchConditions) => {
-      let result = [...baseRows];
-
-      // 날짜 범위 필터링
-      if (conditions.startDate) {
-        result = result.filter(
-          (row) => row.startDate >= (conditions.startDate ?? "")
-        );
-      }
-      if (conditions.endDate) {
-        result = result.filter(
-          (row) => row.endDate <= (conditions.endDate ?? "")
-        );
-      }
-
-      // 키워드 필터링
-      if (conditions.keyword) {
-        const keyword = conditions.keyword.toLowerCase();
-        result = result.filter((row) => {
-          if (conditions.type === "settingName" || conditions.type === "all") {
-            return row.settingName.toLowerCase().includes(keyword);
-          }
-          return true;
-        });
-      }
-
-      setFilteredRows(result);
-    },
-    [baseRows]
-  );
-
+  // 검색
   const handleSearch = (conditions: SearchConditions) => {
     setIsSearched(true);
-    setSearchState(conditions);
-    filterRows(conditions);
+    setSearchState((prev) => ({
+      ...prev,
+      startDate: conditions.startDate ?? "",
+      endDate: conditions.endDate ?? "",
+      type: conditions.type ?? "all",
+      keyword: conditions.keyword ?? "",
+      page: 0, // 검색 시 첫 페이지로
+    }));
   };
 
   const handleReset = () => {
@@ -123,8 +99,14 @@ export default function Scheduler() {
       endDate: "",
       type: "all",
       keyword: "",
+      page: 0,
+      size: 10,
     });
-    setFilteredRows(baseRows);
+  };
+
+  // 페이지 변경
+  const handlePageChange = (newPage: number) => {
+    setSearchState((prev) => ({ ...prev, page: newPage }));
   };
 
   /**  수정 페이지  =========================================== */
@@ -139,21 +121,16 @@ export default function Scheduler() {
     setOpenDeleteAlert(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedRow) return;
 
-    console.log("Delete scheduler with ID:", selectedRow.id);
-    // API 연결 시 deleteScheduler(selectedRow.id) 호출
-
-    setFilteredRows((prevRows) =>
-      prevRows.filter((row) => row.id !== selectedRow.id)
-    );
-    setBaseRows((prevRows) =>
-      prevRows.filter((row) => row.id !== selectedRow.id)
-    );
-
-    // 삭제완료 팝업
-    setOpenDelDoneAlert(true);
+    try {
+      await deleteSchedule(selectedRow.scheduleId);
+      setOpenDelDoneAlert(true);
+    } catch (error) {
+      console.error("Failed to delete schedule:", error);
+      alert("스케줄 삭제에 실패했습니다.");
+    }
   };
 
   const columns = getColumns({ handleEditOpen, handleDeleteOpen });
@@ -185,7 +162,7 @@ export default function Scheduler() {
           value={searchState}
           onSearch={handleSearch}
           onReset={handleReset}
-          totalCount={filteredRows.length}
+          totalCount={totalCount}
           showDateRange={true}
           showKeyword={true}
           showSearchType={true}
@@ -198,7 +175,14 @@ export default function Scheduler() {
         />
 
         <Box sx={{ mt: 10 }}>
-          <CommonTable columns={columns} rows={filteredRows} />
+          <PaginationServerTable
+            columns={columns}
+            rows={rows}
+            page={searchState.page}
+            pageSize={searchState.size}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
+          />
         </Box>
       </Box>
 
@@ -221,7 +205,7 @@ export default function Scheduler() {
         type="success"
         onConfirm={() => {
           setOpenDelDoneAlert(false);
-          // BoardRefresh();
+          fetchSchedulerList();
         }}
       />
     </Box>

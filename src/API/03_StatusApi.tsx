@@ -1,4 +1,4 @@
-import AxiosInstance from "./AxiosInstance";
+import instance from "./AxiosInstance";
 
 export interface StatusTableRows {
   // 기본 정보
@@ -59,7 +59,7 @@ export interface StopCrawlResponse {
  */
 
 export const getStatusList = async (): Promise<StatusTableRows[]> => {
-  const response = await AxiosInstance.get(`/status`);
+  const response = await instance.get(`/status`);
   return response.data;
 };
 
@@ -72,7 +72,7 @@ export const getStatusList = async (): Promise<StatusTableRows[]> => {
 export const getStatusDetail = async (
   workId: number
 ): Promise<StatusDetailResponse> => {
-  const response = await AxiosInstance.get(`/status/detail/${workId}`);
+  const response = await instance.get(`/status/detail/${workId}`);
   return response.data;
 };
 
@@ -83,7 +83,7 @@ export const getStatusDetail = async (
  */
 
 export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
-  const response = await AxiosInstance.post(`/crawl/stop`, { workId });
+  const response = await instance.post(`/crawl/stop`, { workId });
   return response.data;
 };
 
@@ -93,7 +93,7 @@ export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
 //  * @returns 재수집 결과
 //  */
 // export const recollectWork = async (workId: number): Promise<any> => {
-//   const response = await AxiosInstance.post(`/recollect/work/${workId}`);
+//   const response = await instance.post(`/recollect/work/${workId}`);
 //   return response.data;
 // };
 
@@ -103,6 +103,6 @@ export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
 //  * @returns 재수집 결과
 //  */
 // export const recollectItem = async (itemId: number): Promise<any> => {
-//   const response = await AxiosInstance.post(`/recollect/item/${itemId}`);
+//   const response = await instance.post(`/recollect/item/${itemId}`);
 //   return response.data;
 // };
