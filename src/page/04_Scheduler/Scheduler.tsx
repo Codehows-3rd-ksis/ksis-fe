@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { getSchedulerSearchCategory } from "../../Types/Search";
 import Alert from "../../component/Alert";
 import {
-  // parseTimeCron,
+  parseTimeCron,
   formatScheduleToKorean,
   type DayOfWeekEN,
 } from "../../utils/cronUtils";
@@ -59,7 +59,7 @@ export default function Scheduler() {
 
       const data: SchedulerTableRows[] = response.content.map(
         (item: Schedule) => {
-          // const time = parseTimeCron(item.cronExpression);
+          const time = parseTimeCron(item.cronExpression);
           const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[];
           return {
             id: item.scheduleId,
@@ -74,12 +74,12 @@ export default function Scheduler() {
             weekOfMonth: item.weekOfMonth,
             createAt: item.createAt,
             updateAt: item.updateAt,
-            collectAt: item.collectAt,
-            //  time
-            // ? `${String(time.hour).padStart(2, "0")}:${String(
-            //     time.minute
-            //   ).padStart(2, "0")}`
-            // : "",
+            // collectAt: item.collectAt,
+            collectAt: time
+              ? `${String(time.hour).padStart(2, "0")}:${String(
+                  time.minute
+                ).padStart(2, "0")}`
+              : "",
             period: `${item.startDate} ~ ${item.endDate}`,
             cycle: formatScheduleToKorean(daysArray, item.weekOfMonth),
           };
