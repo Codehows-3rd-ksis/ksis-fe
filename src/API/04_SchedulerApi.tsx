@@ -18,6 +18,7 @@ export interface Schedule {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   cronExpression: string; // 시간 정보만 (0 0 9 * * ?)
+  collectAt: string;
   daysOfWeek: string; // "MON,WED,FRI" (문자열)
   weekOfMonth: WeekOfMonth; // "0": 매주 | "1"~"4": n번째 주 | "L": 마지막 주
   createAt: string;
@@ -85,7 +86,10 @@ export const updateSchedule = async (
   scheduleId: number,
   data: Partial<CreateScheduleRequest>
 ): Promise<Schedule> => {
-  const response = await instance.put<Schedule>(`/scheduler/${scheduleId}`, data);
+  const response = await instance.put<Schedule>(
+    `/scheduler/${scheduleId}`,
+    data
+  );
   return response.data;
 };
 
@@ -99,7 +103,9 @@ export const deleteSchedule = async (scheduleId: number): Promise<void> => {
 /**
  * 특정 스케줄 조회
  */
-export const getScheduleById = async (scheduleId: number): Promise<Schedule> => {
+export const getScheduleById = async (
+  scheduleId: number
+): Promise<Schedule> => {
   const response = await instance.get<Schedule>(`/scheduler/${scheduleId}`);
   return response.data;
 };

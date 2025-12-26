@@ -6,7 +6,7 @@ export interface SchedulerTableRows {
   id: number; // DataGrid row 식별용 (필수)
   scheduleId: number; // 실제 DB ID
   settingName: string; // "데이터 수집명"
-  startAt: string; // "수집시간"
+  collectAt: string; // "수집시간"
   period: string; // "기간"
   cycle: string; // "주기"
   // 수정 페이지에서 필요한 원본 데이터
@@ -45,7 +45,7 @@ export const getColumns = ({
     align: "center",
   },
   {
-    field: "startAt",
+    field: "collectAt",
     headerName: "수집시간",
     flex: 1.5,
     headerAlign: "center",
@@ -66,7 +66,10 @@ export const getColumns = ({
     align: "center",
     sortable: false,
     renderCell: (params) => (
-      <CustomIconButton icon="edit" onClick={() => handleEditOpen(params.row)} />
+      <CustomIconButton
+        icon="edit"
+        onClick={() => handleEditOpen(params.row)}
+      />
     ),
   },
   {

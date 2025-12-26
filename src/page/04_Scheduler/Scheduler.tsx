@@ -11,11 +11,15 @@ import { useNavigate } from "react-router-dom";
 import { getSchedulerSearchCategory } from "../../Types/Search";
 import Alert from "../../component/Alert";
 import {
-  parseTimeCron,
+  // parseTimeCron,
   formatScheduleToKorean,
   type DayOfWeekEN,
 } from "../../utils/cronUtils";
-import { getSchedules, deleteSchedule, type Schedule } from "../../API/04_SchedulerApi";
+import {
+  getSchedules,
+  deleteSchedule,
+  type Schedule,
+} from "../../API/04_SchedulerApi";
 
 export default function Scheduler() {
   const navigate = useNavigate();
@@ -32,7 +36,9 @@ export default function Scheduler() {
     page: 0,
     size: 10,
   });
-  const [selectedRow, setSelectedRow] = useState<SchedulerTableRows | null>(null);
+  const [selectedRow, setSelectedRow] = useState<SchedulerTableRows | null>(
+    null
+  );
 
   // Alert
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
@@ -42,31 +48,43 @@ export default function Scheduler() {
   const fetchSchedulerList = useCallback(async () => {
     try {
       const { startDate, endDate, type, keyword, page, size } = searchState;
-      const response = await getSchedules(startDate, endDate, type, keyword, page, size);
+      const response = await getSchedules(
+        startDate,
+        endDate,
+        type,
+        keyword,
+        page,
+        size
+      );
 
-      const data: SchedulerTableRows[] = response.content.map((item: Schedule) => {
-        const time = parseTimeCron(item.cronExpression);
-        const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[];
-        return {
-          id: item.scheduleId,
-          scheduleId: item.scheduleId,
-          settingName: item.settingName,
-          settingId: item.settingId,
-          userId: item.userId,
-          startDate: item.startDate,
-          endDate: item.endDate,
-          cronExpression: item.cronExpression,
-          daysOfWeek: item.daysOfWeek,
-          weekOfMonth: item.weekOfMonth,
-          createAt: item.createAt,
-          updateAt: item.updateAt,
-          startAt: time
-            ? `${String(time.hour).padStart(2, "0")}:${String(time.minute).padStart(2, "0")}`
-            : "",
-          period: `${item.startDate} ~ ${item.endDate}`,
-          cycle: formatScheduleToKorean(daysArray, item.weekOfMonth),
-        };
-      });
+      const data: SchedulerTableRows[] = response.content.map(
+        (item: Schedule) => {
+          // const time = parseTimeCron(item.cronExpression);
+          const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[];
+          return {
+            id: item.scheduleId,
+            scheduleId: item.scheduleId,
+            settingName: item.settingName,
+            settingId: item.settingId,
+            userId: item.userId,
+            startDate: item.startDate,
+            endDate: item.endDate,
+            cronExpression: item.cronExpression,
+            daysOfWeek: item.daysOfWeek,
+            weekOfMonth: item.weekOfMonth,
+            createAt: item.createAt,
+            updateAt: item.updateAt,
+            collectAt: item.collectAt,
+            //  time
+            // ? `${String(time.hour).padStart(2, "0")}:${String(
+            //     time.minute
+            //   ).padStart(2, "0")}`
+            // : "",
+            period: `${item.startDate} ~ ${item.endDate}`,
+            cycle: formatScheduleToKorean(daysArray, item.weekOfMonth),
+          };
+        }
+      );
 
       setRows(data);
       setTotalCount(response.totalElements);
