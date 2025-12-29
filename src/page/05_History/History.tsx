@@ -279,7 +279,7 @@ export default function History() {
                     sx={{
                       color: "gray",
                       "&.Mui-checked": {
-                        color: "#BB510C",
+                        color: "#F7941D",
                       },
                     }}
                   />
@@ -293,7 +293,7 @@ export default function History() {
                     sx={{
                       color: "gray",
                       "&.Mui-checked": {
-                        color: "#BB510C",
+                        color: "#F7941D",
                       },
                     }}
                   />
@@ -307,7 +307,7 @@ export default function History() {
                     sx={{
                       color: "gray",
                       "&.Mui-checked": {
-                        color: "#BB510C",
+                        color: "#F7941D",
                       },
                     }}
                   />

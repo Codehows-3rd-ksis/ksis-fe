@@ -386,13 +386,25 @@ function StatusDetail() {
             gap: 2,
           }}
         >
-          <CustomButton
+          {/* <CustomButton
             text="◀ 이전"
             backgroundColor="#9E9E9E"
             // color="#fff"
             onClick={handleBack}
             radius={2}
             width="80px"
+          /> */}
+          <CustomButton 
+            text="이전"
+            backgroundColor="#fff"
+            border="1px solid #CDBAA6"
+            onClick={handleBack}
+            radius={2}
+            width="80px"
+            hoverStyle={{
+              backgroundColor: '#F0F0F0',
+              border: "1px solid #CDBAA6"
+            }}
           />
         </Box>
       </Box>

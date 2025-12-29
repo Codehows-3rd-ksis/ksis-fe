@@ -1,4 +1,4 @@
-import { Box, Typography, InputAdornment, type SelectChangeEvent, } from "@mui/material";
+import { Box, Typography, InputAdornment, type SelectChangeEvent, Card } from "@mui/material";
 import CustomTextField from "../../../component/CustomTextField";
 import CustomSelect from "../../../component/CustomSelect";
 import CustomButton from "../../../component/CustomButton";
@@ -180,108 +180,117 @@ export default function Step1({
   return (
     <>
       {/* 데이터 수집명 */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, color: "black" }}>
-        <Typography sx={{ width: "200px", textAlign: "left", fontSize: 25 }}>
-          데이터 수집명
-        </Typography>
-        <CustomTextField
-          height="50px"
-          value={newData.settingName}
-          inputWidth="600px"
-          placeholder="데이터 수집명"
-          onChange={(e) => handleInputChange("settingName", e.target.value)}
-        />
-      </Box>
+      <Card sx={{display: 'flex', flexDirection: 'column', color: 'black', p:2, gap: 1, bgcolor: "#f8f8f5"}}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{ minWidth: "220px", textAlign: "left", fontSize: 25, fontWeight: 500 }}>
+            · 데이터 수집명
+          </Typography>
+          <CustomTextField
+            height="50px"
+            value={newData.settingName}
+            inputWidth="600px"
+            placeholder="데이터 수집명"
+            onChange={(e) => handleInputChange("settingName", e.target.value)}
+            border='1px solid #cdbaa6'
+          />
+        </Box>
 
-      {/* User-Agent */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, color: "black" }}>
-        <Typography sx={{ width: "200px", textAlign: "left", fontSize: 25 }}>
-          User-Agent
-        </Typography>
-        <CustomSelect
-          inputWidth="600px"
-          height="50px"
-          value={newData.userAgent}
-          listItem={userAgentList}
-          onChange={handleSelectChange("userAgent")}
-        />
-      </Box>
+        {/* User-Agent */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{ minWidth: "220px", textAlign: "left", fontSize: 25, fontWeight: 500 }}>
+            · User-Agent
+          </Typography>
+          <CustomSelect
+            inputWidth="600px"
+            height="50px"
+            value={newData.userAgent}
+            listItem={userAgentList}
+            onChange={handleSelectChange("userAgent")}
+            border='1px solid #cdbaa6'
+          />
+        </Box>
 
-      {/* 수집간격 */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, color: "black" }}>
-        <Typography sx={{ width: "200px", textAlign: "left", fontSize: 25 }}>
-          데이터 수집간격(s)
-        </Typography>
-        <CustomTextField
-          height="50px"
-          value={newData.rate}
-          inputWidth="600px"
-          placeholder="데이터 수집간격(s)"
-          type="number"
-          step={10}
-          onChange={(e) => handleInputChange("rate", e.target.value)}
-        />
-      </Box>
+        {/* 수집간격 */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{ minWidth: "220px", textAlign: "left", fontSize: 25, fontWeight: 500 }}>
+            · 데이터 수집간격(s)
+          </Typography>
+          <CustomTextField
+            height="50px"
+            value={newData.rate}
+            inputWidth="600px"
+            placeholder="데이터 수집간격(s)"
+            type="number"
+            step={10}
+            onChange={(e) => handleInputChange("rate", e.target.value)}
+            border='1px solid #cdbaa6'
+          />
+        </Box>
 
-      {/* URL + 타입 + 검증 */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, color: "black" }}>
-        <Typography sx={{ width: "200px", textAlign: "left", fontSize: 25 }}>
-          URL
-        </Typography>
-        <CustomTextField
-          height="50px"
-          value={newData.url}
-          inputWidth="600px"
-          placeholder="URL"
-          onChange={(e) => handleInputChange("url", e.target.value)}
-          startAdornment={
-            <InputAdornment position="start" sx={{ marginLeft: "-14px" }}>
-              <CustomSelect
-                height="50px"
-                inputWidth="80px"
-                value={newData.type}
-                listItem={typeList}
-                onChange={handleSelectChange("type")}
-              />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end" sx={{ marginRight: "-14px" }}>
-              <CustomButton
-                width="40px"
-                height="50px"
-                text={"검증"}
-                onClick={() => {
-                  setLoading(true);
-                  handleRobots();
-                }}
-                radius={1}
-              />
-            </InputAdornment>
-          }
-        />
-      </Box>
+        {/* URL + 타입 + 검증 */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography sx={{ minWidth: "220px", textAlign: "left", fontSize: 25, fontWeight: 500 }}>
+            · URL
+          </Typography>
+          <CustomTextField
+            height="50px"
+            value={newData.url}
+            inputWidth="600px"
+            placeholder="URL"
+            onChange={(e) => handleInputChange("url", e.target.value)}
+            border='1px solid #cdbaa6'
+            startAdornment={
+              <InputAdornment position="start" sx={{ marginLeft: "-14px" }}>
+                <CustomSelect
+                  height="50px"
+                  inputWidth="80px"
+                  value={newData.type}
+                  listItem={typeList}
+                  onChange={handleSelectChange("type")}
+                />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end" sx={{ marginRight: "-14px" }}>
+                <CustomButton
+                  width="40px"
+                  height="50px"
+                  text={"검증"}
+                  onClick={() => {
+                    setLoading(true);
+                    handleRobots();
+                  }}
+                  radius={1}
+                />
+              </InputAdornment>
+            }
+          />
+        </Box>
+      </Card>
+      
 
       <br /><br />
 
       {/* Robots Table */}
-      <Typography
-        sx={{ width: "200px", textAlign: "left", fontSize: 25, color: "black" }}
-      >
-        Crawl Rules
-      </Typography>
-
-      <Box
+      
+      <Card
         sx={{
           minWidth: 800,
           height: 600,
-          bgcolor: "#f0f0f0",
+          // bgcolor: "#f5f5f5",
+          bgcolor: "#f8f8f5",
+          p:2,
         }}
       >
-        <Box sx={{ padding: 2 }}>
+        <Typography
+          sx={{ fontSize: 25, color: "black", fontWeight: 500 }}
+        >
+          · Crawl Rules
+        </Typography>
+        <Box>
           <ScrollTable columns={robotsColumns} rows={robotsRows} maxHeight={560} />
         </Box>
-      </Box>
+      </Card>
 
       <Alert
           open={openRobotsAlert}

@@ -68,13 +68,17 @@ function CommonTable(props: CommonTableProps) {
           border: "1px solid #CDBAA6",
           // 헤더 배경색
           "&": {
-            "--DataGrid-t-header-background-base": "#FCF7F2 !important",
+            // '--DataGrid-t-header-background-base': '#FCF7F2 !important'
           },
           // 헤더 스타일
           "& .MuiDataGrid-columnHeaders": {
-            color: "black",
+            color: "white",
             fontSize: 20,
             fontWeight: "bold",
+            background: "linear-gradient(90deg, #2a2c32ff 0%, #4F5054 100%)",
+          },
+          "& .MuiDataGrid-columnHeader": {
+            background: "transparent",
           },
           // 셀 폰트
           "& .MuiDataGrid-cell": {
@@ -96,8 +100,16 @@ function CommonTable(props: CommonTableProps) {
             backgroundColor: "#FCF7F2",
           },
           // 마우스오버 색변경
+          // '& .MuiDataGrid-row:hover': {
+          //   backgroundColor: disableHover ? 'inherit' : '#FFEFD6 !important',
+          // },
+          // 마우스오버 색변경
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: disableHover ? "inherit" : "#faf5ecff !important",
+            // backgroundColor: '#FFEFD6 !important',
+            background: disableHover
+              ? "inherit"
+              : "linear-gradient(90deg, #FFEFD6 0%, #FFFFFF 100%)",
+            borderLeft: "3px solid #F29A15",
           },
           // 포커스 제거
           "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {

@@ -192,19 +192,6 @@ export default function LogPage() {
           showButton={false}
           placeholder="수집명 입력"
         />
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Box sx={{ paddingLeft: 2 }}>
-          <Typography sx={{ color: "black", fontWeight: "bold", fontSize: 20 }}>
-            User ID : {username}
-          </Typography>
-        </Box>
         {/* RadioBtn */}
         <Box
           sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}
@@ -262,6 +249,7 @@ export default function LogPage() {
           </FormControl>
         </Box>
       </Box>
+
       {/* 테이블 영역 */}
       <Box sx={{ padding: 2 }}>
         <PaginationServerTable

@@ -96,17 +96,20 @@ function ScrollTable(props: ScrollTableProps & {
                 border: '1px solid #CDBAA6',
                 // 헤더 배경색
                 '&': {
-                    '--DataGrid-t-header-background-base': '#FCF7F2 !important'
+                    // '--DataGrid-t-header-background-base': '#FCF7F2 !important'
                 },
                 // 헤더 스타일
                 '& .MuiDataGrid-columnHeaders': { 
-                    color: 'black', 
-                    fontSize: 20, 
-                    fontWeight: 'bold', 
                     position: 'sticky', // 헤더 고정
                     top: 0,
-                    // backgroundColor: '#FCF7F2',
                     zIndex: 1,
+                    color: 'white', 
+                    fontSize: 20, 
+                    fontWeight: 'bold', 
+                    background: 'linear-gradient(90deg, #2a2c32ff 0%, #4F5054 100%)',
+                }, 
+                '& .MuiDataGrid-columnHeader': { 
+                    background: 'transparent',
                 }, 
                 // 셀 폰트
                 '& .MuiDataGrid-cell': {
@@ -130,9 +133,11 @@ function ScrollTable(props: ScrollTableProps & {
                   backgroundColor: '#FCF7F2',
                 },
                 // 마우스오버 색변경
-                '& .MuiDataGrid-row:hover': {
-                  backgroundColor: '#FFEFD6 !important',
-                },
+              '& .MuiDataGrid-row:hover': {
+                // backgroundColor: '#FFEFD6 !important',
+                background: 'linear-gradient(90deg, #FFEFD6 0%, #FFFFFF 100%)',
+                borderLeft: '3px solid #F29A15'
+              },
                 // 포커스 제거
                 '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
                   outline: 'none !important',

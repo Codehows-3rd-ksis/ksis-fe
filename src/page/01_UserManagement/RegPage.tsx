@@ -348,7 +348,7 @@ export default function RegPage(props: RegPageProps) {
                     <Box sx={{display: 'flex', justifyContent:'center', alignItems: 'center', borderRight: '1px solid', width: '200px'}}>
                         <Typography>승인상태</Typography>
                     </Box>
-                    <Box>
+                    <Box sx={{paddingRight: 2.5}}>
                         <CustomSelect
                           value={newData.state}
                           listItem={stateList}

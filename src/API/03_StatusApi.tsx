@@ -82,8 +82,9 @@ export const getStatusDetail = async (
  @returns 중지 결과
  */
 
-export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
-  const response = await instance.post(`/crawl/stop`, { workId });
+// export const stopCrawl = async (workId: number): Promise<StopCrawlResponse> => {
+export const stopCrawl = async (workId: number) => {
+  const response = await instance.put(`/crawl/stop/${workId}`);
   return response.data;
 };
 
