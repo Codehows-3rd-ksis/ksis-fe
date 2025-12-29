@@ -229,17 +229,30 @@ export default function RegPage() {
             sx={{
               display: "flex",
               alignItems: "center",
+              flexDirection: "row",
               gap: 2,
               color: "black",
             }}
           >
             <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+              sx={{
+                width: "150px",
+                flexShrink: 0,
+                textAlign: "left",
+                fontSize: 25,
+              }}
             >
               수집 기간 :
             </Typography>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                flexDirection: "row",
+              }}
+            >
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="시작일자"
                   format="YYYY-MM-DD"
@@ -252,7 +265,7 @@ export default function RegPage() {
                       sx: {
                         backgroundColor: "#fff",
                         borderRadius: 1,
-                        width: "280px",
+                        width: "200px",
                         "& .MuiOutlinedInput-root": {
                           height: "50px",
                         },
@@ -271,7 +284,7 @@ export default function RegPage() {
                       sx: {
                         backgroundColor: "#fff",
                         borderRadius: 1,
-                        width: "280px",
+                        width: "200px",
                         "& .MuiOutlinedInput-root": {
                           height: "50px",
                         },
@@ -279,8 +292,8 @@ export default function RegPage() {
                     },
                   }}
                 />
-              </Box>
-            </LocalizationProvider>
+              </LocalizationProvider>
+            </Box>
           </Box>
 
           {/* 수집주기 */}
@@ -294,11 +307,23 @@ export default function RegPage() {
             }}
           >
             <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+              sx={{
+                width: "150px",
+                flexShrink: 0,
+                textAlign: "left",
+                fontSize: 25,
+              }}
             >
               수집 주기 :
             </Typography>
-            <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                gap: 2,
+                alignItems: "center",
+              }}
+            >
               <CustomSelect
                 inputWidth="120px"
                 height="50px"
@@ -356,12 +381,24 @@ export default function RegPage() {
               sx={{ display: "flex", flexDirection: "row", gap: 2 }}
             >
               <Typography
-                sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+                sx={{
+                  width: "150px",
+                  flexShrink: 0,
+                  textAlign: "left",
+                  fontSize: 25,
+                }}
               >
                 수집 시간 :
               </Typography>
 
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  alignItems: "center",
+                  flexDirection: "row",
+                }}
+              >
                 <CustomSelect
                   inputWidth="120px"
                   height="50px"

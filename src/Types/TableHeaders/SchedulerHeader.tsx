@@ -56,7 +56,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 2,
     headerAlign: "center",
-    align: "left",
+    align: "center",
   },
   {
     field: "edit",

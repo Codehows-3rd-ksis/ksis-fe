@@ -37,6 +37,7 @@ export interface ScheduleResponse {
  * 스케줄 등록 요청 데이터
  */
 export interface CreateScheduleRequest {
+  schedulerId?: number; // 수정 시에만 필요
   settingId: number;
   startDate: string;
   endDate: string;

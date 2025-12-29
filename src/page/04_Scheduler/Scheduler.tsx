@@ -74,7 +74,6 @@ export default function Scheduler() {
             weekOfMonth: item.weekOfMonth,
             createAt: item.createAt,
             updateAt: item.updateAt,
-            // collectAt: item.collectAt,
             collectAt: time
               ? `${String(time.hour).padStart(2, "0")}:${String(
                   time.minute
@@ -154,15 +153,21 @@ export default function Scheduler() {
   const columns = getColumns({ handleEditOpen, handleDeleteOpen });
 
   return (
-    <Box sx={{ height: "97%" }}>
+    <Box
+      sx={{
+        height: "100%",
+        minHeight: 0,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Typography
         sx={{
           fontSize: 60,
           fontWeight: "bold",
           color: "black",
           paddingLeft: 2,
-          marginTop: 20,
-          marginBottom: 5,
+          marginTop: 5,
         }}
       >
         스케줄러 관리
@@ -171,9 +176,9 @@ export default function Scheduler() {
       <Box
         sx={{
           padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
+          // display: "flex",
+          // flexDirection: "column",
+          // height: "100%",
         }}
       >
         <SearchBarSet
@@ -191,17 +196,17 @@ export default function Scheduler() {
           buttonWidth="100px"
           onButtonClick={() => navigate("/scheduler/reg")}
         />
-
-        <Box sx={{ mt: 10 }}>
-          <PaginationServerTable
-            columns={columns}
-            rows={rows}
-            page={searchState.page}
-            pageSize={searchState.size}
-            totalCount={totalCount}
-            onPageChange={handlePageChange}
-          />
-        </Box>
+      </Box>
+      {/* 테이블 영역 */}
+      <Box sx={{ padding: 2, overflowY: "auto" }}>
+        <PaginationServerTable
+          columns={columns}
+          rows={rows}
+          page={searchState.page}
+          pageSize={searchState.size}
+          totalCount={totalCount}
+          onPageChange={handlePageChange}
+        />
       </Box>
 
       {/* 삭제 팝업 */}

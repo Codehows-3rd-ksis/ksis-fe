@@ -82,7 +82,9 @@ export default function EditPage() {
 
       // daysOfWeek 문자열을 배열로 변환 ("MON,WED,FRI" -> [1, 3, 5])
       const daysArray = row.daysOfWeek.split(",") as DayOfWeekEN[];
-      setSelectedDays(daysArray.map(d => DAY_OF_WEEK_EN.indexOf(d) as DayOfWeekIndex));
+      setSelectedDays(
+        daysArray.map((d) => DAY_OF_WEEK_EN.indexOf(d) as DayOfWeekIndex)
+      );
 
       // 시간 cron 파싱
       const timeConfig = parseTimeCron(row.cronExpression);
@@ -163,7 +165,7 @@ export default function EditPage() {
     if (selectedDays.length === 0) {
       return "요일을 선택해주세요";
     }
-    const daysOfWeekEN = selectedDays.map(d => DAY_OF_WEEK_EN[d]);
+    const daysOfWeekEN = selectedDays.map((d) => DAY_OF_WEEK_EN[d]);
     const scheduleText = formatScheduleToKorean(daysOfWeekEN, weekOfMonth);
     return `${scheduleText} ${hour}시 ${minute}분`;
   };
@@ -177,7 +179,7 @@ export default function EditPage() {
         startDate,
         endDate,
         cronExpression: generateTimeCron(hour, minute),
-        daysOfWeek: selectedDays.map(d => DAY_OF_WEEK_EN[d]),
+        daysOfWeek: selectedDays.map((d) => DAY_OF_WEEK_EN[d]),
         weekOfMonth,
       };
 
@@ -281,7 +283,7 @@ export default function EditPage() {
             }}
           >
             <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+              sx={{ width: "150px", flexShrink: 0, textAlign: "left", fontSize: 25 }}
             >
               수집 기간 :
             </Typography>
@@ -341,7 +343,7 @@ export default function EditPage() {
             }}
           >
             <Typography
-              sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+              sx={{ width: "150px", flexShrink: 0, textAlign: "left", fontSize: 25 }}
             >
               수집 주기 :
             </Typography>
@@ -364,8 +366,12 @@ export default function EditPage() {
                       key={index}
                       control={
                         <Checkbox
-                          checked={selectedDays.includes(index as DayOfWeekIndex)}
-                          onChange={() => handleDayToggle(index as DayOfWeekIndex)}
+                          checked={selectedDays.includes(
+                            index as DayOfWeekIndex
+                          )}
+                          onChange={() =>
+                            handleDayToggle(index as DayOfWeekIndex)
+                          }
                           sx={{
                             color: "gray",
                             "&.Mui-checked": {
@@ -399,7 +405,7 @@ export default function EditPage() {
               sx={{ display: "flex", flexDirection: "row", gap: 2 }}
             >
               <Typography
-                sx={{ width: "150px", textAlign: "left", fontSize: 25 }}
+                sx={{ width: "150px", flexShrink: 0, textAlign: "left", fontSize: 25 }}
               >
                 수집 시간 :
               </Typography>

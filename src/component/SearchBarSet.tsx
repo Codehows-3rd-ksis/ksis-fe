@@ -86,7 +86,9 @@ export default function SearchBarSet({
         )}
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+      >
         {showDateRange && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Box sx={{ display: "flex", gap: 1 }}>
@@ -105,6 +107,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
+                      width: "180px",
                     },
                   },
                 }}
@@ -122,6 +125,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
+                      width: "180px",
                     },
                   },
                 }}
