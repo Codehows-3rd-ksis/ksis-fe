@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { Box, LinearProgress, Typography } from "@mui/material";
 import CustomIconButton from "../../component/CustomIconButton";
 import { PlayCircleOutline, HighlightOff, ErrorOutline, CheckCircleOutline  } from "@mui/icons-material";
+import { type StatusTableRows } from "../../API/03_StatusApi";
 
 //** 데이터 **/
 // 크롤링 결과 항목 (백엔드 CrawlResultItem 엔티티)
@@ -31,7 +32,13 @@ export interface FailureRow {
 
 //** 컬럼정의 **/
 // 기본 정보 테이블 컬럼
-export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
+
+export interface StatusDetailTableColumnHandlers {
+  handleStopClick: (row: StatusTableRows) => void;
+}
+export const DETAIL_SETTING_COLUMNS = ({
+  handleStopClick,
+}: StatusDetailTableColumnHandlers): GridColDef[] => [
   {
     field: "settingName",
     headerName: "데이터수집명",
@@ -312,10 +319,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
           >
             <CustomIconButton
               icon="stop"
-              onClick={() => {
-                // TODO: 중지 기능 구현 예정
-                console.log("중지 버튼 클릭:", params.row);
-              }}
+              onClick={() => handleStopClick(params.row)}
             />
           </Box>
         </Box>
