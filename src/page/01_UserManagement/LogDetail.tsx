@@ -250,7 +250,7 @@ export default function LogDetail() {
                 수집 실패
               </Typography>
               <Typography>
-                {failCount}/{totalCount}
+                {failureRows.length}/{totalCount}
               </Typography>
             </Box>
             <CustomButton
@@ -303,13 +303,11 @@ export default function LogDetail() {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
           }}
         >
           <CustomButton
             text="이전"
-            backgroundColor="#fff"
-            border="1px solid #CDBAA6"
             onClick={() =>
               navigate(`/user/${userId}/history`, {
                 state: { username: username },
@@ -317,9 +315,11 @@ export default function LogDetail() {
             }
             radius={2}
             width="80px"
+            backgroundColor="#F2F2F2"
+            border="1px solid #757575"
             hoverStyle={{
-              backgroundColor: "#F0F0F0",
-              border: "1px solid #CDBAA6",
+              backgroundColor: "transparent",
+              border: "2px solid #373737ff"
             }}
           />
         </Box>

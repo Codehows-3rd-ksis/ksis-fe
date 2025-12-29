@@ -421,14 +421,16 @@ function StatusDetail() {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
             gap: 2,
           }}
         >
           <CustomButton 
             text="이전"
-            backgroundColor="#fff"
-            border="1px solid #CDBAA6"
+            // backgroundColor="#fff"
+            // border="1px solid #CDBAA6"
+            backgroundColor="#F2F2F2"
+            border="1px solid #757575"
             onClick={handleBack}
             radius={2}
             width="80px"

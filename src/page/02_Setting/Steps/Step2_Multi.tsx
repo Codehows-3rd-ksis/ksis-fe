@@ -630,14 +630,39 @@ export default React.memo(function Step2_Multi({
                           height: 60,
                           pl:2, 
                           alignItems: 'center',
-                          bgcolor: '#ccc'
+                          // bgcolor: '#ccc'
+                          background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
                       }}>
                         <SearchBar
                           placeholder="태그 검색"
                           onSearch={runMainSearch}
                         />
-                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
-                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        <CustomButton 
+                          text="<" 
+                          width="40px" 
+                          border="1px solid #757575"
+                          backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""}
+                          hoverStyle={currentIndex+1 <= 1 ?{}:{
+                            backgroundColor: "#ba7d1bff",
+                            border: "2px solid #373737ff",
+                          }} 
+                          radius={1} 
+                          onClick={findPrev} 
+                          disabled={currentIndex+1 <= 1} 
+                        />
+                        <CustomButton 
+                          text=">" 
+                          width="40px" 
+                          border="1px solid #757575"
+                          backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} 
+                          hoverStyle={(currentIndex+1 === searchResults.length || searchResults.length === 0)? {}:{
+                            backgroundColor: "#ba7d1bff",
+                            border: "2px solid #373737ff",
+                          }} 
+                          radius={1} 
+                          onClick={findNext} 
+                          disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} 
+                        />
                         {searchResults.length > 0 ?
                           <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
                           : <></>
@@ -699,6 +724,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('listArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -734,6 +763,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -753,6 +786,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingNextbtn')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -797,6 +834,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('linkArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -812,6 +853,13 @@ export default React.memo(function Step2_Multi({
                                       handleDetailLoad()
                                     }}
                                     backgroundColor={isDetail? '#BABABA' : ''}
+                                    hoverStyle={isDetail?{
+                                      backgroundColor: "#7d7d7dff",
+                                      border: "2px solid #373737ff",
+                                    } : {
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                     width='200px'
                                 />
                             </InputAdornment>  
@@ -901,14 +949,38 @@ export default React.memo(function Step2_Multi({
                             pl: 2,
                             height: 60,
                             alignItems: 'center',
-                            bgcolor: '#ccc'
+                            background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
                         }}>
                           <SearchBar
                             placeholder="태그 검색"
                             onSearch={runDetailSearch}
                           />
-                          <CustomButton text="<" width="40px" backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
-                          <CustomButton text=">" width="40px" backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
+                          <CustomButton 
+                            text="<" 
+                            width="40px" 
+                            border="1px solid #757575"
+                            backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} 
+                            hoverStyle={currentDetailIndex+1 <= 1 ?{}:{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }} 
+                            radius={1} 
+                            onClick={findPrevDetail} 
+                            disabled={currentDetailIndex+1 <= 1} 
+                          />
+                          <CustomButton 
+                            text=">" 
+                            width="40px" 
+                            border="1px solid #757575"
+                            backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} 
+                            hoverStyle={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? {}:{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }} 
+                            radius={1} 
+                            onClick={findNextDetail} 
+                            disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} 
+                          />
                           {searchDetailResults.length > 0 ?
                             <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
                             : <></>

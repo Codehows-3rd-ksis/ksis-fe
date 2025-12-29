@@ -287,13 +287,17 @@ export default function HistoryDetail() {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
           }}
         >
           <CustomButton
-            text="◀ 이전"
-            backgroundColor="#9E9E9E"
-            // color="#fff"
+            text="이전"
+            backgroundColor="#F2F2F2"
+            border="1px solid #757575"
+            hoverStyle={{
+              backgroundColor: "transparent",
+              border: "2px solid #373737ff"
+            }}
             onClick={() => navigate("/history")}
             radius={2}
             width="80px"

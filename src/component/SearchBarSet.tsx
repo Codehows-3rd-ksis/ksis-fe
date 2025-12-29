@@ -176,6 +176,10 @@ export default function SearchBarSet({
             onClick={onButtonClick}
             radius={2}
             height="40px"
+            hoverStyle={{
+              backgroundColor: "#ba7d1bff",
+              border: "2px solid #373737ff",
+            }}
           />
         )}
       </Box>

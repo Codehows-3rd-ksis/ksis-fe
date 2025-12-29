@@ -103,6 +103,10 @@ function Login({onLoginSuccess}: LoginProps) {
               text="로그인" width="330px" radius={20} height="50px" 
               backgroundColor="#F5A623" color='black' fontSize="24px"
               onClick={handleLogin} 
+              hoverStyle={{
+                backgroundColor: "#ba7d1bff",
+                border: "2px solid #373737ff",
+              }}
             />
           </Box>
         </Box>

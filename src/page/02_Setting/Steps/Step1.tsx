@@ -261,6 +261,10 @@ export default function Step1({
                     handleRobots();
                   }}
                   radius={1}
+                  hoverStyle={{
+                    backgroundColor: "#ba7d1bff",
+                    border: "2px solid #373737ff",
+                  }}
                 />
               </InputAdornment>
             }

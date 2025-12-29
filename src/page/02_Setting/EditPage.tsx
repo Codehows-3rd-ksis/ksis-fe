@@ -315,12 +315,12 @@ export default function EditPage() {
                 <CustomButton 
                     text="닫기" 
                     radius={2} 
-                    backgroundColor='#fff' 
+                    backgroundColor="#F2F2F2"
+                    border="1px solid #757575"
                     onClick={()=>setOpenCloseAlert(true)} 
-                    border="1px solid #CDBAA6"
                     hoverStyle={{
-                      backgroundColor: '#F0F0F0',
-                      border: "1px solid #CDBAA6"
+                      backgroundColor: "transparent",
+                      border: "2px solid #373737ff"
                     }}
                 />
                 <Box sx={{display: 'flex', gap: 2}}>
@@ -329,17 +329,25 @@ export default function EditPage() {
                             text="이전" 
                             onClick={handleBack} 
                             radius={2} 
-                            backgroundColor='#fff' 
-                            border="1px solid #CDBAA6"
+                            backgroundColor="#F2F2F2"
+                            border="1px solid #757575"
                             hoverStyle={{
-                              backgroundColor: '#F0F0F0',
-                              border: "1px solid #CDBAA6"
+                              backgroundColor: "transparent",
+                              border: "2px solid #373737ff"
                             }}
                         />
                     }
                     {activeStep < steps.length - 1 ? (
                         <>
-                            <CustomButton text="다음" onClick={handleNext} radius={2} 
+                            <CustomButton 
+                              text="다음" 
+                              onClick={handleNext} 
+                              radius={2} 
+                              border="1px solid #757575"
+                              hoverStyle={{
+                                backgroundColor: "#ba7d1bff",
+                                border: "2px solid #373737ff",
+                              }}
                               disabled={
                                 activeStep === 0 ? 
                                   ( isAble === false ? true : false)
@@ -352,7 +360,16 @@ export default function EditPage() {
                         </>
                     ) : (
                         <>
-                            <CustomButton text="수정" onClick={()=>setOpenEditAlert(true)} radius={2} />
+                            <CustomButton 
+                              text="수정" 
+                              onClick={()=>setOpenEditAlert(true)} 
+                              radius={2} 
+                              border="1px solid #757575"
+                              hoverStyle={{
+                                  backgroundColor: "#ba7d1bff",
+                                  border: "2px solid #373737ff",
+                              }}
+                            />
                         </>
                     )}
                 </Box>
