@@ -71,11 +71,12 @@ function Menu() {
                     // color: 'black',
                     bgcolor: '#1e1d1dff',
                     // background: 'linear-gradient(90deg, #000000 0%, #46464B 100%)',
-                    // border: '2px solid rgba(86, 86, 86, 1)',
+                    border: '1px solid rgba(86, 86, 86, 1)',
                     color: 'white',
                     borderRadius: 3,
                     boxShadow: '-2px 2px 0 0 rgba(0, 0, 0, 0.42)',
-                    minHeight: 100
+                    minHeight: 100,
+                    p: 1
                   }}
                 >
                   <Box sx={{paddingLeft: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
@@ -121,7 +122,9 @@ function Menu() {
                                     sx={{
                                         height: 80,
                                         borderRadius: 2,
-                                        boxShadow: '0px 2px 0 1px rgba(0, 0, 0, 0.42)',
+                                        // borderLeft: '1px solid gray',
+                                        border: '1px solid rgba(86, 86, 86, 1)',
+                                        boxShadow: '1px 3px 0 1px rgba(0, 0, 0, 0.42)',
                                         backgroundColor: location.pathname.startsWith(item.path) ? '#EDA634' : 'inherit',
                                         color: location.pathname.startsWith(item.path) ? 'black' : 'white',
                                         '&:hover': {
@@ -168,7 +171,9 @@ function Menu() {
                                 height: 80,
                                 borderRadius: 2,
                                 marginBottom: 0.5,
-                                boxShadow: '0px 2px 0 1px rgba(0, 0, 0, 0.42)',
+                                // borderLeft: '1px solid gray',
+                                border: '1px solid rgba(86, 86, 86, 1)',
+                                boxShadow: '1px 3px 0 1px rgba(0, 0, 0, 0.42)',
                                 backgroundColor: location.pathname.startsWith(item.path) ? '#EDA634' : 'inherit',
                                 color: location.pathname.startsWith(item.path) ? 'black' : 'white',
                                 '&:hover': {

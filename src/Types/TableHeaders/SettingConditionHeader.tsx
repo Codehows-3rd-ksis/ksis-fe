@@ -67,6 +67,11 @@ export const getColumns = ({
                 text="영역선택"
                 onClick={()=>handleAreaSelect(params.row.id)} 
                 radius={2}
+                border="1px solid #757575"
+                hoverStyle={{
+                  backgroundColor: "#ba7d1bff",
+                  border: "2px solid #373737ff",
+                }}
               />
               {params.value}
             </Box>

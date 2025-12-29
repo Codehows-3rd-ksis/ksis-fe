@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Box, Typography, InputAdornment } from '@mui/material'
-import logo from '../../assets/ksisLogo.png'
+import logo from '../../assets/logo.png'
 import CustomButton from "../../component/CustomButton"
 import CustomIconButton from '../../component/CustomIconButton'
 import CustomTextField from "../../component/CustomTextField"
@@ -50,14 +50,14 @@ function Login({onLoginSuccess}: LoginProps) {
   }
 
   return (
-    <Box sx={{ width: '100vw', height: '100vh', backgroundColor: '#fff', display: 'flex', justifyContent: 'space-evenly', alignItems: 'center'}}>
+    <Box sx={{ width: '100vw', height: '100vh', display: 'flex', justifyContent: 'space-evenly', alignItems: 'center'}}>
       <Box>
-        <Box sx={{display: 'flex', alignItems: 'center', gap:3}}>
-          <Box>
+        <Box sx={{alignItems: 'center'}}>
+          <Box sx={{ maxWidth: 400, maxHeight: 400}}>
             {<img src={logo} alt="company logo" style={{ height: '100%', width: '100%' }} />}
           </Box>
           <Box>
-            <Typography sx={{ fontSize: 54, fontWeight: 'bold', color: 'black'}}>데이터 수집 시스템</Typography>
+            <Typography sx={{ fontSize: 54, fontWeight: 'bold', color: 'white'}}>데이터 수집 시스템</Typography>
           </Box>
         </Box>
         <Box sx={{ marginTop: 3, padding: 2, borderRadius: 3}}>
@@ -103,6 +103,10 @@ function Login({onLoginSuccess}: LoginProps) {
               text="로그인" width="330px" radius={20} height="50px" 
               backgroundColor="#F5A623" color='black' fontSize="24px"
               onClick={handleLogin} 
+              hoverStyle={{
+                backgroundColor: "#ba7d1bff",
+                border: "2px solid #373737ff",
+              }}
             />
           </Box>
         </Box>

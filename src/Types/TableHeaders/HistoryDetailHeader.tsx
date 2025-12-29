@@ -162,7 +162,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
               }}> 
               <ErrorOutline sx={{fontSize:15}}/>
                {'부분완료 (실패:'}
-               <Typography sx={{color: 'red'}}>{failCount}</Typography>
+               <Typography component="span" sx={{color: 'red'}}>{failCount}</Typography>
                {'건)'}
               </Typography>
           </Box>

@@ -18,7 +18,13 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
                         <CheckCircleOutlineIcon color="success" fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
@@ -36,7 +42,17 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="닫기" onClick={onConfirm} radius={2}/>
+                        <CustomButton 
+                            text="닫기" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            backgroundColor="#f0f0f0" 
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )
@@ -48,8 +64,14 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
-                        <HelpOutlineIcon color="action" fontSize="large" />
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
+                        <HelpOutlineIcon sx={{color: 'white'}} fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
                         </Typography>
@@ -66,8 +88,27 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="확인" onClick={onConfirm} radius={2}/>
-                        <CustomButton text="취소" onClick={onCancel} backgroundColor="#f0f0f0" radius={2}/>
+                        <CustomButton 
+                            text="확인" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            border="1px solid #757575"
+                            hoverStyle={{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }}
+                        />
+                        <CustomButton 
+                            text="취소" 
+                            onClick={onCancel} 
+                            radius={2}
+                            backgroundColor="#f0f0f0" 
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )
@@ -79,7 +120,13 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
                         <HighlightOffIcon color="error" fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
@@ -97,8 +144,27 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="확인" onClick={onConfirm} radius={2}/>
-                        <CustomButton text="취소" onClick={onCancel} backgroundColor="#f0f0f0" radius={2}/>
+                        <CustomButton 
+                            text="확인" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor: "#ba7d1bff",
+                                border: "2px solid #373737ff",
+                            }}
+                        />
+                        <CustomButton 
+                        text="취소" 
+                        onClick={onCancel} 
+                        radius={2}
+                        backgroundColor="#f0f0f0" 
+                        border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )
@@ -110,7 +176,13 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
                         <WarningAmberIcon color="warning" fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
@@ -131,7 +203,17 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="닫기" onClick={onConfirm} radius={2}/>
+                        <CustomButton 
+                            text="닫기" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            backgroundColor="#f0f0f0" 
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )
@@ -143,7 +225,13 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
                         <WarningAmberIcon color="error" fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
@@ -161,7 +249,17 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="닫기" onClick={onConfirm} radius={2}/>
+                        <CustomButton 
+                            text="닫기" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            backgroundColor="#f0f0f0" 
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )
@@ -174,7 +272,13 @@ export default function Alert (props: Alert_Type) {
                     disableAutoFocus
                     disableRestoreFocus
                 >
-                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, backgroundColor: '#FFF4E5' }}>
+                    <DialogTitle sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1, 
+                        background: 'linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)', 
+                        color: 'white' 
+                    }}>
                         <WarningAmberIcon color="warning" fontSize="large" />
                         <Typography variant="h6" component="div">
                             알림
@@ -192,8 +296,27 @@ export default function Alert (props: Alert_Type) {
                     </DialogContent>
                     
                     <DialogActions sx={{ paddingX: 3, paddingBottom: 2 }}>
-                        <CustomButton text="확인" onClick={onConfirm} radius={2}/>
-                        <CustomButton text="취소" onClick={onCancel} backgroundColor="#f0f0f0" radius={2}/>
+                        <CustomButton 
+                            text="확인" 
+                            onClick={onConfirm} 
+                            radius={2}
+                            border="1px solid #757575"
+                            hoverStyle={{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }}
+                        />
+                        <CustomButton 
+                            text="취소" 
+                            onClick={onCancel} 
+                            backgroundColor="#f0f0f0" 
+                            radius={2}
+                            border="1px solid #757575"
+                            hoverStyle={{
+                                backgroundColor:"#b9b8b8ff",
+                                border: "2px solid #373737ff"
+                            }}
+                        />
                     </DialogActions>
                 </Dialog>
             )

@@ -4,6 +4,7 @@ import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
+import Alert from "../../component/Alert";
 import { type StatusTableRows } from "../../API/03_StatusApi";
 import {
   type FailureRow,
@@ -11,7 +12,7 @@ import {
   FAILURE_COLUMNS,
   createColumnsFromParsedRow,
 } from "../../Types/TableHeaders/StatusDetailHeader";
-import { getStatusDetail } from "../../API/03_StatusApi";
+import { getStatusDetail, stopCrawl } from "../../API/03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
@@ -60,6 +61,13 @@ function StatusDetail() {
   const failCount = currentProgress?.failCount ?? 0;
   const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
   // const progress = currentProgress?.progress ?? 0;
+
+  // Alert
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [openErrorAlert, setOpenErrorAlert] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("")
+  const [alertStopResultOpen, setAlertStopResultOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
   const handleBack = () => navigate("/status");
 
@@ -244,6 +252,37 @@ function StatusDetail() {
     };
   }, [workId, resetCrawlingState]);
 
+  // 수집 중지 API
+  const handleStopCrawl = async (row: StatusTableRows) => {
+    try {
+      await stopCrawl(row.workId);
+      setAlertStopResultOpen(true);
+    } catch (error) {
+      console.error("수집 중지 요청 실패:", error);
+      setErrorMsg("수집 중지 요청에 실패했습니다.");
+      setOpenErrorAlert(true);
+    }
+  };
+
+  const handleStopClick = (row: StatusTableRows) => {
+    setSelectedRow(row);
+    setAlertOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    setAlertOpen(false);
+    if (selectedRow) {
+      await handleStopCrawl(selectedRow);
+    }
+  };
+
+  const handleCancel = () => {
+    setAlertOpen(false);
+    setSelectedRow(null);
+  };
+
+  const baseColumns = DETAIL_SETTING_COLUMNS({ handleStopClick });
+
   return (
     <Box
       sx={{
@@ -300,7 +339,7 @@ function StatusDetail() {
             기본 정보
           </Typography>
           <CommonTable
-            columns={DETAIL_SETTING_COLUMNS}
+            columns={baseColumns}
             rows={
               detailData
                 ? [
@@ -382,22 +421,16 @@ function StatusDetail() {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
             gap: 2,
           }}
         >
-          {/* <CustomButton
-            text="◀ 이전"
-            backgroundColor="#9E9E9E"
-            // color="#fff"
-            onClick={handleBack}
-            radius={2}
-            width="80px"
-          /> */}
           <CustomButton 
             text="이전"
-            backgroundColor="#fff"
-            border="1px solid #CDBAA6"
+            // backgroundColor="#fff"
+            // border="1px solid #CDBAA6"
+            backgroundColor="#F2F2F2"
+            border="1px solid #757575"
             onClick={handleBack}
             radius={2}
             width="80px"
@@ -408,6 +441,34 @@ function StatusDetail() {
           />
         </Box>
       </Box>
+
+      {/* 수집 중지 요청 알람 */}
+      <Alert
+        open={alertOpen}
+        type="question"
+        text={`"수집을 중지하시겠습니까?`}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+      {/* 수집 중지 결과 확인 알람 */}
+      <Alert
+        open={alertStopResultOpen}
+        text="수집이 중지되었습니다."
+        type="success"
+        onConfirm={() => {
+          setAlertStopResultOpen(false);
+          handleBack()
+        }}
+      />
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   );
 }
