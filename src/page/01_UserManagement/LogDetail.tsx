@@ -267,6 +267,7 @@ export default function LogDetail() {
               onClick={handleBatchRecollectClick}
               radius={2}
               disabled={failCount === 0}
+              border="1px solid #CDBAA6"
             />
           </Box>
           <CommonTable
@@ -280,6 +281,7 @@ export default function LogDetail() {
           sx={{
             display: "flex",
             flexDirection: "column",
+            gap: 1,
           }}
         >
           {/* Text */}
@@ -313,9 +315,9 @@ export default function LogDetail() {
           }}
         >
           <CustomButton 
-            text="◀ 이전"
-            backgroundColor="#9E9E9E"
-            // color="#fff"
+            text="이전"
+            backgroundColor="#fff"
+            border="1px solid #CDBAA6"
             onClick={()=>
               navigate(`/user/${userId}/history`, {
                 state: { username: username },
@@ -323,6 +325,10 @@ export default function LogDetail() {
             }
             radius={2}
             width="80px"
+            hoverStyle={{
+              backgroundColor: '#F0F0F0',
+              border: "1px solid #CDBAA6"
+            }}
           />
         </Box>
       </Box>

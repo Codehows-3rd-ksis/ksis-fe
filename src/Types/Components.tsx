@@ -1,4 +1,5 @@
 import type { SelectChangeEvent } from '@mui/material'
+import { type SxProps } from '@mui/material';
 
 export interface TextField_Type {
     // Box sx
@@ -42,6 +43,7 @@ export interface Button_Type {
     startIcon?: React.ReactNode;
     endIcon?: React.ReactNode;
     disabled?: boolean;
+    hoverStyle?:  SxProps;
 }
 export interface IconButton_Type {
     width? : string;

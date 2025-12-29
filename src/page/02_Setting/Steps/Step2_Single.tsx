@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, Card } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomButton from '../../../component/CustomButton';
 import ScrollTable from '../../../component/ScrollTable';
@@ -359,12 +359,11 @@ export default React.memo(function Step2_Single({
                     height: "100%",
             }}>
                 {/* 상단 */}
-                <Box
+                <Card
                     sx={{
-                        borderBottom: "2px solid #ccc",
                         display: "flex",
                         gap: 2,
-                        pb: 2,
+                        p: 2,
                         minHeight: 550,
                         minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
                 }}>
@@ -376,6 +375,7 @@ export default React.memo(function Step2_Single({
                           position: "relative",
                           overflow: "auto",
                           background: "#eaeaea",
+                          border: '1px solid black',
                     }}>
                         {previewData.image ? (
                           <img
@@ -424,17 +424,20 @@ export default React.memo(function Step2_Single({
                     </Box>
                     {/* HTML 태그 */}
                     <Box sx={{
-                      flex: "0 0 50%",
+                      // flex: "0 0 50%",
                       minWidth: 500,
                       display: "flex",
                       flexDirection: "column",
+                      border: '1px solid black',
                     }}>
                       <Box 
                         sx={{ 
                           display:'flex', 
                           gap:2, 
                           height: 60,
-                          alignItems: 'center'
+                          pl: 2,
+                          alignItems: 'center',
+                          bgcolor: '#ccc'
                       }}>
                         <SearchBar
                           placeholder="태그 검색"
@@ -450,7 +453,7 @@ export default React.memo(function Step2_Single({
                       <Box 
                         sx={{
                           overflow: 'auto',
-                          height: 490,
+                          height: 530,
                         }}
                         ref={inspectorContainerRef}
                         data-scroll-container
@@ -467,26 +470,27 @@ export default React.memo(function Step2_Single({
                         />
                       </Box>
                     </Box>
-                </Box>
+                </Card>
                 {/* 하단 */}
-                <Box 
+                <Card 
                   sx={{
                       height: 350,
                       minHeight: 350,
                       mt: 2,
-                      background: "#f7f7f7",
+                      background: "#f7f7f7ff",
                       borderRadius: 2,
                       p: 2,
                       display: "flex",
                       flexDirection: "column",
-                      gap: 2
+                      gap: 2,
+                      color: 'black'
                   }}
                 >
                     <Box sx={{display: 'flex', justifyContent: 'flex-end', color: 'black', alignItems: 'center'}}>
                         <Typography sx={{ fontSize: 22, fontWeight: "bold" }}>
                             조건 행 추가
                         </Typography>
-                        <CustomIconButton icon="add" backgroundColor='#f7f7f7' onClick={handleAddCondition}/>
+                        <CustomIconButton icon="add" backgroundColor='#f7f7f7ff' onClick={handleAddCondition}/>
                     </Box>
                     <ScrollTable
                         rows={conditionData}
@@ -494,7 +498,7 @@ export default React.memo(function Step2_Single({
                         processRowUpdate={processRowUpdate}
                         maxHeight={300}
                     />
-                </Box>
+                </Card>
             </Box>
 
             <Alert

@@ -3,7 +3,7 @@ import {Button} from '@mui/material'
 import {type Button_Type} from '../Types/Components'
 
 export default function CustomButton(props: Button_Type) {
-    const {width, height, fontSize, color, fontWeight, backgroundColor, border, radius, onClick, text, startIcon, endIcon, disabled} = props
+    const {width, height, fontSize, color, fontWeight, backgroundColor, border, radius, onClick, text, startIcon, endIcon, disabled, hoverStyle} = props
     return (
         <Button 
             sx={{
@@ -20,7 +20,10 @@ export default function CustomButton(props: Button_Type) {
                   backgroundColor: 'rgba(0, 0, 0, 0.12)',
                   color: 'rgba(0, 0, 0, 0.26)',
                 },
-                // boxShadow: '0px 3px 0px black'
+                // 🔽 hover 스타일을 조건부로 추가
+                ...(hoverStyle && {
+                  '&:hover': hoverStyle,
+                }),
             }}
             disabled={disabled || false}
             onClick={onClick? onClick : ()=>{}}

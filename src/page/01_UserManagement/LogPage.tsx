@@ -192,7 +192,7 @@ export default function LogPage () {
                             sx={{
                               color: "gray",
                               "&.Mui-checked": {
-                                color: "#BB510C",
+                                color: "#F7941D",
                               },
                             }}
                           />
@@ -206,7 +206,7 @@ export default function LogPage () {
                             sx={{
                               color: "gray",
                               "&.Mui-checked": {
-                                color: "#BB510C",
+                                color: "#F7941D",
                               },
                             }}
                           />
@@ -220,7 +220,7 @@ export default function LogPage () {
                             sx={{
                               color: "gray",
                               "&.Mui-checked": {
-                                color: "#BB510C",
+                                color: "#F7941D",
                               },
                             }}
                           />
@@ -250,12 +250,16 @@ export default function LogPage () {
             </Box>
             <Box sx={{display: 'flex', justifyContent: 'flex-end', padding: 2}}>
                 <CustomButton 
-                  text="◀ 이전"
-                  backgroundColor="#9E9E9E"
-                  // color="#fff"
+                  text="이전"
+                  backgroundColor="#fff"
+                  border="1px solid #CDBAA6"
                   onClick={handleClose}
                   radius={2}
                   width="80px"
+                  hoverStyle={{
+                    backgroundColor: '#F0F0F0',
+                    border: "1px solid #CDBAA6"
+                  }}
                 />
             </Box>
             {/* Error Alert */}

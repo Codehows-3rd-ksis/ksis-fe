@@ -312,12 +312,22 @@ export default function RegPage() {
               marginTop: 2, 
               flexShrink: 0,
             }}>
-                <CustomButton text="닫기" radius={2} backgroundColor='#BABABA' onClick={()=>setOpenCloseAlert(true)} />
+                <CustomButton 
+                    text="닫기" 
+                    radius={2} 
+                    backgroundColor='#fff' 
+                    onClick={()=>setOpenCloseAlert(true)} 
+                    border="1px solid #CDBAA6"
+                    hoverStyle={{
+                    backgroundColor: '#F0F0F0',
+                    border: "1px solid #CDBAA6"
+                  }}
+                />
                 <Box sx={{display: 'flex', gap: 2}}>
-                    {activeStep > 0 && <CustomButton text="◀ 이전" onClick={handleBack} radius={2} backgroundColor='#BABABA'/>}
+                    {activeStep > 0 && <CustomButton text="이전" onClick={handleBack} radius={2} backgroundColor='#BABABA'/>}
                     {activeStep < steps.length - 1 ? (
                         <>
-                            <CustomButton text="다음 ▶" onClick={handleNext} radius={2} 
+                            <CustomButton text="다음" onClick={handleNext} radius={2} 
                               disabled={
                                 activeStep === 0 ? 
                                   ( isAble === false ? true : false)

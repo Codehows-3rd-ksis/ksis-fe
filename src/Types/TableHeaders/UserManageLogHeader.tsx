@@ -1,6 +1,7 @@
 import { type GridColDef } from '@mui/x-data-grid';
 import dayjs from 'dayjs'
 import { Box, Typography } from '@mui/material'
+import { PlayCircleOutline, HighlightOff, ErrorOutline, CheckCircleOutline  } from "@mui/icons-material";
 
 export interface UserLogTableRows {
     workId: number,
@@ -40,10 +41,14 @@ export const getColumns = ({
                 </Typography>
     )
   },
-  { field: 'state',    headerName: '진행상태',       flex: 1,    headerAlign: 'center',  align: 'center',
+  {
+    field: "state",
+    headerName: "진행상태",
+    flex: 1,
+    headerAlign: "center",
+    align: "center",
     renderCell: (params) => {
       if (params.value === "SUCCESS") {
-        if(params.row.failCount === 0) {
           return (
             <Box
               sx={{
@@ -54,30 +59,25 @@ export const getColumns = ({
                 width: "100%",
               }}
             >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+              <Typography sx={{ 
+                color: 'black',
+                borderRadius: 2,
+                bgcolor: 'rgba(46,125,50,0.15)',
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}> 
+                <CheckCircleOutline sx={{fontSize:15}}/>
+                수집완료
+              </Typography>
             </Box>
           )
-        }
-        else return (
-          <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                width: "100%",
-              }}
-            >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
-              <Typography>(수집실패:</Typography>
-              <Typography sx={{ color: "red" }}>
-                {params.row.failCount}
-              </Typography>
-              <Typography>건)</Typography>
-            </Box>
-        )
-      } 
-      else if(params.value === "FAILED") {
+      }
+      else if (params.value === "FAILED") {
         return (
           <Box
             sx={{
@@ -88,13 +88,26 @@ export const getColumns = ({
               width: "100%",
             }}
           >
-            <Typography sx={{ color: 'red'}}>수집실패</Typography>
+            <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: 'rgba(211,47,47,0.15)',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}> 
+            <HighlightOff sx={{fontSize:15}}/>
+             수집실패
+            </Typography>
           </Box>
         )
       }
       else if (params.value === "PARTIAL") {
         const failCount = params.row.failCount || 0;
-        // console.log(params.row);
         return (
           <Box
               sx={{
@@ -104,15 +117,26 @@ export const getColumns = ({
                 height: "100%",
                 width: "100%",
               }}
-            >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
-              <Typography>(수집실패:</Typography>
-              <Typography sx={{ color: "red" }}>
-                {failCount}
+          >
+              <Typography sx={{ 
+                color: 'black',
+                borderRadius: 3,
+                bgcolor: 'rgba(237,108,2,0.3)',
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}> 
+              <ErrorOutline sx={{fontSize:15}}/>
+               {'부분완료 (실패:'}
+               <Typography sx={{color: 'red'}}>{failCount}</Typography>
+               {'건)'}
               </Typography>
-              <Typography>건)</Typography>
-            </Box>
-          );
+          </Box>
+        );
       }
       else return (
         <Box
@@ -124,10 +148,24 @@ export const getColumns = ({
             width: "100%",
           }}
         >
-          <Typography sx={{ color: '#BB510C'}}>진행중</Typography>
+          <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: 'rgba(247,148,29,0.15)',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+          }}> 
+            <PlayCircleOutline sx={{fontSize:15}}/>
+             진행중
+            </Typography>
         </Box>
       )
-    }
+    },
   },
   { field: 'startAt',    headerName: '수집시작',       flex: 1,  headerAlign: 'center',  align: 'center',
     renderCell: (params) => {

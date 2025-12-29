@@ -6,19 +6,14 @@ function Content({children}:LayoutProps) {
   return (
     <Box
         sx={{
-            // backgroundColor: '#fff',
-            // height: '100%',
-            // border: '3px solid #CDBAA6', 
-            // borderRadius: 3
-
             backgroundColor: '#fff',
-            // flex: 1,          
             height: '100%',
             minHeight: 0,     
-            border: '3px solid #CDBAA6',
             borderRadius: 3,
             boxSizing: 'border-box',
-            // overflow: 'hidden', 
+            border: '3px solid rgba(86, 86, 86, 1)',
+            background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
+            
         }}
     >
             {children}

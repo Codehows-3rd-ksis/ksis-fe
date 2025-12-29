@@ -68,7 +68,9 @@ function App() {
       width: '100vw',
       height: '100vh',   // 🔥 여기에만 100vh
       display: 'flex',
-      backgroundColor: '#FEF4EA',
+      // backgroundColor: '#FEF4EA',
+      background: 'linear-gradient(90deg, #000 0%, #383A3D 100%)',
+      // background: '#fff',
       p: 1,
       gap: 1,
       boxSizing: 'border-box',
