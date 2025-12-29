@@ -126,7 +126,7 @@ export default function PaginationServerTable(props: CommonTableProps) {
             },
           // 선택된 행 색 변경
           "& .MuiDataGrid-row.Mui-selected": {
-            backgroundColor: "#e8e8e8ff !important",
+            backgroundColor: "#ece2d0ff  !important",
           },
         }}
       />

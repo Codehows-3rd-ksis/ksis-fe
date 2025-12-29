@@ -59,9 +59,10 @@ export default function Scheduler() {
 
       const data: SchedulerTableRows[] = response.content.map(
         (item: Schedule) => {
-          const time = parseTimeCron(item.cronExpression);
-          const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[];
+          const time = parseTimeCron(item.cronExpression); // 크론식 시간 파싱 -> {hour:9, minute:30}
+          const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[]; // 요일 파싱 -> ["MON","WED","FRI"]
           return {
+            //row 단위로 동작
             id: item.scheduleId,
             scheduleId: item.scheduleId,
             settingName: item.settingName,
@@ -78,9 +79,9 @@ export default function Scheduler() {
               ? `${String(time.hour).padStart(2, "0")}:${String(
                   time.minute
                 ).padStart(2, "0")}`
-              : "",
-            period: `${item.startDate} ~ ${item.endDate}`,
-            cycle: formatScheduleToKorean(daysArray, item.weekOfMonth),
+              : "", //{hour:9, minute:30} -> "09:30"
+            period: `${item.startDate} ~ ${item.endDate}`, //"2025-01-01 ~ 2025-12-31"
+            cycle: formatScheduleToKorean(daysArray, item.weekOfMonth), // ["MON","WED","FRI"] + "0" -> "매주 월요일, 수요일, 금요일"
           };
         }
       );
@@ -109,6 +110,7 @@ export default function Scheduler() {
     }));
   };
 
+  //검색 초기화
   const handleReset = () => {
     setIsSearched(false);
     setSearchState({
@@ -126,18 +128,20 @@ export default function Scheduler() {
     setSearchState((prev) => ({ ...prev, page: newPage }));
   };
 
-  /**  수정 페이지  =========================================== */
+  // ============= 수정 / 삭제  ==========
+  // 수정 - 페이지이동 + 데이터 전달
   const handleEditOpen = (row: SchedulerTableRows) => {
     console.log("Edit scheduler with ID:", row.id);
     navigate("/scheduler/edit", { state: { row } });
   };
 
-  /**  삭제 팝업  =========================================== */
+  // 삭제 확인 팝업 열기
   const handleDeleteOpen = (row: SchedulerTableRows) => {
     setSelectedRow(row);
     setOpenDeleteAlert(true);
   };
 
+  // 삭제
   const handleDelete = async () => {
     if (!selectedRow) return;
 
@@ -150,6 +154,7 @@ export default function Scheduler() {
     }
   };
 
+  //컬럼 정의
   const columns = getColumns({ handleEditOpen, handleDeleteOpen });
 
   return (

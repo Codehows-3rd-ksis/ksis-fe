@@ -1,14 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Breadcrumbs,
-  Link,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-} from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -51,7 +43,7 @@ export default function RegPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [weekOfMonth, setWeekOfMonth] = useState<WeekOfMonth>("0");
-  const [selectedDays, setSelectedDays] = useState<DayOfWeekIndex[]>([1]);
+  const [selectedDays, setSelectedDays] = useState<DayOfWeekIndex[]>([]);
   const [hour, setHour] = useState(9);
   const [minute, setMinute] = useState(0);
 
@@ -65,25 +57,24 @@ export default function RegPage() {
     size: 5,
   });
 
-  // 설정 목록 불러오기
-  const fetchSettingList = useCallback(async () => {
-    try {
-      const { type, keyword, page, size } = searchState;
-      const res = await getSetting(type, keyword, page, size);
-      const data = res.content.map((row: SettingTableRows) => ({
-        ...row,
-        id: row.settingId,
-      }));
-      setRows(data);
-      setTotalCount(res.totalElements);
-    } catch (error) {
-      console.error("Failed to fetch setting list:", error);
-    }
-  }, [searchState]);
-
+  // searchState 변경 시 설정 목록 불러오기
   useEffect(() => {
+    const fetchSettingList = async () => {
+      try {
+        const { type, keyword, page, size } = searchState;
+        const res = await getSetting(type, keyword, page, size);
+        const data = res.content.map((row: SettingTableRows) => ({
+          ...row,
+          id: row.settingId,
+        }));
+        setRows(data);
+        setTotalCount(res.totalElements);
+      } catch (error) {
+        console.error("Failed to fetch setting list:", error);
+      }
+    };
     fetchSettingList();
-  }, [fetchSettingList]);
+  }, [searchState]);
 
   // 검색
   const handleSearch = (conditions: SearchConditions) => {
@@ -95,6 +86,7 @@ export default function RegPage() {
     }));
   };
 
+  //검색초기화
   const handleReset = () => {
     setSearchState({
       type: "all",
@@ -116,32 +108,33 @@ export default function RegPage() {
   const handleSettingRowClick = (params: GridRowParams) => {
     const clickedId = params.row.id;
 
-    // 이미 선택된 행이면 취소
     if (settingId === clickedId) {
-      setSettingId("");
+      setSettingId(""); //선택해제
     } else {
-      // 새로 선택
-      setSettingId(clickedId);
+      setSettingId(clickedId); // 새로 선택
     }
   };
-
+  //요일토글
   const handleDayToggle = (day: DayOfWeekIndex) => {
     setSelectedDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
+  //미리보기
   const previewCron = () => {
     if (selectedDays.length === 0) {
-      return "요일을 선택해주세요";
+      return "";
     }
-    const daysOfWeekEN = selectedDays.map((d) => DAY_OF_WEEK_EN[d]);
-    const scheduleText = formatScheduleToKorean(daysOfWeekEN, weekOfMonth);
+    const daysOfWeekEN = selectedDays.map((d) => DAY_OF_WEEK_EN[d]); //숫자인덱스 -> 영문
+    const scheduleText = formatScheduleToKorean(daysOfWeekEN, weekOfMonth); // 영문 -> 한글
     return `${scheduleText} ${hour}시 ${minute}분`;
   };
 
+  //등록
   const handleRegist = async () => {
     try {
+      //서버 전송 데이터 구성
       const requestData: CreateScheduleRequest = {
         settingId: settingId as number,
         startDate,
@@ -152,7 +145,7 @@ export default function RegPage() {
       };
 
       await createSchedule(requestData);
-      setOpenRegDoneAlert(true);
+      setOpenRegDoneAlert(true); //완료팝업
     } catch (error) {
       console.error("Failed to create schedule:", error);
       alert("스케줄 등록에 실패했습니다.");
@@ -164,11 +157,10 @@ export default function RegPage() {
   };
 
   return (
-    <Box
-      sx={{ height: "97%", display: "flex", flexDirection: "column", gap: 1 }}
-    >
-      <Box sx={{ padding: 2 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+    <Box sx={{ height: "97%", display: "flex", flexDirection: "column" }}>
+      {/* 상단 헤더 */}
+      <Box sx={{ px: 2, py: 2 }}>
+        <Breadcrumbs sx={{ mb: 1 }}>
           <Link
             component={RouterLink}
             to="/scheduler"
@@ -186,312 +178,317 @@ export default function RegPage() {
           </Typography>
         </Breadcrumbs>
 
-        <Typography
-          sx={{
-            fontSize: 60,
-            fontWeight: "bold",
-            color: "black",
-          }}
-        >
+        <Typography sx={{ fontSize: 60, fontWeight: "bold", color: "black" }}>
           스케줄 등록
         </Typography>
       </Box>
-
-      {/* 폼 영역 */}
       <Box
-        sx={{ padding: 2, flex: 1, display: "flex", flexDirection: "column" }}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+
+          border: "1px solid #abababff",
+          marginLeft: "20px",
+          marginRight: "20px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          gap: 2,
+          p: 2,
+          overflowY: "auto",
+        }}
       >
-        <Typography
-          sx={{
-            fontSize: 25,
-            fontWeight: "bold",
-            color: "black",
-            mt: 1,
-          }}
-        >
-          스케줄 설정
-        </Typography>
-        <Box
-          sx={{
-            width: "100%", // Occupy full width of parent
-            backgroundColor: "#e8e8e8ff",
-            display: "flex", // Make this the flex container for form elements
-            flexDirection: "column", // Arrange form elements in a column
-            gap: 3, // Space between form elements
-            padding: 4, // Internal padding for content within this lightgrey box
-            boxSizing: "border-box", // Ensure padding is included in total width/height
-            mt: 3,
-          }}
-        >
-          {/* 수집기간 */}
-          <Box
-            className="수집기간"
+        {/* 본문 */}
+        <Box sx={{ px: 2, flex: 1, overflow: "auto" }}>
+          <Typography
             sx={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 2,
+              fontSize: 25,
+              fontWeight: "bold",
               color: "black",
+              mt: 1,
+              mb: 2,
             }}
           >
-            <Typography
-              sx={{
-                width: "150px",
-                flexShrink: 0,
-                textAlign: "left",
-                fontSize: 25,
-              }}
-            >
-              수집 기간 :
-            </Typography>
+            스케줄 설정
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 3,
+            }}
+          >
+            {/* 설정 카드 */}
             <Box
               sx={{
+                flex: 1,
+                backgroundColor: "#fff",
+                borderRadius: 2,
+                p: 5,
                 display: "flex",
-                gap: 2,
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-            >
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  label="시작일자"
-                  format="YYYY-MM-DD"
-                  value={startDate ? dayjs(startDate) : null}
-                  onChange={(v) =>
-                    setStartDate(v ? v.format("YYYY-MM-DD") : "")
-                  }
-                  slotProps={{
-                    textField: {
-                      sx: {
-                        backgroundColor: "#fff",
-                        borderRadius: 1,
-                        width: "200px",
-                        "& .MuiOutlinedInput-root": {
-                          height: "50px",
-                        },
-                      },
-                    },
-                  }}
-                />
-                <Typography sx={{ fontSize: 20 }}>~</Typography>
-                <DatePicker
-                  label="종료일자"
-                  format="YYYY-MM-DD"
-                  value={endDate ? dayjs(endDate) : null}
-                  onChange={(v) => setEndDate(v ? v.format("YYYY-MM-DD") : "")}
-                  slotProps={{
-                    textField: {
-                      sx: {
-                        backgroundColor: "#fff",
-                        borderRadius: 1,
-                        width: "200px",
-                        "& .MuiOutlinedInput-root": {
-                          height: "50px",
-                        },
-                      },
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
-          </Box>
-
-          {/* 수집주기 */}
-          <Box
-            className="수집주기"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              color: "black",
-            }}
-          >
-            <Typography
-              sx={{
-                width: "150px",
-                flexShrink: 0,
-                textAlign: "left",
-                fontSize: 25,
-              }}
-            >
-              수집 주기 :
-            </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                gap: 2,
-                alignItems: "center",
-              }}
-            >
-              <CustomSelect
-                inputWidth="120px"
-                height="50px"
-                value={weekOfMonth}
-                listItem={[...WEEK_OF_MONTH_OPTIONS]}
-                onChange={(e) => {
-                  setWeekOfMonth(e.target.value as WeekOfMonth);
-                  setSelectedDays([1]);
-                }}
-              />
-
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                <FormGroup row>
-                  {DAY_OF_WEEK_KR.map((name, index) => (
-                    <FormControlLabel
-                      key={index}
-                      control={
-                        <Checkbox
-                          checked={selectedDays.includes(
-                            index as DayOfWeekIndex
-                          )}
-                          onChange={() =>
-                            handleDayToggle(index as DayOfWeekIndex)
-                          }
-                          sx={{
-                            color: "gray",
-                            "&.Mui-checked": {
-                              color: "#575757ff",
-                            },
-                          }}
-                        />
-                      }
-                      label={name}
-                    />
-                  ))}
-                </FormGroup>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* 수집 시간 */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              gap: 2,
-              color: "black",
-              width: "100%",
-            }}
-          >
-            <Box
-              className="수집시간"
-              sx={{ display: "flex", flexDirection: "row", gap: 2 }}
-            >
-              <Typography
-                sx={{
-                  width: "150px",
-                  flexShrink: 0,
-                  textAlign: "left",
-                  fontSize: 25,
-                }}
-              >
-                수집 시간 :
-              </Typography>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  alignItems: "center",
-                  flexDirection: "row",
-                }}
-              >
-                <CustomSelect
-                  inputWidth="120px"
-                  height="50px"
-                  value={hour}
-                  listItem={HOUR_OPTIONS}
-                  onChange={(e) => setHour(e.target.value as number)}
-                />
-                <CustomSelect
-                  inputWidth="120px"
-                  height="50px"
-                  value={minute}
-                  listItem={[...MINUTE_OPTIONS]}
-                  onChange={(e) => setMinute(e.target.value as number)}
-                />
-              </Box>
-            </Box>
-
-            {/* 미리보기 */}
-            <Box
-              className="미리보기"
-              sx={{
-                paddingTop: 4,
-                borderRadius: 1,
-                maxWidth: "800px",
-              }}
-            >
-              <Typography sx={{ fontSize: 16, color: "black" }}>
-                <strong>미리보기:</strong> {previewCron()}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* 데이터 설정 테이블 */}
-        <Box
-          sx={{
-            mt: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 25,
-                fontWeight: "bold",
+                flexDirection: "column",
+                gap: 3,
                 color: "black",
               }}
             >
-              데이터 수집 설정 목록
-            </Typography>
-            <SearchBarSet
-              value={searchState}
-              onSearch={handleSearch}
-              onReset={handleReset}
-              showSearchType={true}
-              searchCategories={getSettingSearchCategory()}
-              showKeyword={true}
+              {/* 수집 기간 */}
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  수집 기간
+                </Typography>
+
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <DatePicker
+                      format="YYYY-MM-DD"
+                      value={startDate ? dayjs(startDate) : null}
+                      onChange={(v) =>
+                        setStartDate(v ? v.format("YYYY-MM-DD") : "")
+                      }
+                      slotProps={{
+                        textField: {
+                          sx: {
+                            "& .MuiOutlinedInput-root": {
+                              height: "44px",
+                              minHeight: "unset",
+                            },
+                            "& .MuiInputBase-input": {
+                              padding: "0 14px",
+                              height: "42px",
+                              lineHeight: "42px",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                    <Typography>—</Typography>
+                    <DatePicker
+                      format="YYYY-MM-DD"
+                      value={endDate ? dayjs(endDate) : null}
+                      onChange={(v) =>
+                        setEndDate(v ? v.format("YYYY-MM-DD") : "")
+                      }
+                      slotProps={{
+                        textField: {
+                          sx: {
+                            "& .MuiOutlinedInput-root": {
+                              height: "44px",
+                              minHeight: "unset",
+                            },
+                            "& .MuiInputBase-input": {
+                              padding: "0 14px",
+                              height: "42px",
+                              lineHeight: "42px",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
+
+              {/* 수집 주기 */}
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  수집 주기
+                </Typography>
+
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <CustomSelect
+                    inputWidth="120px"
+                    height="44px"
+                    value={weekOfMonth}
+                    listItem={[...WEEK_OF_MONTH_OPTIONS]}
+                    onChange={(e) => {
+                      setWeekOfMonth(e.target.value as WeekOfMonth);
+                      setSelectedDays([1]);
+                    }}
+                  />
+
+                  {/* 요일 버튼 */}
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    {DAY_OF_WEEK_KR.map((day, index) => {
+                      const selected = selectedDays.includes(
+                        index as DayOfWeekIndex
+                      );
+
+                      return (
+                        <Box
+                          key={index}
+                          onClick={() =>
+                            handleDayToggle(index as DayOfWeekIndex)
+                          }
+                          sx={{
+                            px: 2,
+                            height: "44px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: 1,
+                            fontSize: 14,
+                            cursor: "pointer",
+                            userSelect: "none",
+                            border: "1px solid",
+                            borderColor: selected ? "#333" : "#ddd",
+                            backgroundColor: selected ? "#333" : "#fff",
+                            color: selected ? "#fff" : "#333",
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          {day}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* 수집 시간  */}
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  수집 시간
+                </Typography>
+
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                  <CustomSelect
+                    inputWidth="120px"
+                    height="44px"
+                    value={hour}
+                    listItem={HOUR_OPTIONS}
+                    onChange={(e) => setHour(e.target.value as number)}
+                  />
+                  <CustomSelect
+                    inputWidth="120px"
+                    height="44px"
+                    value={minute}
+                    listItem={[...MINUTE_OPTIONS]}
+                    onChange={(e) => setMinute(e.target.value as number)}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            {/* 요약 카드 */}
+            <Box
+              sx={{
+                // flex: 1,
+                width: "332px",
+                backgroundColor: "#fafafa",
+                borderRadius: 2,
+                p: 5,
+                border: "1px solid #eee",
+                color: "black",
+                display: "flex",
+                flexDirection: "column",
+                gap: 4,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 600,
+                  mb: 1,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                설정 요약
+              </Typography>
+
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  실행 스케줄
+                </Typography>
+                <Typography sx={{ fontSize: 16, color: "#555", pl: 1 }}>
+                  {previewCron()}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  적용 기간
+                </Typography>
+                <Typography sx={{ fontSize: 16, color: "#555", pl: 1 }}>
+                  {startDate && endDate
+                    ? `${startDate} ~ ${endDate}`
+                    : startDate || endDate || ""}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography sx={{ fontWeight: 600, mb: 1 }}>
+                  데이터 수집 설정
+                </Typography>
+                <Typography sx={{ fontSize: 16, color: "#555", pl: 1 }}>
+                  {settingId
+                    ? rows.find((row) => row.id === settingId)?.settingName
+                    : ""}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* 데이터 수집 설정 목록 */}
+          <Box sx={{ mt: 12 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                mb: 2,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: 25,
+                  fontWeight: "bold",
+                  color: "black",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                데이터 수집 설정 목록
+              </Typography>
+
+              <Box sx={{ "& > div": { pl: 0 } }}>
+                <SearchBarSet
+                  value={searchState}
+                  onSearch={handleSearch}
+                  onReset={handleReset}
+                  showSearchType
+                  searchCategories={getSettingSearchCategory()}
+                  showKeyword
+                />
+              </Box>
+            </Box>
+
+            <PaginationServerTable
+              columns={settingColumns}
+              rows={rows}
+              page={searchState.page}
+              pageSize={searchState.size}
+              totalCount={totalCount}
+              onPageChange={handlePageChange}
+              onRowClick={handleSettingRowClick}
+              selectedRows={settingId ? [{ id: settingId }] : []}
             />
           </Box>
-          <PaginationServerTable
-            columns={settingColumns}
-            rows={rows}
-            page={searchState.page}
-            pageSize={searchState.size}
-            totalCount={totalCount}
-            onPageChange={handlePageChange}
-            onRowClick={handleSettingRowClick}
-            selectedRows={settingId ? [{ id: settingId }] : []}
-          />
         </Box>
       </Box>
       {/* 하단 버튼 */}
       <Box
         sx={{
+          px: 3,
+          py: 2,
           display: "flex",
           justifyContent: "space-between",
-          px: 2.5,
         }}
       >
         <CustomButton
           text="닫기"
-          radius={2}
           backgroundColor="#BABABA"
           onClick={() => setOpenCloseAlert(true)}
+          radius={2}
         />
         <CustomButton
           text="등록"

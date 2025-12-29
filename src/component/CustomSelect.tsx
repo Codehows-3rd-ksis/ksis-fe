@@ -19,7 +19,16 @@ export default function CustomSelect(props: Select_Type) {
         <Select
           value={value}
           onChange={onChange}
-          sx={{ height: height || "40px", backgroundColor: "white" }}
+          sx={{
+            height: height || "40px",
+            backgroundColor: "white",
+            "& .MuiSelect-select": {
+              padding: "0 14px",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+            }
+          }}
         >
           {listItem.map((item, index) => (
             <MenuItem key={index} value={item.value}>
