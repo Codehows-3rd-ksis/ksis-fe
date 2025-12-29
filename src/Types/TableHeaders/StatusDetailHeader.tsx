@@ -60,7 +60,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
               <Typography sx={{ 
                   color: 'black',
                   borderRadius: 3,
-                  bgcolor: 'rgba(247,148,29,0.15)',
+                  bgcolor: '#90CAF9',
                   pl: 1,
                   pr: 2,
                   pt: 0.5,
@@ -89,7 +89,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
               <Typography sx={{ 
               color: 'black',
               borderRadius: 2,
-              bgcolor: 'rgba(46,125,50,0.15)',
+              bgcolor: '#A5D6A7',
               pl: 1,
               pr: 2,
               pt: 0.5,
@@ -118,7 +118,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
             <Typography sx={{ 
               color: 'black',
               borderRadius: 3,
-              bgcolor: 'rgba(211,47,47,0.15)',
+              bgcolor: '#EF9A9A',
               pl: 1,
               pr: 2,
               pt: 0.5,
@@ -129,6 +129,35 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
             }}> 
             <HighlightOff sx={{fontSize:15}}/>
              수집실패
+            </Typography>
+          </Box>
+        )
+      }
+      else if (params.value === "STOPPED") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: '#E0E0E0',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}> 
+            <HighlightOff sx={{fontSize:15}}/>
+             수집중지
             </Typography>
           </Box>
         )
@@ -148,7 +177,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
               <Typography sx={{ 
                 color: 'black',
                 borderRadius: 3,
-                bgcolor: 'rgba(237,108,2,0.3)',
+                bgcolor: '#FFCC80',
                 pl: 1,
                 pr: 2,
                 pt: 0.5,
@@ -175,7 +204,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-      if (!params.value) return ""; // 값 없으면 빈 문자열
+      if (!params.value) return "-"; // 값 없으면 빈 문자열
       return dayjs(params.value).format("YY-MM-DD HH:mm");
     },
   },
@@ -186,7 +215,7 @@ export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-      if (!params.value) return ""; // 값 없으면 빈 문자열
+      if (!params.value) return "-"; // 값 없으면 빈 문자열
       return dayjs(params.value).format("YY-MM-DD HH:mm");
     },
   },
