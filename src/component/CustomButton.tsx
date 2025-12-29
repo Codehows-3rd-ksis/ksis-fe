@@ -30,6 +30,7 @@ export default function CustomButton(props: Button_Type) {
         backgroundColor: backgroundColor || "#F5A623",
         border: border || "",
         borderRadius: radius || 0,
+        whiteSpace: "nowrap",
         // 비활성화 상태일 때의 스타일을 명시적으로 지정
         "&.Mui-disabled": {
           backgroundColor: "rgba(0, 0, 0, 0.12)",
