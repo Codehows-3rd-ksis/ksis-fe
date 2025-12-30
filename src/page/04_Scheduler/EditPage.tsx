@@ -218,13 +218,16 @@ export default function EditPage() {
   return (
     <Box
       sx={{
-        height: "97%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
+        backgroundColor: "#fafaf9",
+        borderRadius: 3,
+        overflow: "hidden",
       }}
     >
       {/* 상단 헤더: 폰트 크기 최적화 및 간결화 */}
-      <Box sx={{ px: 4, pt: 4, pb: 2 }}>
+      <Box sx={{ px: 4, pt: 4, pb: 2, flexShrink: 0 }}>
         <Breadcrumbs sx={{ mb: 1 }}>
           <Link
             component={RouterLink}
@@ -253,39 +256,41 @@ export default function EditPage() {
           스케줄 수정
         </Typography>
       </Box>
-      <Box sx={{ flex: 1, overflowY: "auto", px: 4, pb: 4 }}>
+      <Box sx={{ flex: 1, overflowY: "auto", px: 4, pb: 2 }}>
         {/* 섹션 1: 스케줄 설정 카드 */}
         <Paper
           elevation={0}
           sx={{
             p: 4,
             borderRadius: 3,
-            border: "1px solid #d1d5db",
-            boxShadow: "0 4px 12px -2px rgb(0 0 0 / 0.08)",
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
           }}
         >
           <Typography
-            sx={{ fontSize: 22, fontWeight: 700, mb: 3, color: "black" }}
+            sx={{ fontSize: 18, fontWeight: 700, mb: 5, color: "#44403c" }}
           >
             스케줄 설정
           </Typography>
 
-          <Box sx={{ display: "flex", gap: 6 }}>
-            {/* 왼쪽: 입력 폼 (Side-Label 구조) */}
-            <Box
-              sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0 }}
-            >
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
             {/* Row: 수집 기간 */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                py: 3,
-                borderBottom: "1px solid #e5e7eb",
+                py: 2.5,
+                borderBottom: "1px solid #f5f5f4",
               }}
             >
               <Typography
-                sx={{ width: 180, fontWeight: 600, color: "#6e6a63" }}
+                sx={{
+                  width: 160,
+                  fontWeight: 600,
+                  color: "#78716c",
+                  fontSize: 15,
+                }}
               >
                 수집 기간
               </Typography>
@@ -298,7 +303,7 @@ export default function EditPage() {
                       setStartDate(v ? v.format("YYYY-MM-DD") : "")
                     }
                     slotProps={{
-                      textField: { size: "small", sx: { width: 195 } },
+                      textField: { size: "small", sx: { width: 200 } },
                     }}
                   />
                   <Typography color="#cbd5e1">—</Typography>
@@ -309,7 +314,7 @@ export default function EditPage() {
                       setEndDate(v ? v.format("YYYY-MM-DD") : "")
                     }
                     slotProps={{
-                      textField: { size: "small", sx: { width: 195 } },
+                      textField: { size: "small", sx: { width: 200 } },
                     }}
                   />
                 </Box>
@@ -321,12 +326,17 @@ export default function EditPage() {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                py: 3,
-                borderBottom: "1px solid #e5e7eb",
+                py: 2.5,
+                borderBottom: "1px solid #f5f5f4",
               }}
             >
               <Typography
-                sx={{ width: 180, fontWeight: 600, color: "#6e6a63" }}
+                sx={{
+                  width: 160,
+                  fontWeight: 600,
+                  color: "#78716c",
+                  fontSize: 15,
+                }}
               >
                 수집 주기
               </Typography>
@@ -383,25 +393,30 @@ export default function EditPage() {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                py: 3,
-                borderBottom: "1px solid #e5e7eb",
+                py: 2.5,
+                borderBottom: "1px solid #f5f5f4",
               }}
             >
               <Typography
-                sx={{ width: 180, fontWeight: 600, color: "#6e6a63" }}
+                sx={{
+                  width: 160,
+                  fontWeight: 600,
+                  color: "#78716c",
+                  fontSize: 15,
+                }}
               >
                 수집 시간
               </Typography>
               <Box sx={{ display: "flex", gap: 1.5 }}>
                 <CustomSelect
-                  inputWidth="120px"
+                  inputWidth="100px"
                   height="40px"
                   value={hour}
                   listItem={HOUR_OPTIONS}
                   onChange={(e) => setHour(e.target.value as number)}
                 />
                 <CustomSelect
-                  inputWidth="120px"
+                  inputWidth="100px"
                   height="40px"
                   value={minute}
                   listItem={[...MINUTE_OPTIONS]}
@@ -415,11 +430,17 @@ export default function EditPage() {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                pt: 3,
+                py: 2.5,
+                borderBottom: "1px solid #f5f5f4",
               }}
             >
               <Typography
-                sx={{ width: 180, fontWeight: 600, color: "#6e6a63" }}
+                sx={{
+                  width: 160,
+                  fontWeight: 600,
+                  color: "#78716c",
+                  fontSize: 15,
+                }}
               >
                 데이터 수집명
               </Typography>
@@ -437,26 +458,82 @@ export default function EditPage() {
                     {...params}
                     placeholder="수집 설정명 검색 및 선택"
                     size="small"
-                    sx={{ width: 420 }}
+                    sx={{ width: 430 }}
                   />
                 )}
               />
             </Box>
-          </Box>
+
+            {/* 미리보기 */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                pt: 2.5,
+                visibility:
+                  settingId && startDate && endDate && previewCron()
+                    ? "visible"
+                    : "hidden",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  px: 2.5,
+                  py: 1.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: 1.5,
+                  border: "1px solid #dee2e6",
+                  width: "fit-content",
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: "#ba7d1bff",
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography
+                  sx={{ fontSize: 13, color: "#495057", fontWeight: 500 }}
+                >
+                  {rows.find((row) => row.id === settingId)?.settingName || ""}
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#adb5bd" }}>
+                  •
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#495057" }}>
+                  {startDate} ~ {endDate}
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#adb5bd" }}>
+                  •
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#495057" }}>
+                  {previewCron()}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Paper>
 
         {/* 섹션 2: 테이블 영역 */}
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 8 }}>
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              mb: 2,
             }}
           >
-            <Typography sx={{ fontSize: 20, fontWeight: 700, color: "black" }}>
-              데이터 수집 설정 목록
+            <Typography
+              sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}
+            >
+              연결할 설정 목록
             </Typography>
             <SearchBarSet
               value={searchState}
@@ -487,59 +564,17 @@ export default function EditPage() {
             />
           </Box>
         </Box>
-
-        {/* 미리보기 */}
-        {settingId && startDate && endDate && previewCron() && (
-          <Box
-            sx={{
-              mt: 3,
-              backgroundColor: "#fff5e6",
-              border: "2px solid #ba7d1bff",
-              borderRadius: 2,
-              p: 2,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: 15,
-                color: "#6e6a63",
-                fontWeight: 500,
-                textAlign: "center",
-              }}
-            >
-              <Box
-                component="span"
-                sx={{ fontWeight: 700, color: "#ba7d1bff" }}
-              >
-                {rows.find((row) => row.id === settingId)?.settingName || ""}
-              </Box>
-              {" 설정으로 "}
-              <Box
-                component="span"
-                sx={{ fontWeight: 700, color: "#ba7d1bff" }}
-              >
-                {startDate} ~ {endDate}
-              </Box>
-              {" 기간 동안 "}
-              <Box
-                component="span"
-                sx={{ fontWeight: 700, color: "#ba7d1bff" }}
-              >
-                {previewCron()}
-              </Box>
-              에 크롤링합니다
-            </Typography>
-          </Box>
-        )}
       </Box>
       {/* 하단 푸터 액션바 */}
       <Box
         sx={{
           px: 4,
-          pt: 2,
-          pb: 0,
+          py: 2,
+          backgroundColor: "#fff",
+          borderTop: "1px solid #e7e5e4",
           display: "flex",
           justifyContent: "space-between",
+          flexShrink: 0,
         }}
       >
         <CustomButton

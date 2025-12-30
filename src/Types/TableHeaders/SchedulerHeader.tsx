@@ -56,7 +56,7 @@ export const getColumns = ({
     headerName: "수집시간",
     flex: 1,
     headerAlign: "center",
-    align: "left",
+    align: "center",
   },
 
   {

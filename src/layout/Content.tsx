@@ -5,7 +5,7 @@ function Content({ children }: LayoutProps) {
   return (
     <Box
       sx={{
-        backgroundColor: "#efefef",
+        backgroundColor: "#fafaf9",
         height: "100%",
         minHeight: 0,
         borderRadius: 3,
