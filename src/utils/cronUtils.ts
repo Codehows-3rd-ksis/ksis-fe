@@ -10,13 +10,13 @@ export const DAY_OF_WEEK_EN = [
 ] as const;
 
 export const DAY_OF_WEEK_KR = [
-  "일요일",
-  "월요일",
-  "화요일",
-  "수요일",
-  "목요일",
-  "금요일",
-  "토요일",
+  "일",
+  "월",
+  "화",
+  "수",
+  "목",
+  "금",
+  "토",
 ] as const;
 
 //타입

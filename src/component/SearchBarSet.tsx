@@ -69,25 +69,29 @@ export default function SearchBarSet({
   return (
     <Box
       sx={{
-        bgcolor: "white",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: showCount ? "space-between" : "flex-end",
         alignItems: "center",
-        p: 2,
+        p: 1,
         borderRadius: 2,
         gap: 2,
       }}
     >
-      <Box>
-        {showCount && (
+      {showCount && (
+        <Box>
           <Typography sx={{ color: "black", fontWeight: 700 }}>
             검색결과 : {totalCount} 건 입니다.
           </Typography>
-        )}
-      </Box>
+        </Box>
+      )}
 
       <Box
-        sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          flexWrap: "wrap",
+        }}
       >
         {showDateRange && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>

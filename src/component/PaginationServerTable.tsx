@@ -84,7 +84,7 @@ export default function PaginationServerTable(props: CommonTableProps) {
           // 헤더 스타일
           "& .MuiDataGrid-columnHeaders": {
             color: "white",
-            fontSize: 20,
+            fontSize: 16,
             fontWeight: "bold",
             background: "linear-gradient(90deg, #2a2c32ff 0%, #4F5054 100%)",
           },
@@ -126,7 +126,7 @@ export default function PaginationServerTable(props: CommonTableProps) {
             },
           // 선택된 행 색 변경
           "& .MuiDataGrid-row.Mui-selected": {
-            backgroundColor: "#ece2d0ff  !important",
+            backgroundColor: "#fff5e6 !important",
           },
         }}
       />

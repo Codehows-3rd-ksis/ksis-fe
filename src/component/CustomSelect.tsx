@@ -19,6 +19,14 @@ export default function CustomSelect(props: Select_Type) {
         <Select
           value={value}
           onChange={onChange}
+          MenuProps={{
+            PaperProps: {
+              sx: {
+                maxHeight: 300,
+                overflow: 'auto'
+              }
+            }
+          }}
           sx={{
             height: height || "40px",
             backgroundColor: "white",

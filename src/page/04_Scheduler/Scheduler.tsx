@@ -61,6 +61,9 @@ export default function Scheduler() {
         (item: Schedule) => {
           const time = parseTimeCron(item.cronExpression); // 크론식 시간 파싱 -> {hour:9, minute:30}
           const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[]; // 요일 파싱 -> ["MON","WED","FRI"]
+          // 요일을 SUN부터 차례대로 정렬
+          const dayOrder = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+          const sortedDaysArray = daysArray.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
           return {
             //row 단위로 동작
             id: item.scheduleId,
@@ -81,7 +84,7 @@ export default function Scheduler() {
                 ).padStart(2, "0")}`
               : "", //{hour:9, minute:30} -> "09:30"
             period: `${item.startDate} ~ ${item.endDate}`, //"2025-01-01 ~ 2025-12-31"
-            cycle: formatScheduleToKorean(daysArray, item.weekOfMonth), // ["MON","WED","FRI"] + "0" -> "매주 월요일, 수요일, 금요일"
+            cycle: formatScheduleToKorean(sortedDaysArray, item.weekOfMonth), // ["MON","WED","FRI"] + "0" -> "매주 월요일, 수요일, 금요일"
           };
         }
       );
