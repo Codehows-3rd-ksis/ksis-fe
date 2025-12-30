@@ -91,7 +91,7 @@ export default function SearchBarSet({
       >
         {showDateRange && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
               <DatePicker
                 label="시작일자"
                 format="YYYY-MM-DD"
@@ -107,7 +107,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
-                      width: "180px",
+                      width: "220px",
                     },
                   },
                 }}
@@ -125,7 +125,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
-                      width: "180px",
+                      width: "220px",
                     },
                   },
                 }}
@@ -141,7 +141,7 @@ export default function SearchBarSet({
               value={localValue.type}
               onChange={(e) => updateLocal("type", e.target.value)}
               listItem={searchCategories}
-              inputWidth="120px"
+              inputWidth="140px"
               height="40px"
             />
           )}

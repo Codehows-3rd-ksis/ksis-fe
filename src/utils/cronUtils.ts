@@ -20,7 +20,7 @@ export const DAY_OF_WEEK_KR = [
 ] as const;
 
 //타입
-export type WeekOfMonth = "0" | "1" | "2" | "3" | "4" | "L"; // 주차 ("0": 매주 | "1" ~ "4": n번째 주 | "L": 마지막 주)
+export type WeekOfMonth = "0" | "1" | "2" | "3" | "4" | "5" | "L"; // 주차 ("0": 매주 | "1" ~ "5": n번째 주 | "L": 마지막 주)
 export type DayOfWeekIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 요일  (0: 일요일 ~ 6: 토요일)
 export type DayOfWeekEN = (typeof DAY_OF_WEEK_EN)[number]; // 요일 영문
 
@@ -44,6 +44,7 @@ export const formatScheduleToKorean = (
     "2": "두번째 주",
     "3": "세번째 주",
     "4": "네번째 주",
+    "5": "다섯번째 주",
     L: "마지막 주",
   };
 
@@ -72,6 +73,7 @@ export const WEEK_OF_MONTH_OPTIONS = [
   { value: "2", name: "두번째 주" },
   { value: "3", name: "세번째 주" },
   { value: "4", name: "네번째 주" },
+  { value: "5", name: "다섯번째 주" },
   { value: "L", name: "마지막 주" },
 ] as const;
 
