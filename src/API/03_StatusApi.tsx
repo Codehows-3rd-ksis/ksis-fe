@@ -11,10 +11,10 @@ export interface StatusTableRows {
   userId?: string;
 
   // 스케줄링 설정 (고정값)
-  startDate?: string; // 스케줄 시작 날짜
-  endDate?: string; // 스케줄 종료 날짜
+  // startDate?: string; // 스케줄 시작 날짜
+  // endDate?: string; // 스케줄 종료 날짜
   period?: string; // startDate ~ endDate
-  cycle?: string; // 수집 주기
+  searchText?: string; // 수집 주기
 
   // 실행 정보 (실시간)
   startAt?: string; // 수집시작

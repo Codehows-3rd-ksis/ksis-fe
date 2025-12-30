@@ -103,7 +103,7 @@ export const getColumns = ({
     headerName: "데이터수집명",
     flex: 1,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "url",
@@ -133,6 +133,9 @@ export const getColumns = ({
     width: 120,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+        return params.value + ' 초'
+    }
   },
   {
     field: "edit",

@@ -184,6 +184,8 @@ function StatusDetail() {
 
           // collectionRows: 모든 항목 추가 (FAILED는 seq만, SUCCESS는 전체 데이터)
           const itemId = item.itemId;
+          if(itemId === 0) return;
+
           if (!collectionIdSet.current.has(itemId)) {
             collectionIdSet.current.add(itemId); // 중복 방지
 
