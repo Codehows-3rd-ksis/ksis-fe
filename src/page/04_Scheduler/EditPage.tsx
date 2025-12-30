@@ -226,31 +226,29 @@ export default function EditPage() {
         overflow: "hidden",
       }}
     >
-      {/* 상단 헤더: 폰트 크기 최적화 및 간결화 */}
-      <Box sx={{ px: 4, pt: 4, pb: 2, flexShrink: 0 }}>
-        <Breadcrumbs sx={{ mb: 1 }}>
+      {/* 상단 헤더: 최적화된 타이틀 */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Breadcrumbs
+          sx={{ mb: 0.5, "& .MuiTypography-root": { fontSize: 14 } }}
+        >
           <Link
             component={RouterLink}
             to="/scheduler"
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
           >
             스케줄러 관리
           </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
+          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
             스케줄 수정
           </Typography>
         </Breadcrumbs>
         <Typography
           sx={{
-            fontSize: 42,
-            fontWeight: 700,
-            color: "black",
-            letterSpacing: "-0.02em",
+            fontSize: 32,
+            fontWeight: 800,
+            color: "#292524",
+            letterSpacing: "-0.03em",
           }}
         >
           스케줄 수정
@@ -578,8 +576,9 @@ export default function EditPage() {
         }}
       >
         <CustomButton
-          text="닫기"
-          backgroundColor="#adadaeff"
+          text="취소"
+          backgroundColor="#f5f5f4"
+          color="#78716c"
           onClick={() => setOpenCloseAlert(true)}
           radius={1}
         />
