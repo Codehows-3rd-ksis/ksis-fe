@@ -19,9 +19,9 @@ export const getColumns = ({
   {
     field: "settingName",
     headerName: "데이터수집명",
-    flex: 1,
+    flex: 2,
     headerAlign: "center",
-    align: "center",
+    align: "left",
     renderCell: (params) => (
       <Link
         component="button"
@@ -43,7 +43,7 @@ export const getColumns = ({
   {
     field: "startAt",
     headerName: "수집시작",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
@@ -54,7 +54,7 @@ export const getColumns = ({
   {
     field: "type",
     headerName: "실행타입",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
   },
@@ -64,30 +64,32 @@ export const getColumns = ({
     flex: 1,
     headerAlign: "center",
     align: "center",
-    valueGetter: (_value, row) => {
-      return `${row.startDate || ""} ~ ${row.endDate || ""}`;
-    },
     renderCell: (params) => {
-      const startDate = params.row.startDate || "";
-      const endDate = params.row.endDate || "";
-      return startDate && endDate
-        ? `${startDate} ~ ${endDate}`
-        : startDate || endDate || "-";
+      if (!params.value) return "-";
+      else return params.value;
     },
   },
   {
-    field: "cycle",
+    field: "searchText",
     headerName: "수집주기",
     flex: 1,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+      if (!params.value) return "-";
+      else return params.value;
+    },
   },
   {
     field: "userId",
     headerName: "유저ID",
-    flex: 1,
+    width: 200,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+      if (!params.value) return "-";
+      else return params.value;
+    },
   },
   {
     field: "progress",

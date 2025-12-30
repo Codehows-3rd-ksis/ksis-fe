@@ -39,7 +39,7 @@ export const getColumns = ({
   {
     field: "index",
     headerName: "번호",
-    flex: 0.5,
+    width: 90,
     headerAlign: "center",
     align: "center",
   },
@@ -48,7 +48,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 1.5,
     headerAlign: "center",
-    align: "center",
+    align: "left",
     renderCell: (params) => (
       <Typography
         variant="body2"
@@ -58,7 +58,7 @@ export const getColumns = ({
           textDecoration: "underline",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          // justifyContent: "center",
           height: "100%",
           width: "100%",
           fontWeight: "bold",
@@ -228,7 +228,7 @@ export const getColumns = ({
   {
     field: "startAt",
     headerName: "수집시작",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
@@ -239,7 +239,7 @@ export const getColumns = ({
   {
     field: "endAt",
     headerName: "수집완료",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
@@ -250,7 +250,7 @@ export const getColumns = ({
   {
     field: "type",
     headerName: "수집타입",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
   },
@@ -266,11 +266,11 @@ export const getColumns = ({
     },
   },
   {
-    field: "cycle",
+    field: "searchText",
     headerName: "수집주기",
     flex: 1,
     headerAlign: "center",
-    align: "center",
+    align: "left",
     renderCell: (params) => {
       if (!params.row.scheduleId) return "-";
       else return params.value;
@@ -279,7 +279,7 @@ export const getColumns = ({
   {
     field: "username",
     headerName: "유저ID",
-    flex: 1,
+    width: 200,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {

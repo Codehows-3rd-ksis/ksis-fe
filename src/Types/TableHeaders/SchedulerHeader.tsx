@@ -47,7 +47,7 @@ export const getColumns = ({
   {
     field: "collectAt",
     headerName: "수집시간",
-    flex: 1.5,
+    flex: 1,
     headerAlign: "center",
     align: "center",
   },
@@ -56,12 +56,12 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 2,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "edit",
     headerName: "수정",
-    flex: 0.5,
+    width: 80,
     headerAlign: "center",
     align: "center",
     sortable: false,
@@ -75,7 +75,7 @@ export const getColumns = ({
   {
     field: "delete",
     headerName: "삭제",
-    flex: 0.5,
+    width: 80,
     headerAlign: "center",
     align: "center",
     sortable: false,

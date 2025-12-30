@@ -32,12 +32,12 @@ export const getColumns = ({
   handleShowLogOpen,
 }: UserTableColumnHandlers): GridColDef[] => [
   { field: 'index',   headerName: '번호',       width: 70,  headerAlign: 'center',  align: 'center' },
-  { field: 'username', headerName: 'ID',     flex: 1.5,    headerAlign: 'center',  align: 'center' },
+  { field: 'username', headerName: 'ID',     flex: 1.5,    headerAlign: 'center',  align: 'left' },
   { field: 'name',    headerName: '이름',       flex: 1,    headerAlign: 'center',  align: 'center' },
   { field: 'dept',    headerName: '부서',       flex: 1.5,  headerAlign: 'center',  align: 'center' },
   { field: 'ranks',    headerName: '직위',       flex: 1,    headerAlign: 'center',  align: 'center' },
   { field: 'state',   headerName: '상태',       flex: 1,    headerAlign: 'center',  align: 'center' },
-  { field: 'loginAt', headerName: '최근접속일',  flex: 1.5,  headerAlign: 'center',  align: 'center',
+  { field: 'loginAt', headerName: '최근접속일',  width: 150,  headerAlign: 'center',  align: 'center',
     renderCell: (params) => {
       if (!params.value) return ''; // 값 없으면 빈 문자열
       return dayjs(params.value).format('YY.MM.DD HH:mm');           
