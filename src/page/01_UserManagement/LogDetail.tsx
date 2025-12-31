@@ -172,96 +172,100 @@ export default function LogDetail() {
             gap: 3,
           }}
         >
-        {/* 기본 정보 */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            border: "1px solid #e7e5e4",
-            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
-            backgroundColor: "#fff",
-          }}
-        >
-          <Typography
-            sx={{ fontSize: 18, fontWeight: 700, mb: 3, color: "#44403c" }}
+          {/* 기본 정보 */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+              backgroundColor: "#fff",
+            }}
           >
-            기본 정보
-          </Typography>
-          <CommonTable
-            columns={DETAIL_SETTING_COLUMNS}
-            rows={detailData ? [detailData] : []}
-            pageSize={1}
-            hideFooter={true}
-            disableHover={true}
-          />
-        </Paper>
+            <Typography
+              sx={{ fontSize: 18, fontWeight: 700, mb: 3, color: "#44403c" }}
+            >
+              기본 정보
+            </Typography>
+            <CommonTable
+              columns={DETAIL_SETTING_COLUMNS}
+              rows={detailData ? [detailData] : []}
+              pageSize={1}
+              hideFooter={true}
+              disableHover={true}
+            />
+          </Paper>
 
-        {/* 수집 실패 */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            border: "1px solid #e7e5e4",
-            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
-            backgroundColor: "#fff",
-          }}
-        >
-          <Box
+          {/* 수집 실패 */}
+          <Paper
+            elevation={0}
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 3,
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+              backgroundColor: "#fff",
             }}
           >
-            <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
-              수집 실패
-            </Typography>
-            <Typography sx={{ fontSize: 15, color: "#78716c" }}>
-              {failureRows.length}/{totalCount}
-            </Typography>
-          </Box>
-          <CommonTable
-            columns={FAILURE_COLUMNS}
-            rows={failureRows}
-            pageSize={3}
-          />
-        </Paper>
-        {/* 수집 데이터 */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            border: "1px solid #e7e5e4",
-            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
-            backgroundColor: "#fff",
-          }}
-        >
-          <Box
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              <Typography
+                sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}
+              >
+                수집 실패
+              </Typography>
+              <Typography sx={{ fontSize: 15, color: "#78716c" }}>
+                {failCount}/{totalCount}
+              </Typography>
+            </Box>
+            <CommonTable
+              columns={FAILURE_COLUMNS}
+              rows={failureRows}
+              pageSize={3}
+            />
+          </Paper>
+          {/* 수집 데이터 */}
+          <Paper
+            elevation={0}
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              mb: 3,
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+              backgroundColor: "#fff",
             }}
           >
-            <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
-              수집 데이터
-            </Typography>
-            <Typography sx={{ fontSize: 15, color: "#78716c" }}>
-              {collectCount}/{totalCount}
-            </Typography>
-          </Box>
-          <CommonTable
-            columns={collectionColumns}
-            rows={collectionRows}
-            pageSize={5}
-            disableHover={true}
-          />
-        </Paper>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                mb: 3,
+              }}
+            >
+              <Typography
+                sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}
+              >
+                수집 데이터
+              </Typography>
+              <Typography sx={{ fontSize: 15, color: "#78716c" }}>
+                {collectCount}/{totalCount}
+              </Typography>
+            </Box>
+            <CommonTable
+              columns={collectionColumns}
+              rows={collectionRows}
+              pageSize={5}
+              disableHover={true}
+            />
+          </Paper>
         </Box>
       </Box>
 

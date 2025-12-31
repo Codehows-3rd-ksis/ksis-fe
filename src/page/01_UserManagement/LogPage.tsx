@@ -167,7 +167,7 @@ export default function LogPage() {
             유저관리
           </Link>
           <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-            {username} 의 데이터 수집 이력
+            {username}의 수집 이력
           </Typography>
         </Breadcrumbs>
         <Typography
