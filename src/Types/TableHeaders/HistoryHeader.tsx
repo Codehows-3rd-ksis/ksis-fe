@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
+import { PlayCircleOutline, HighlightOff, ErrorOutline, CheckCircleOutline  } from "@mui/icons-material";
 import dayjs from "dayjs";
 
 export interface HistoryTableRows {
@@ -38,7 +39,7 @@ export const getColumns = ({
   {
     field: "index",
     headerName: "번호",
-    flex: 0.5,
+    width: 90,
     headerAlign: "center",
     align: "center",
   },
@@ -47,7 +48,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 1.5,
     headerAlign: "center",
-    align: "center",
+    align: "left",
     renderCell: (params) => (
       <Typography
         variant="body2"
@@ -57,7 +58,7 @@ export const getColumns = ({
           textDecoration: "underline",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
+          // justifyContent: "center",
           height: "100%",
           width: "100%",
           fontWeight: "bold",
@@ -77,7 +78,6 @@ export const getColumns = ({
     align: "center",
     renderCell: (params) => {
       if (params.value === "SUCCESS") {
-        if (params.row.failCount === 0) {
           return (
             <Box
               sx={{
@@ -88,30 +88,24 @@ export const getColumns = ({
                 width: "100%",
               }}
             >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
+              <Typography sx={{ 
+                color: 'black',
+                borderRadius: 2,
+                bgcolor: '#A5D6A7',
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}> 
+                <CheckCircleOutline sx={{fontSize:15}}/>
+                수집완료
+              </Typography>
             </Box>
           )
-        }
-        else
-          return (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                width: "100%",
-              }}
-            >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
-              <Typography>(수집실패:</Typography>
-              <Typography sx={{ color: "red" }}>
-                {params.row.failCount}
-              </Typography>
-              <Typography>건)</Typography>
-            </Box>
-          );
-      } 
+      }
       else if (params.value === "FAILED") {
         return (
           <Box
@@ -123,13 +117,55 @@ export const getColumns = ({
               width: "100%",
             }}
           >
-            <Typography sx={{ color: 'red'}}>수집실패</Typography>
+            <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: '#EF9A9A',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}> 
+            <HighlightOff sx={{fontSize:15}}/>
+             수집실패
+            </Typography>
+          </Box>
+        )
+      }
+      else if (params.value === "STOPPED") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: '#E0E0E0',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}> 
+            <HighlightOff sx={{fontSize:15}}/>
+             수집중지
+            </Typography>
           </Box>
         )
       }
       else if (params.value === "PARTIAL") {
         const failCount = params.row.failCount || 0;
-        // console.log(params.row);
         return (
           <Box
               sx={{
@@ -139,15 +175,26 @@ export const getColumns = ({
                 height: "100%",
                 width: "100%",
               }}
-            >
-              <Typography sx={{ color: 'green'}}>수집완료</Typography>
-              <Typography>(수집실패:</Typography>
-              <Typography sx={{ color: "red" }}>
-                {failCount}
+          >
+              <Typography sx={{ 
+                color: 'black',
+                borderRadius: 3,
+                bgcolor: '#FFCC80',
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}> 
+              <ErrorOutline sx={{fontSize:15}}/>
+               {'부분완료 (실패:'}
+               <Typography component="span" sx={{color: 'red'}}>{failCount}</Typography>
+               {'건)'}
               </Typography>
-              <Typography>건)</Typography>
-            </Box>
-          );
+          </Box>
+        );
       }
       else return (
         <Box
@@ -159,7 +206,21 @@ export const getColumns = ({
             width: "100%",
           }}
         >
-          <Typography sx={{ color: '#BB510C'}}>진행중</Typography>
+          <Typography sx={{ 
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: '#90CAF9',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+          }}> 
+            <PlayCircleOutline sx={{fontSize:15}}/>
+             진행중
+            </Typography>
         </Box>
       )
     },
@@ -167,7 +228,7 @@ export const getColumns = ({
   {
     field: "startAt",
     headerName: "수집시작",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
@@ -178,7 +239,7 @@ export const getColumns = ({
   {
     field: "endAt",
     headerName: "수집완료",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
@@ -189,7 +250,7 @@ export const getColumns = ({
   {
     field: "type",
     headerName: "수집타입",
-    flex: 1,
+    width: 150,
     headerAlign: "center",
     align: "center",
   },
@@ -205,11 +266,11 @@ export const getColumns = ({
     },
   },
   {
-    field: "cycle",
+    field: "searchText",
     headerName: "수집주기",
     flex: 1,
     headerAlign: "center",
-    align: "center",
+    align: "left",
     renderCell: (params) => {
       if (!params.row.scheduleId) return "-";
       else return params.value;
@@ -218,7 +279,7 @@ export const getColumns = ({
   {
     field: "username",
     headerName: "유저ID",
-    flex: 1,
+    width: 200,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {

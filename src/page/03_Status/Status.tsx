@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Container, Paper } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import { getColumns } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
@@ -31,6 +31,9 @@ function Status() {
 
   // UI State
   const [alertOpen, setAlertOpen] = useState(false);
+  const [openErrorAlert, setOpenErrorAlert] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("")
+  const [alertStopResultOpen, setAlertStopResultOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
   // 현황 목록 조회 API
@@ -52,12 +55,14 @@ function Status() {
   // 수집 중지 API
   const handleStopCrawl = async (row: StatusTableRows) => {
     try {
+      resetCrawlingState(row.workId);
       await stopCrawl(row.workId);
-      alert(`"${row.settingName}" 수집이 중지되었습니다.`);
+      setAlertStopResultOpen(true);
       await fetchStatusList();
     } catch (error) {
-      alert("수집 중지 요청에 실패했습니다.");
       console.error("수집 중지 요청 실패:", error);
+      setErrorMsg("수집 중지 요청에 실패했습니다.");
+      setOpenErrorAlert(true);
     }
   };
 
@@ -86,7 +91,10 @@ function Status() {
 
   useEffect(() => {
     //데이터 로딩 확인
-    if (baseRows.length === 0) return;
+    if (baseRows.length === 0) {
+      setDisplayRows([]);
+      return;
+    }
 
     //메모리 정리
     const validWorkIds = new Set(baseRows.map((row) => row.workId));
@@ -98,7 +106,8 @@ function Status() {
 
     //데이터 병합 [ 목록데이터(baseRows) + Websocket(progressInfo) ]
     setDisplayRows([
-      ...baseRows.map((row) => {
+      ...baseRows
+      .map((row) => {
         const progressInfo = progressMap.get(row.workId);
         if (!progressInfo) return row; // 없으면 API원본 그대로
 
@@ -110,6 +119,7 @@ function Status() {
         };
       }),
     ]);
+    
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseRows, progressMap]);
 
@@ -141,29 +151,36 @@ function Status() {
           data: { progress: crawlingMessage.progress },
         } as CrawlingMessage);
 
-        setBaseRows((prevRows) => {
-          const exists = prevRows.some(
-            (row) => row.workId === crawlingMessage.workId
-          );
-          if (!exists) {
-            console.log(
-              `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
-            );
-            fetchStatusList();
-          }
+        // setBaseRows((prevRows) => {
+        //   const exists = prevRows.some(
+        //     (row) => row.workId === crawlingMessage.workId
+        //   );
+        //   if (!exists) {
+        //     console.log(
+        //       `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
+        //     );
+        //     fetchStatusList();
+        //   }
 
-          baseRows.map((row) => {
-            const progressInfo = progressMap.get(row.workId);
-            if (!progressInfo) return row;
+        //   baseRows.map((row) => {
+        //     const progressInfo = progressMap.get(row.workId);
+        //     if (!progressInfo) return row;
 
-            //workid 있으면 progressInfo 업데이트
-            return {
-              ...row,
-              progress: progressInfo.progress,
-              state: progressInfo.state,
-            };
-          });
-          return prevRows;
+        //     //workid 있으면 progressInfo 업데이트
+        //     return {
+        //       ...row,
+        //       progress: progressInfo.progress,
+        //       state: progressInfo.state,
+        //     };
+        //   });
+        //   return prevRows;
+        // });
+
+        setBaseRows((prev) => {
+          // 신규 작업만 감지해서 목록 갱신
+          const exists = prev.some(row => row.workId === crawlingMessage.workId);
+          if (!exists) fetchStatusList();
+          return prev;
         });
       });
     }
@@ -181,38 +198,49 @@ function Status() {
   return (
     <Box
       sx={{
-        height: "100%",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
-        color: "black",
+        pb: 4,
       }}
     >
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        데이터 수집 현황
-      </Typography>
-      <Box
-        sx={{
-          padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-        }}
-      >
-        <Box sx={{ marginTop: 13 }}>
-          <CommonTable columns={columns} rows={displayRows} />
-        </Box>
+      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
+      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
+            fontWeight: 800,
+            color: "#1E293B",
+            letterSpacing: "-0.02em",
+            mb: 0.5,
+          }}
+        >
+          데이터 수집 현황
+        </Typography>
+        <Typography
+          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+        >
+          데이터 수집 작업의 실시간 진행 상황을 추적합니다.
+        </Typography>
       </Box>
+
+      <Container maxWidth={false} sx={{ px: 4 }}>
+        {/* 2. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <CommonTable columns={columns} rows={displayRows} />
+          </Box>
+        </Paper>
+      </Container>
 
       <Alert
         open={alertOpen}
@@ -220,6 +248,24 @@ function Status() {
         text={`"${selectedRow?.settingName}"의 수집을 중지하시겠습니까?`}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
+      />
+      {/* 수집 중지 결과 확인 알람 */}
+      <Alert
+        open={alertStopResultOpen}
+        text={`"${selectedRow?.settingName}"의 수집이 중지되었습니다.`}
+        type="success"
+        onConfirm={() => {
+          setAlertStopResultOpen(false);
+        }}
+      />
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
       />
     </Box>
   );
