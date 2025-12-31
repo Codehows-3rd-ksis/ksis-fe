@@ -46,15 +46,16 @@ export const getColumns = ({
     align: "center",
   },
   {
-    field: "cycle",
+    field: "displayCycle",
     headerName: "주기",
     flex: 1.5,
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
       const text = params.value || "";
-      // 요일(월~일)을 기준으로 텍스트를 분리합니다.
-      const parts = text.split(/(월|화|수|목|금|토|일)/);
+      const parts = text.split(
+        /(일요일|월요일|화요일|수요일|목요일|금요일|토요일)/
+      );
 
       return (
         <Box
@@ -67,8 +68,8 @@ export const getColumns = ({
           }}
         >
           {parts.map((part: string, index: number) => {
-            // 분리된 파트가 요일일 경우 동그라미 배지로 렌더링
-            if (["월", "화", "수", "목", "금", "토", "일"].includes(part)) {
+            // 요일이면 첫 글자만 동그라미 배지로 렌더링
+            if (part.endsWith("요일")) {
               return (
                 <Box
                   key={index}
@@ -86,11 +87,11 @@ export const getColumns = ({
                     mx: 0.3,
                   }}
                 >
-                  {part}
+                  {part[0]}
                 </Box>
               );
             }
-            // '매주', '첫번째 주', ',' 등 일반 텍스트는 그대로 유지
+            // '매주', '첫번째 주' 등 일반 텍스트는 그대로 표시
             return <span key={index}>{part}</span>;
           })}
         </Box>

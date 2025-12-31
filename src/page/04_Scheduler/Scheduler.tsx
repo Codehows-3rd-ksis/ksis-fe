@@ -12,11 +12,6 @@ import { useNavigate } from "react-router-dom";
 import { getSchedulerSearchCategory } from "../../Types/Search";
 import Alert from "../../component/Alert";
 import {
-  parseTimeCron,
-  formatScheduleToKorean,
-  type DayOfWeekEN,
-} from "../../utils/cronUtils";
-import {
   getSchedules,
   deleteSchedule,
   type Schedule,
@@ -60,13 +55,6 @@ export default function Scheduler() {
 
       const data: SchedulerTableRows[] = response.content.map(
         (item: Schedule) => {
-          const time = parseTimeCron(item.cronExpression); // 크론식 시간 파싱 -> {hour:9, minute:30}
-          const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[]; // 요일 파싱 -> ["MON","WED","FRI"]
-          // 요일을 SUN부터 차례대로 정렬
-          const dayOrder = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-          const sortedDaysArray = daysArray.sort(
-            (a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b)
-          );
           return {
             //row 단위로 동작
             id: item.scheduleId,
@@ -81,13 +69,9 @@ export default function Scheduler() {
             weekOfMonth: item.weekOfMonth,
             createAt: item.createAt,
             updateAt: item.updateAt,
-            collectAt: time
-              ? `${String(time.hour).padStart(2, "0")}:${String(
-                  time.minute
-                ).padStart(2, "0")}`
-              : "", //{hour:9, minute:30} -> "09:30"
+            collectAt: item.displayTime, // "오전 9시 40분"
             period: `${item.startDate} ~ ${item.endDate}`, //"2025-01-01 ~ 2025-12-31"
-            cycle: formatScheduleToKorean(sortedDaysArray, item.weekOfMonth), // ["MON","WED","FRI"] + "0" -> "매주 월요일, 수요일, 금요일"
+            displayCycle: item.displayCycle, // "두번째 주 월요일 수요일"
           };
         }
       );

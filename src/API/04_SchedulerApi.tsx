@@ -21,6 +21,8 @@ export interface Schedule {
   collectAt: string;
   daysOfWeek: string; // "MON,WED,FRI" (문자열)
   weekOfMonth: WeekOfMonth; // "0": 매주 | "1"~"4": n번째 주 | "L": 마지막 주
+  displayCycle: string; // 백엔드에서 파싱된 주기 표시 (예: "두번째 주 월요일 수요일")
+  displayTime: string; // 백엔드에서 파싱된 시간 표시 (예: "오전 9시 40분")
   createAt: string;
   updateAt: string;
   isDelete: string;
