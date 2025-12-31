@@ -1,8 +1,7 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { IconButton, Link, Typography, Box } from "@mui/material";
+import { Link, Typography, Box } from "@mui/material";
 import { PlayCircleOutline, HighlightOff, ErrorOutline, CheckCircleOutline  } from "@mui/icons-material";
-import RefreshIcon from "@mui/icons-material/Refresh";
 
 // --- 기본 정보 컬럼 ---
 export const DETAIL_SETTING_COLUMNS: GridColDef[] = [
@@ -238,17 +237,8 @@ export const createHistoryColumnsFromParsedRow = (
   return [...baseColumns, ...dynamicColumns];
 };
 
-// --- 수집 실패 테이블 컬럼 (함수로 변경) ---
-
-// 핸들러 타입 정의
-export interface FailureColumnHandlers {
-  handleRecollectClick: (itemId: string, seq: string) => void;
-}
-
-// 컬럼을 반환하는 함수로 변경
-export const getFailureColumns = ({
-  handleRecollectClick,
-}: FailureColumnHandlers): GridColDef[] => [
+// --- 수집 실패 테이블 컬럼 ---
+export const FAILURE_COLUMNS: GridColDef[] = [
   {
     field: "seq",
     headerName: "진행번호",
@@ -269,9 +259,8 @@ export const getFailureColumns = ({
           href={params.value}
           target="_blank"
           rel="noopener noreferrer"
-          underline="hover" // 마우스를 올리면 밑줄 표시
+          underline="hover"
           sx={{
-            // 긴 URL이 잘리지 않고 ...으로 표시되도록
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -282,22 +271,5 @@ export const getFailureColumns = ({
         </Link>
       );
     },
-  },
-  {
-    field: "recollect",
-    headerName: "재수집",
-    width: 120,
-    headerAlign: "center",
-    align: "center",
-    renderCell: (params) => (
-      <IconButton
-        sx={(theme) => ({ color: theme.palette.common.black })}
-        size="small"
-        onClick={() => handleRecollectClick(params.row.itemId, params.row.seq)}
-        title="재수집"
-      >
-        <RefreshIcon />
-      </IconButton>
-    ),
   },
 ];

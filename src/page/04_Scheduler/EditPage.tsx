@@ -454,7 +454,7 @@ export default function EditPage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="수집 설정명 검색 및 선택"
+                    placeholder="수집 설정명 검색 및 표에서 선택"
                     size="small"
                     sx={{ width: 430 }}
                   />
