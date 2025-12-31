@@ -220,7 +220,7 @@ function Status() {
         <Typography
           sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
         >
-          현재 진행 중인 데이터 수집 작업을 실시간으로 모니터링할 수 있습니다.
+          데이터 수집 작업의 실시간 진행 상황을 추적합니다.
         </Typography>
       </Box>
 

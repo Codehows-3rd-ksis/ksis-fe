@@ -247,7 +247,7 @@ export default function History() {
         <Typography
           sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
         >
-          수집된 데이터의 이력을 조회하고 내보낼 수 있습니다.
+          데이터 수집 결과를 조회하고 다운로드합니다.
         </Typography>
       </Box>
 

@@ -162,7 +162,7 @@ function Setting() {
         <Typography
           sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
         >
-          데이터 수집을 위한 설정을 등록하고 관리할 수 있습니다.
+          데이터 수집 대상 및 조건을 설정합니다.
         </Typography>
       </Box>
 

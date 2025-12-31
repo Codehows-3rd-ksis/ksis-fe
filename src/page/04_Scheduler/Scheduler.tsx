@@ -188,7 +188,7 @@ export default function Scheduler() {
         <Typography
           sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
         >
-          데이터 수집 일정을 체계적으로 확인하고 관리할 수 있습니다.
+          데이터 수집 스케줄을 등록하고 관리합니다.
         </Typography>
       </Box>
 

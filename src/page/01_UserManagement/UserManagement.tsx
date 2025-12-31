@@ -213,7 +213,7 @@ function UserManagement() {
         <Typography
           sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
         >
-          시스템 사용자를 등록하고 계정 정보를 관리할 수 있습니다.
+          시스템 사용자의 계정과 활동 이력을 관리합니다.
         </Typography>
       </Box>
 

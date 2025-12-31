@@ -8,7 +8,6 @@ import {
   StepLabel,
   Breadcrumbs,
   Link,
-  Paper,
 } from "@mui/material";
 import CustomButton from "../../component/CustomButton";
 import Alert from "../../component/Alert";

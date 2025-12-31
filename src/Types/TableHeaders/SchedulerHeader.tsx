@@ -99,7 +99,7 @@ export const getColumns = ({
   },
   {
     field: "collectAt",
-    headerName: "수집시간",
+    headerName: "시간",
     flex: 1,
     headerAlign: "center",
     align: "center",
