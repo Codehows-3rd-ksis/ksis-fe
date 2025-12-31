@@ -1,26 +1,21 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   useLocation,
   useParams,
   useNavigate,
   Link as RouterLink,
 } from "react-router-dom";
-import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link, Paper } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
-import Alert from "../../component/Alert";
-import {
-  getHistoryDetail,
-  recollectItem,
-  recollectWork,
-} from "../../API/05_HistoryApi";
+import { getHistoryDetail } from "../../API/05_HistoryApi";
 import { parseResultValue } from "../../utils/resultValueParser";
 
 // 새로운 Header 파일 import
 import {
   DETAIL_SETTING_COLUMNS,
-  getFailureColumns,
+  FAILURE_COLUMNS,
   createHistoryColumnsFromParsedRow,
 } from "../../Types/TableHeaders/HistoryDetailHeader";
 
@@ -46,51 +41,10 @@ export default function LogDetail() {
   const [collectionRows, setCollectionRows] = useState<any[]>([]);
   const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([]);
 
-  // 재수집 관련 상태
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertType, setAlertType] = useState<"single" | "batch">("single");
-  const [selectedRecollect, setSelectedRecollect] = useState<{
-    itemId: string;
-    seq: string;
-  } | null>(null);
-
   // 계산된 값: 백엔드에서 받은 detailData를 신뢰의 원천으로 사용
   const totalCount = detailData?.totalCount ?? 0;
   const failCount = detailData?.failCount ?? 0;
   const collectCount = detailData?.collectCount ?? 0;
-
-  // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = useCallback((itemId: string, seq: string) => {
-    setSelectedRecollect({ itemId, seq });
-    setAlertType("single");
-    setAlertOpen(true);
-  }, []);
-
-  const handleBatchRecollectClick = () => {
-    setAlertType("batch");
-    setAlertOpen(true);
-  };
-
-  const handleConfirm = async () => {
-    setAlertOpen(false);
-    if (alertType === "single" && selectedRecollect) {
-      await recollectItem(selectedRecollect.itemId);
-    } else if (alertType === "batch" && workId) {
-      await recollectWork(workId);
-    }
-    setSelectedRecollect(null);
-  };
-
-  const handleCancel = () => {
-    setAlertOpen(false);
-    setSelectedRecollect(null);
-  };
-
-  // --- 컬럼 정의 (useMemo로 getFailureColumns 호출) ---
-  const failureColumns = useMemo(
-    () => getFailureColumns({ handleRecollectClick }),
-    [handleRecollectClick]
-  );
 
   // --- 데이터 로딩 로직 ---
   useEffect(() => {
@@ -166,19 +120,21 @@ export default function LogDetail() {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
-        color: "black",
+        backgroundColor: "#fafaf9",
+        borderRadius: 3,
+        overflow: "hidden",
       }}
     >
-      {/* BreadCrumbs */}
-      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+      {/* 상단 헤더 */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Breadcrumbs
+          sx={{ mb: 0.5, "& .MuiTypography-root": { fontSize: 14 } }}
+        >
           <Link
             component={RouterLink}
             to="/user"
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
           >
             유저관리
           </Link>
@@ -187,45 +143,49 @@ export default function LogDetail() {
             to={`/user/${userId}/history`}
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
             state={{ username }}
           >
             {username} 이력
           </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
+          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
             상세 조회
           </Typography>
         </Breadcrumbs>
+        <Typography
+          sx={{
+            fontSize: 32,
+            fontWeight: 800,
+            color: "#292524",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          데이터 수집이력 상세 조회
+        </Typography>
       </Box>
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        데이터 수집이력 상세 조회
-      </Typography>
-      <Box
-        sx={{
-          padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          color: "black",
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          gap: 4,
-        }}
-      >
-        {/* Work */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+
+      {/* 본문 영역: 스크롤 구역 */}
+      <Box sx={{ flex: 1, overflowY: "auto", px: 4, pb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+        {/* 기본 정보 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
+          }}
+        >
+          <Typography
+            sx={{ fontSize: 18, fontWeight: 700, mb: 3, color: "#44403c" }}
+          >
             기본 정보
           </Typography>
           <CommonTable
@@ -233,109 +193,105 @@ export default function LogDetail() {
             rows={detailData ? [detailData] : []}
             pageSize={1}
             hideFooter={true}
+            disableHover={true}
           />
-        </Box>
+        </Paper>
 
-        {/* 실패 */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        {/* 수집 실패 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
+              gap: 1.5,
+              mb: 3,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                수집 실패
-              </Typography>
-              <Typography>
-                {failureRows.length}/{totalCount}
-              </Typography>
-            </Box>
-            <CustomButton
-              text="일괄재수집"
-              width="100px"
-              onClick={handleBatchRecollectClick}
-              radius={2}
-              disabled={failCount === 0}
-              border="1px solid #CDBAA6"
-            />
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
+              수집 실패
+            </Typography>
+            <Typography sx={{ fontSize: 15, color: "#78716c" }}>
+              {failureRows.length}/{totalCount}
+            </Typography>
           </Box>
           <CommonTable
-            columns={failureColumns}
+            columns={FAILURE_COLUMNS}
             rows={failureRows}
             pageSize={3}
           />
-        </Box>
-        {/* 수집데이터 */}
-        <Box
+        </Paper>
+        {/* 수집 데이터 */}
+        <Paper
+          elevation={0}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
           }}
         >
-          {/* Text */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
+              gap: 1.5,
+              mb: 3,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
               수집 데이터
             </Typography>
-            <Typography>
+            <Typography sx={{ fontSize: 15, color: "#78716c" }}>
               {collectCount}/{totalCount}
             </Typography>
           </Box>
-          {/* Table */}
           <CommonTable
             columns={collectionColumns}
             rows={collectionRows}
             pageSize={5}
-            // height="370px"
+            disableHover={true}
           />
-        </Box>
-        {/* 닫기버튼 */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-start",
-          }}
-        >
-          <CustomButton
-            text="이전"
-            onClick={() =>
-              navigate(`/user/${userId}/history`, {
-                state: { username: username },
-              })
-            }
-            radius={2}
-            width="80px"
-            backgroundColor="#F2F2F2"
-            border="1px solid #757575"
-            hoverStyle={{
-              backgroundColor: "transparent",
-              border: "2px solid #373737ff"
-            }}
-          />
+        </Paper>
         </Box>
       </Box>
 
-      <Alert
-        open={alertOpen}
-        type="question"
-        text={
-          alertType === "single"
-            ? `${selectedRecollect?.seq}번 항목을 재수집하시겠습니까?`
-            : "모든 실패 항목을 재수집하시겠습니까?"
-        }
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+      {/* 하단 푸터 */}
+      <Box
+        sx={{
+          px: 4,
+          py: 2,
+          display: "flex",
+          justifyContent: "flex-start",
+          flexShrink: 0,
+        }}
+      >
+        <CustomButton
+          text="이전"
+          onClick={() =>
+            navigate(`/user/${userId}/history`, {
+              state: { username: username },
+            })
+          }
+          radius={2}
+          width="100px"
+          backgroundColor="#F2F2F2"
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "transparent",
+            border: "2px solid #373737ff",
+          }}
+        />
+      </Box>
     </Box>
   );
 }

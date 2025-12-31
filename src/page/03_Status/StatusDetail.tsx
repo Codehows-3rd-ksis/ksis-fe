@@ -466,13 +466,11 @@ function StatusDetail() {
         </Box>
       </Box>
 
-      {/* 하단 푸터 액션바 */}
+      {/* 하단 푸터 */}
       <Box
         sx={{
           px: 4,
           py: 2,
-          backgroundColor: "#fff",
-          borderTop: "1px solid #e7e5e4",
           display: "flex",
           justifyContent: "flex-start",
           flexShrink: 0,
@@ -480,11 +478,15 @@ function StatusDetail() {
       >
         <CustomButton
           text="이전"
-          backgroundColor="#f5f5f4"
-          color="#78716c"
+          backgroundColor="#F2F2F2"
           onClick={handleBack}
-          radius={1}
+          radius={2}
           width="100px"
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "transparent",
+            border: "2px solid #373737ff",
+          }}
         />
       </Box>
 

@@ -521,13 +521,11 @@ export default function RegPage() {
         </Box>
       </Box>
 
-      {/* 하단 푸터 액션바 */}
+      {/* 하단 푸터 */}
       <Box
         sx={{
           px: 4,
           py: 2,
-          backgroundColor: "#fff",
-          borderTop: "1px solid #e7e5e4",
           display: "flex",
           justifyContent: "space-between",
           flexShrink: 0,
@@ -535,16 +533,24 @@ export default function RegPage() {
       >
         <CustomButton
           text="취소"
-          backgroundColor="#f5f5f4"
-          color="#78716c"
+          backgroundColor="#F2F2F2"
           onClick={() => setOpenCloseAlert(true)}
-          radius={1}
+          radius={2}
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "transparent",
+            border: "2px solid #373737ff",
+          }}
         />
         <CustomButton
           text="등록"
-          backgroundColor="#ba7d1bff"
           onClick={() => setOpenRegAlert(true)}
-          radius={1}
+          radius={2}
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "#ba7d1bff",
+            border: "2px solid #373737ff",
+          }}
           disabled={
             !settingId || !startDate || !endDate || selectedDays.length === 0
           }

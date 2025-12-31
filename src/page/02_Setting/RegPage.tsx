@@ -8,6 +8,7 @@ import {
   StepLabel,
   Breadcrumbs,
   Link,
+  Paper,
 } from "@mui/material";
 import CustomButton from "../../component/CustomButton";
 import Alert from "../../component/Alert";
@@ -182,67 +183,53 @@ export default function RegPage() {
         display: "flex",
         flexDirection: "column",
         minHeight: 0,
-        color: "black",
-        gap: 1,
+        backgroundColor: "#fafaf9",
+        borderRadius: 3,
+        overflow: "hidden",
       }}
     >
-      {/* BreadCrumbs */}
-      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+      {/* 상단 헤더 */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Breadcrumbs
+          sx={{ mb: 0.5, "& .MuiTypography-root": { fontSize: 14 } }}
+        >
           <Link
             component={RouterLink}
             to="/setting"
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
           >
             데이터 수집 설정
           </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
+          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
             설정 등록
           </Typography>
         </Breadcrumbs>
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography
-          sx={{
-            fontSize: 60,
-            fontWeight: "bold",
-            color: "black",
-            paddingLeft: 2,
-            marginTop: -1,
-          }}
-        >
-          데이터 수집 설정
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row-reverse",
-            alignItems: "flex-end",
-            paddingRight: 2,
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography
+            sx={{
+              fontSize: 32,
+              fontWeight: 800,
+              color: "#292524",
+              letterSpacing: "-0.03em",
+            }}
+          >
+            데이터 수집 설정
+          </Typography>
           <Stepper activeStep={activeStep}>
             {steps.map((label, index) => (
               <Step key={label} completed={activeStep > index}>
                 <StepLabel
                   sx={{
                     "& .MuiStepIcon-root": {
-                      color: activeStep === index ? "#F5A623" : "#555555",
+                      color: activeStep === index ? "#ba7d1bff" : "#78716c",
                     },
                     "& .MuiStepLabel-label": {
-                      color:
-                        activeStep === index
-                          ? "#F5A623" // 🔹 현재 단계 색상
-                          : "#555555", // ⚪ 비활성 단계 색상
-                      fontWeight: activeStep === index ? "bold" : "normal",
+                      color: activeStep === index ? "#ba7d1bff" : "#78716c",
+                      fontWeight: activeStep === index ? 700 : 500,
                       borderBottom:
-                        activeStep === index ? "2px solid #F5A623" : "none",
-                      fontSize: 18,
+                        activeStep === index ? "2px solid #ba7d1bff" : "none",
+                      fontSize: 15,
                     },
                   }}
                   StepIconComponent={() => null}
@@ -255,20 +242,23 @@ export default function RegPage() {
         </Box>
       </Box>
 
+      {/* 본문 영역 */}
       <Box
         sx={{
           flex: 1,
           minHeight: 0,
-          // height: 'calc(97% - 96px)',
-          border: "1px solid #abababff",
-          marginLeft: "20px",
-          marginRight: "20px",
+          border: "1px solid #e7e5e4",
+          borderRadius: 3,
+          marginLeft: 4,
+          marginRight: 4,
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-start",
           gap: 2,
           p: 2,
           overflowY: "auto",
+          backgroundColor: "#fff",
+          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
         }}
       >
         {/* 1. 기본 정보 */}
@@ -328,14 +318,14 @@ export default function RegPage() {
           </>
         )}
       </Box>
+
+      {/* 하단 푸터 */}
       <Box
         sx={{
+          px: 4,
+          py: 2,
           display: "flex",
           justifyContent: "space-between",
-          paddingLeft: 2.5,
-          paddingRight: 2.5,
-          paddingBottom: 2,
-          marginTop: 2,
           flexShrink: 0,
         }}
       >
@@ -343,8 +333,8 @@ export default function RegPage() {
           text="닫기"
           radius={2}
           backgroundColor="#F2F2F2"
-          border="1px solid #757575"
           onClick={() => setOpenCloseAlert(true)}
+          border="1px solid #757575"
           hoverStyle={{
             backgroundColor: "transparent",
             border: "2px solid #373737ff",
@@ -366,42 +356,34 @@ export default function RegPage() {
           )}
 
           {activeStep < steps.length - 1 ? (
-            <>
-              <CustomButton
-                text="다음"
-                onClick={handleNext}
-                radius={2}
-                border="1px solid #757575"
-                hoverStyle={{
-                  backgroundColor: "#ba7d1bff",
-                  border: "2px solid #373737ff",
-                }}
-                disabled={
-                  activeStep === 0
-                    ? isAble === false
-                      ? true
-                      : false
-                    : activeStep === 1
-                    ? condition.length === 0
-                      ? true
-                      : false
-                    : false
-                }
-              />
-            </>
+            <CustomButton
+              text="다음"
+              onClick={handleNext}
+              radius={2}
+              border="1px solid #757575"
+              hoverStyle={{
+                backgroundColor: "#ba7d1bff",
+                border: "2px solid #373737ff",
+              }}
+              disabled={
+                activeStep === 0
+                  ? isAble === false
+                  : activeStep === 1
+                  ? condition.length === 0
+                  : false
+              }
+            />
           ) : (
-            <>
-              <CustomButton
-                text="등록"
-                onClick={() => setOpenRegAlert(true)}
-                radius={2}
-                border="1px solid #757575"
-                hoverStyle={{
-                  backgroundColor: "#ba7d1bff",
-                  border: "2px solid #373737ff",
-                }}
-              />
-            </>
+            <CustomButton
+              text="등록"
+              onClick={() => setOpenRegAlert(true)}
+              radius={2}
+              border="1px solid #757575"
+              hoverStyle={{
+                backgroundColor: "#ba7d1bff",
+                border: "2px solid #373737ff",
+              }}
+            />
           )}
         </Box>
       </Box>
