@@ -46,7 +46,6 @@ function Status() {
         id: row.workId,
       }));
       setBaseRows(result);
-      console.log('result', result)
     } catch (error) {
       alert("수집 현황 목록을 불러오는 데 실패했습니다.");
       console.error("수집 현황 목록 조회 실패:", error);

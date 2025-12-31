@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   useLocation,
   useParams,
@@ -9,18 +9,15 @@ import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
-import Alert from "../../component/Alert";
 import {
   getHistoryDetail,
-  recollectItem,
-  recollectWork,
 } from "../../API/05_HistoryApi";
 import { parseResultValue } from "../../utils/resultValueParser";
 
 // 새로운 Header 파일 import
 import {
   DETAIL_SETTING_COLUMNS,
-  getFailureColumns,
+  FAILURE_COLUMNS,
   createHistoryColumnsFromParsedRow,
 } from "../../Types/TableHeaders/HistoryDetailHeader";
 
@@ -46,51 +43,13 @@ export default function LogDetail() {
   const [collectionRows, setCollectionRows] = useState<any[]>([]);
   const [collectionColumns, setCollectionColumns] = useState<GridColDef[]>([]);
 
-  // 재수집 관련 상태
-  const [alertOpen, setAlertOpen] = useState(false);
-  const [alertType, setAlertType] = useState<"single" | "batch">("single");
-  const [selectedRecollect, setSelectedRecollect] = useState<{
-    itemId: string;
-    seq: string;
-  } | null>(null);
-
   // 계산된 값: 백엔드에서 받은 detailData를 신뢰의 원천으로 사용
   const totalCount = detailData?.totalCount ?? 0;
   const failCount = detailData?.failCount ?? 0;
   const collectCount = detailData?.collectCount ?? 0;
 
-  // --- 재수집 관련 핸들러 ---
-  const handleRecollectClick = useCallback((itemId: string, seq: string) => {
-    setSelectedRecollect({ itemId, seq });
-    setAlertType("single");
-    setAlertOpen(true);
-  }, []);
-
-  const handleBatchRecollectClick = () => {
-    setAlertType("batch");
-    setAlertOpen(true);
-  };
-
-  const handleConfirm = async () => {
-    setAlertOpen(false);
-    if (alertType === "single" && selectedRecollect) {
-      await recollectItem(selectedRecollect.itemId);
-    } else if (alertType === "batch" && workId) {
-      await recollectWork(workId);
-    }
-    setSelectedRecollect(null);
-  };
-
-  const handleCancel = () => {
-    setAlertOpen(false);
-    setSelectedRecollect(null);
-  };
-
   // --- 컬럼 정의 (useMemo로 getFailureColumns 호출) ---
-  const failureColumns = useMemo(
-    () => getFailureColumns({ handleRecollectClick }),
-    [handleRecollectClick]
-  );
+  const failureColumns = FAILURE_COLUMNS;
 
   // --- 데이터 로딩 로직 ---
   useEffect(() => {
@@ -250,17 +209,9 @@ export default function LogDetail() {
                 수집 실패
               </Typography>
               <Typography>
-                {failureRows.length}/{totalCount}
+                {failCount}/{totalCount}
               </Typography>
             </Box>
-            <CustomButton
-              text="일괄재수집"
-              width="100px"
-              onClick={handleBatchRecollectClick}
-              radius={2}
-              disabled={failCount === 0}
-              border="1px solid #CDBAA6"
-            />
           </Box>
           <CommonTable
             columns={failureColumns}
@@ -324,18 +275,6 @@ export default function LogDetail() {
           />
         </Box>
       </Box>
-
-      <Alert
-        open={alertOpen}
-        type="question"
-        text={
-          alertType === "single"
-            ? `${selectedRecollect?.seq}번 항목을 재수집하시겠습니까?`
-            : "모든 실패 항목을 재수집하시겠습니까?"
-        }
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
     </Box>
   );
 }
