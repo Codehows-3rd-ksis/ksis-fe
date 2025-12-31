@@ -64,16 +64,16 @@ export const getSettingSelectColumns = (): GridColDef[] => [
   {
     field: "settingName",
     headerName: "데이터수집명",
-    flex: 1,
+    flex: 2,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "url",
     headerName: "URL",
-    flex: 1,
+    flex: 3,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "userAgent",

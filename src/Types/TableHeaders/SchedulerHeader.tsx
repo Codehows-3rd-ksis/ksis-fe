@@ -35,7 +35,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 1.5,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "period",

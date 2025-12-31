@@ -577,19 +577,27 @@ export default function EditPage() {
       >
         <CustomButton
           text="취소"
-          backgroundColor="#f5f5f4"
-          color="#78716c"
           onClick={() => setOpenCloseAlert(true)}
-          radius={1}
+          radius={2}
+          backgroundColor="#F2F2F2"
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "transparent",
+            border: "2px solid #373737ff",
+          }}
         />
         <CustomButton
           text="수정"
-          backgroundColor="#ba7d1bff"
           onClick={() => setOpenEditAlert(true)}
-          radius={1}
+          radius={2}
           disabled={
             !settingId || !startDate || !endDate || selectedDays.length === 0
           }
+          hoverStyle={{
+            backgroundColor: "#ba7d1bff",
+            border: "2px solid #373737ff",
+          }}
+          border="1px solid #757575"
         />
       </Box>
 
