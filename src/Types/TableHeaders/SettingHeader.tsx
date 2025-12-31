@@ -1,5 +1,6 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
+import { Link } from "@mui/material"
 
 export interface SettingTableRows {
   id: number;
@@ -64,16 +65,31 @@ export const getSettingSelectColumns = (): GridColDef[] => [
   {
     field: "settingName",
     headerName: "데이터수집명",
-    flex: 1,
+    flex: 2,
     headerAlign: "center",
-    align: "center",
+    align: "left",
   },
   {
     field: "url",
     headerName: "URL",
-    flex: 1,
+    flex: 3,
     headerAlign: "center",
-    align: "center",
+    align: "left",
+    renderCell: (params) => {
+      const url = params.value as string;
+
+      return (
+        <Link
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {url}
+        </Link>
+      );
+    },
   },
   {
     field: "userAgent",
@@ -111,6 +127,21 @@ export const getColumns = ({
     flex: 2,
     headerAlign: "center",
     align: "left",
+    renderCell: (params) => {
+      const url = params.value as string;
+      
+      return (
+        <Link
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {url}
+        </Link>
+      );
+    },
   },
   {
     field: "userAgent",

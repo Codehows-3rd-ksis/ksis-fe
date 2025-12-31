@@ -218,7 +218,7 @@ export default function LogPage() {
                 label="전체"
               />
               <FormControlLabel
-                value="스케줄링"
+                value="스케줄러"
                 control={
                   <Radio
                     sx={{
@@ -229,7 +229,7 @@ export default function LogPage() {
                     }}
                   />
                 }
-                label="스케줄링"
+                label="스케줄러"
               />
               <FormControlLabel
                 value="수동실행"
