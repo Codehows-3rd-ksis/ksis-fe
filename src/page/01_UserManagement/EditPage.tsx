@@ -215,8 +215,27 @@ export default function EditPage(props: EditPageProps) {
                 </Box>
             </Box>
             <Box sx={{display: 'flex', justifyContent: 'center', gap:2, marginBottom: 2}}>
-                <CustomButton text="수정" onClick={()=>setOpenEditAlert(true)} radius={2}/>
-                <CustomButton text="닫기" onClick={()=>setOpenCancelAlert(true)} backgroundColor='#f0f0f0' radius={2}/>
+                <CustomButton 
+                    text="수정" 
+                    onClick={()=>setOpenEditAlert(true)} 
+                    radius={2}
+                    border="1px solid #757575"
+                    hoverStyle={{
+                      backgroundColor: "#ba7d1bff",
+                      border: "2px solid #373737ff",
+                    }}
+                />
+                <CustomButton 
+                    text="닫기" 
+                    onClick={()=>setOpenCancelAlert(true)} 
+                    radius={2}
+                    backgroundColor="#F2F2F2"
+                    border="1px solid #757575"
+                    hoverStyle={{
+                      backgroundColor: "transparent",
+                      border: "2px solid #373737ff",
+                    }}
+                />
             </Box>
 
             {/* Cancel Alert */}

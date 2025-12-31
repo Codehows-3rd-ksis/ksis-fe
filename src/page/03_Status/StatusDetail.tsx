@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import { Box, Typography, Breadcrumbs, Link } from "@mui/material";
+import { Box, Typography, Breadcrumbs, Link, Paper } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CommonTable from "../../component/CommonTable";
 import CustomButton from "../../component/CustomButton";
+import Alert from "../../component/Alert";
 import { type StatusTableRows } from "../../API/03_StatusApi";
 import {
   type FailureRow,
@@ -11,7 +12,7 @@ import {
   FAILURE_COLUMNS,
   createColumnsFromParsedRow,
 } from "../../Types/TableHeaders/StatusDetailHeader";
-import { getStatusDetail } from "../../API/03_StatusApi";
+import { getStatusDetail, stopCrawl } from "../../API/03_StatusApi";
 import useWebSocketStore, { ReadyState } from "../../Store/WebSocketStore";
 import { type CrawlingMessage } from "../../Types/WebSocket";
 import useCrawlingProgress from "../../hooks/useCrawlingProgress";
@@ -60,6 +61,13 @@ function StatusDetail() {
   const failCount = currentProgress?.failCount ?? 0;
   const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
   // const progress = currentProgress?.progress ?? 0;
+
+  // Alert
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [openErrorAlert, setOpenErrorAlert] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("")
+  const [alertStopResultOpen, setAlertStopResultOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
   const handleBack = () => navigate("/status");
 
@@ -176,6 +184,8 @@ function StatusDetail() {
 
           // collectionRows: 모든 항목 추가 (FAILED는 seq만, SUCCESS는 전체 데이터)
           const itemId = item.itemId;
+          if(itemId === 0) return;
+
           if (!collectionIdSet.current.has(itemId)) {
             collectionIdSet.current.add(itemId); // 중복 방지
 
@@ -244,63 +254,104 @@ function StatusDetail() {
     };
   }, [workId, resetCrawlingState]);
 
+  // 수집 중지 API
+  const handleStopCrawl = async (row: StatusTableRows) => {
+    try {
+      await stopCrawl(row.workId);
+      setAlertStopResultOpen(true);
+    } catch (error) {
+      console.error("수집 중지 요청 실패:", error);
+      setErrorMsg("수집 중지 요청에 실패했습니다.");
+      setOpenErrorAlert(true);
+    }
+  };
+
+  const handleStopClick = (row: StatusTableRows) => {
+    setSelectedRow(row);
+    setAlertOpen(true);
+  };
+
+  const handleConfirm = async () => {
+    setAlertOpen(false);
+    if (selectedRow) {
+      await handleStopCrawl(selectedRow);
+    }
+  };
+
+  const handleCancel = () => {
+    setAlertOpen(false);
+    setSelectedRow(null);
+  };
+
+  const baseColumns = DETAIL_SETTING_COLUMNS({ handleStopClick });
+
   return (
     <Box
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
-        color: "black",
+        backgroundColor: "#fafaf9",
+        borderRadius: 3,
+        overflow: "hidden",
       }}
     >
-      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+      {/* 상단 헤더 */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Breadcrumbs
+          sx={{ mb: 0.5, "& .MuiTypography-root": { fontSize: 14 } }}
+        >
           <Link
             component={RouterLink}
             to="/status"
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
           >
             데이터 수집 현황
           </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
+          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
             상세조회
           </Typography>
         </Breadcrumbs>
+        <Typography
+          sx={{
+            fontSize: 32,
+            fontWeight: 800,
+            color: "#292524",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          데이터 수집 현황 상세조회
+        </Typography>
       </Box>
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        데이터 수집 현황 상세조회
-      </Typography>
-      <Box
-        sx={{
-          padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          gap: 4,
-        }}
-      >
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+
+      {/* 본문 영역: 스크롤 구역 */}
+      <Box sx={{ flex: 1, overflowY: "auto", px: 4, pb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
+        {/* 기본 정보 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
+          }}
+        >
+          <Typography
+            sx={{ fontSize: 18, fontWeight: 700, mb: 3, color: "#44403c" }}
+          >
             기본 정보
           </Typography>
           <CommonTable
-            columns={DETAIL_SETTING_COLUMNS}
+            columns={baseColumns}
             rows={
               detailData
                 ? [
@@ -317,19 +368,30 @@ function StatusDetail() {
             hideFooter={true}
             disableHover={true}
           />
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        </Paper>
+        {/* 수집 실패 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
+              gap: 1.5,
+              mb: 3,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
               수집 실패
             </Typography>
-            <Typography>
+            <Typography sx={{ fontSize: 15, color: "#78716c" }}>
               {failCount}/{totalCount}
             </Typography>
           </Box>
@@ -338,39 +400,61 @@ function StatusDetail() {
             rows={failureRows}
             pageSize={3}
           />
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        </Paper>
+        {/* 수집 데이터 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            border: "1px solid #e7e5e4",
+            boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+            backgroundColor: "#fff",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              gap: 1,
+              mb: 3,
             }}
           >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Typography sx={{ fontSize: 18, fontWeight: 700, color: "#44403c" }}>
+                수집 데이터
+              </Typography>
+              <Typography sx={{ fontSize: 15, color: "#78716c" }}>
+                {collectCount}/{totalCount}
+              </Typography>
+            </Box>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
+                px: 2.5,
+                py: 1.5,
+                backgroundColor: "#f8f9fa",
+                borderRadius: 1.5,
+                border: "1px solid #dee2e6",
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                수집 데이터
+              <Typography sx={{ fontSize: 13, color: "#495057", fontWeight: 600 }}>
+                수집완료 예상시간
               </Typography>
-              <Typography>
-                {collectCount}/{totalCount}
+              <Typography sx={{ fontSize: 13, color: "#adb5bd" }}>
+                •
+              </Typography>
+              <Typography sx={{ fontSize: 13, color: "#495057" }}>
+                {expectEndAt &&
+                expectEndAt !== "계산 중..." &&
+                expectEndAt !== "완료" &&
+                dayjs(expectEndAt).isValid()
+                  ? dayjs(expectEndAt).format("YY-MM-DD HH:mm")
+                  : expectEndAt}
               </Typography>
             </Box>
-            <Typography sx={{ fontWeight: "bold" }}>
-              수집완료 예상시간 :{" "}
-              {expectEndAt &&
-              expectEndAt !== "계산 중..." &&
-              expectEndAt !== "완료" &&
-              dayjs(expectEndAt).isValid()
-                ? dayjs(expectEndAt).format("YY-MM-DD HH:mm")
-                : expectEndAt}
-            </Typography>
           </Box>
           <CommonTable
             columns={collectionColumns}
@@ -378,24 +462,61 @@ function StatusDetail() {
             pageSize={5}
             disableHover={true}
           />
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 2,
-          }}
-        >
-          <CustomButton
-            text="◀ 이전"
-            backgroundColor="#9E9E9E"
-            // color="#fff"
-            onClick={handleBack}
-            radius={2}
-            width="80px"
-          />
+        </Paper>
         </Box>
       </Box>
+
+      {/* 하단 푸터 */}
+      <Box
+        sx={{
+          px: 4,
+          py: 2,
+          display: "flex",
+          justifyContent: "flex-start",
+          flexShrink: 0,
+        }}
+      >
+        <CustomButton
+          text="이전"
+          backgroundColor="#F2F2F2"
+          onClick={handleBack}
+          radius={2}
+          width="100px"
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "transparent",
+            border: "2px solid #373737ff",
+          }}
+        />
+      </Box>
+
+      {/* 수집 중지 요청 알람 */}
+      <Alert
+        open={alertOpen}
+        type="question"
+        text={`"수집을 중지하시겠습니까?`}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+      {/* 수집 중지 결과 확인 알람 */}
+      <Alert
+        open={alertStopResultOpen}
+        text="수집이 중지되었습니다."
+        type="success"
+        onConfirm={() => {
+          setAlertStopResultOpen(false);
+          handleBack()
+        }}
+      />
+      {/* Error Alert */}
+      <Alert
+        open={openErrorAlert}
+        text={errorMsg}
+        type="error"
+        onConfirm={() => {
+          setOpenErrorAlert(false);
+        }}
+      />
     </Box>
   );
 }

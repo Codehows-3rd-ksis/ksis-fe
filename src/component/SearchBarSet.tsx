@@ -69,27 +69,33 @@ export default function SearchBarSet({
   return (
     <Box
       sx={{
-        bgcolor: "white",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: showCount ? "space-between" : "flex-end",
         alignItems: "center",
-        p: 2,
+        p: 1,
         borderRadius: 2,
         gap: 2,
       }}
     >
-      <Box>
-        {showCount && (
+      {showCount && (
+        <Box>
           <Typography sx={{ color: "black", fontWeight: 700 }}>
             검색결과 : {totalCount} 건 입니다.
           </Typography>
-        )}
-      </Box>
+        </Box>
+      )}
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          flexWrap: "wrap",
+        }}
+      >
         {showDateRange && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
               <DatePicker
                 label="시작일자"
                 format="YYYY-MM-DD"
@@ -105,6 +111,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
+                      width: "220px",
                     },
                   },
                 }}
@@ -122,6 +129,7 @@ export default function SearchBarSet({
                     sx: {
                       backgroundColor: "#fff",
                       borderRadius: 1,
+                      width: "220px",
                     },
                   },
                 }}
@@ -137,7 +145,7 @@ export default function SearchBarSet({
               value={localValue.type}
               onChange={(e) => updateLocal("type", e.target.value)}
               listItem={searchCategories}
-              inputWidth="120px"
+              inputWidth="140px"
               height="40px"
             />
           )}
@@ -172,6 +180,10 @@ export default function SearchBarSet({
             onClick={onButtonClick}
             radius={2}
             height="40px"
+            hoverStyle={{
+              backgroundColor: "#ba7d1bff",
+              border: "2px solid #373737ff",
+            }}
           />
         )}
       </Box>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { Box, Typography, InputAdornment, type SelectChangeEvent } from '@mui/material'
+import { Box, Typography, InputAdornment, type SelectChangeEvent, Card } from '@mui/material'
 import CustomIconButton from '../../../component/CustomIconButton';
 import CustomTextField from '../../../component/CustomTextField';
 import CustomButton from '../../../component/CustomButton';
@@ -42,7 +42,7 @@ const colors = [
 const pagingTypeList = [
         { value: 'Numeric', name: '페이지 형식' },
         { value: 'Next_Btn', name: '다음버튼 형식' },
-        { value: 'AJAX', name: 'AJAX' },
+        // { value: 'AJAX', name: 'AJAX' },
 ]
 
 interface Props {
@@ -552,15 +552,14 @@ export default React.memo(function Step2_Multi({
                     width: "100%",
                     height: "100%",
             }}>
-                <Box
+                <Card
                   sx={{
-                    borderBottom: "2px solid #ccc",
                     display: "flex",
+                    bgcolor: '#f7f7f7ff',
                     gap: 2,
-                    pb: 2,
+                    p: 2,
                     minHeight: 550,
                     minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
-                    // overflowX: "auto" // 화면 작으면 가로 스크롤
                 }}>
                     {/* 스크린샷 */}
                     <Box
@@ -570,6 +569,7 @@ export default React.memo(function Step2_Multi({
                         position: "relative",
                         overflow: "auto",
                         background: "#eaeaea",
+                        border: '1px solid black',
                     }}>
                         {previewData.image ? (
                           <img
@@ -617,24 +617,52 @@ export default React.memo(function Step2_Multi({
                     </Box>
                     {/* HTML 태그 */}
                     <Box sx={{
-                      flex: "0 0 50%",
+                      // flex: "0 0 50%",
                       minWidth: 500,
                       display: "flex",
                       flexDirection: "column",
+                      border: '1px solid black'
                     }}>
                       <Box 
                         sx={{ 
                           display:'flex', 
                           gap:2, 
                           height: 60,
-                          alignItems: 'center'
+                          pl:2, 
+                          alignItems: 'center',
+                          // bgcolor: '#ccc'
+                          background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
                       }}>
                         <SearchBar
                           placeholder="태그 검색"
                           onSearch={runMainSearch}
                         />
-                        <CustomButton text="<" width="40px" backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""} radius={1} onClick={findPrev} disabled={currentIndex+1 <= 1} />
-                        <CustomButton text=">" width="40px" backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} radius={1} onClick={findNext} disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} />
+                        <CustomButton 
+                          text="<" 
+                          width="40px" 
+                          border="1px solid #757575"
+                          backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""}
+                          hoverStyle={currentIndex+1 <= 1 ?{}:{
+                            backgroundColor: "#ba7d1bff",
+                            border: "2px solid #373737ff",
+                          }} 
+                          radius={1} 
+                          onClick={findPrev} 
+                          disabled={currentIndex+1 <= 1} 
+                        />
+                        <CustomButton 
+                          text=">" 
+                          width="40px" 
+                          border="1px solid #757575"
+                          backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} 
+                          hoverStyle={(currentIndex+1 === searchResults.length || searchResults.length === 0)? {}:{
+                            backgroundColor: "#ba7d1bff",
+                            border: "2px solid #373737ff",
+                          }} 
+                          radius={1} 
+                          onClick={findNext} 
+                          disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} 
+                        />
                         {searchResults.length > 0 ?
                           <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
                           : <></>
@@ -643,7 +671,7 @@ export default React.memo(function Step2_Multi({
                       <Box 
                         sx={{
                           overflow: 'auto',
-                          height: 490,
+                          height: 530,
                         }}
                         ref={inspectorContainerRef}
                         data-scroll-container
@@ -661,13 +689,13 @@ export default React.memo(function Step2_Multi({
                       </Box>
                     </Box>
 
-                </Box>
-                <Box 
+                </Card>
+                <Card 
                   sx={{
                     height: 350,
                     minHeight: 350,
                     mt: 2,
-                    background: "#f7f7f7",
+                    background: "#f7f7f7ff",
                     borderRadius: 2,
                     p: 2,
                     display: "flex",
@@ -688,6 +716,7 @@ export default React.memo(function Step2_Multi({
                           placeholder="게시물 영역"
                           readOnly={true}
                           type="text"
+                          border='1px solid #cdbaa6'
                           startAdornment={
                             <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
                                 <CustomButton
@@ -695,6 +724,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('listArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -706,13 +739,14 @@ export default React.memo(function Step2_Multi({
                         alignItems: "center",
                         gap: 2,
                     }}>
-                        <Typography sx={{fontSize: 25, minWidth: 205, textAlign: 'right'}}>페이지네이션 영역:</Typography>
+                        <Typography sx={{fontSize: 25, minWidth: 220, textAlign: 'right'}}>페이지네이션 영역:</Typography>
                         <CustomSelect
                             height="40px"
                             inputWidth="160px"
                             value={newData.pagingType}
                             listItem={pagingTypeList}
                             onChange={handleSelectChange('pagingType')}
+                            border='1px solid #cdbaa6'
                         />
                         <CustomTextField 
                           // inputWidth='630px' 
@@ -721,6 +755,7 @@ export default React.memo(function Step2_Multi({
                           placeholder="페이지네이션 영역"
                           readOnly={true}
                           type="text"
+                          border='1px solid #cdbaa6'
                           startAdornment={
                             <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
                                 <CustomButton
@@ -728,6 +763,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -739,6 +778,7 @@ export default React.memo(function Step2_Multi({
                           placeholder="다음버튼 영역"
                           readOnly={true}
                           type="text"
+                          border='1px solid #cdbaa6'
                           startAdornment={
                             <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
                                 <CustomButton
@@ -746,6 +786,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingNextbtn')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -765,6 +809,7 @@ export default React.memo(function Step2_Multi({
                           placeholder="수집할 페이지 수"
                           type="number"
                           onChange={(e) => handleInputChange('maxPage', e.target.value)}
+                          border='1px solid #cdbaa6'
                         />
                     </Box>
                     <Box sx={{
@@ -781,6 +826,7 @@ export default React.memo(function Step2_Multi({
                           placeholder="상세 링크 영역"
                           readOnly={true}
                           type="text"
+                          border='1px solid #cdbaa6'
                           startAdornment={
                             <InputAdornment position="start" sx={{marginLeft: '-14px'}}>
                                 <CustomButton
@@ -788,6 +834,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('linkArea')}
+                                    hoverStyle={{
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                 />
                             </InputAdornment>  
                           }
@@ -803,35 +853,43 @@ export default React.memo(function Step2_Multi({
                                       handleDetailLoad()
                                     }}
                                     backgroundColor={isDetail? '#BABABA' : ''}
+                                    hoverStyle={isDetail?{
+                                      backgroundColor: "#7d7d7dff",
+                                      border: "2px solid #373737ff",
+                                    } : {
+                                      backgroundColor: "#ba7d1bff",
+                                      border: "2px solid #373737ff",
+                                    }}
                                     width='200px'
                                 />
                             </InputAdornment>  
                           }
                         />
                     </Box>
-                </Box>
+                </Card>
                 {isDetail && (
-                  <>
-                    <br></br>
-                    <Box
-                    sx={{
-                        display: "flex",
-                        gap: 2,
-                        pb: 2,
-                        minHeight: 550,
-                        minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
-                        // overflowX: "auto", // 화면 작으면 가로 스크롤
-                        color: 'black'
-                      }}
-                  >
+                  <Box sx={{pb: 2, pt: 2}}>
+                    <Card
+                      sx={{
+                          display: "flex",
+                          background: "#f7f7f7ff",
+                          gap: 2,
+                          p: 2,
+                          minHeight: 550,
+                          minWidth: 1200,   // ⭐ 핵심: 최소 레이아웃 폭
+                          color: 'black'
+                        }}
+                    >
                       {/* 스크린샷 */}
                       <Box
                           sx={{
                             flex: "0 0 50%",   // ⭐ 비율 고정
                             minWidth: 500,
+                            height: 590,
                             position: "relative",
                             overflow: "auto",
                             background: "#eaeaea",
+                            border: '1px solid black'
                       }}>
                           {detailData.image ? (
                             <img
@@ -878,24 +936,51 @@ export default React.memo(function Step2_Multi({
                       </Box>
                       {/* HTML 태그 */}
                       <Box sx={{
-                        flex: "0 0 50%",
+                        // flex: "0 0 50%",
                         minWidth: 500,
                         display: "flex",
                         flexDirection: "column",
+                        border: '1px solid black'
                       }}>
                         <Box 
                           sx={{ 
                             display:'flex', 
                             gap:2, 
+                            pl: 2,
                             height: 60,
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
                         }}>
                           <SearchBar
                             placeholder="태그 검색"
                             onSearch={runDetailSearch}
                           />
-                          <CustomButton text="<" width="40px" backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} radius={1} onClick={findPrevDetail} disabled={currentDetailIndex+1 <= 1} />
-                          <CustomButton text=">" width="40px" backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} radius={1} onClick={findNextDetail} disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} />
+                          <CustomButton 
+                            text="<" 
+                            width="40px" 
+                            border="1px solid #757575"
+                            backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} 
+                            hoverStyle={currentDetailIndex+1 <= 1 ?{}:{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }} 
+                            radius={1} 
+                            onClick={findPrevDetail} 
+                            disabled={currentDetailIndex+1 <= 1} 
+                          />
+                          <CustomButton 
+                            text=">" 
+                            width="40px" 
+                            border="1px solid #757575"
+                            backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} 
+                            hoverStyle={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? {}:{
+                              backgroundColor: "#ba7d1bff",
+                              border: "2px solid #373737ff",
+                            }} 
+                            radius={1} 
+                            onClick={findNextDetail} 
+                            disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} 
+                          />
                           {searchDetailResults.length > 0 ?
                             <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
                             : <></>
@@ -904,7 +989,7 @@ export default React.memo(function Step2_Multi({
                         <Box 
                           sx={{
                             overflow: 'auto',
-                            height: 490,
+                            height: 530,
                           }}
                           ref={detailInspectorContainerRef}
                           data-scroll-container
@@ -921,7 +1006,8 @@ export default React.memo(function Step2_Multi({
                           />
                         </Box>
                       </Box>
-                    </Box>
+                    </Card>
+
                     <Box 
                         sx={{
                           height: 350,
@@ -947,7 +1033,7 @@ export default React.memo(function Step2_Multi({
                               maxHeight={300}
                       />
                     </Box>
-                  </>
+                  </Box>
                 )}
             </Box>
 

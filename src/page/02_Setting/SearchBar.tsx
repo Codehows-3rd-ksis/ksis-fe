@@ -24,7 +24,16 @@ export const SearchBar = React.memo(
           onChange={(e) => setValue(e.target.value)}
           onEnter={handleSearch}
         />
-        <CustomButton radius={1} text="검색" onClick={handleSearch} />
+        <CustomButton 
+          radius={1} 
+          text="검색" 
+          onClick={handleSearch} 
+          border="1px solid #757575"
+          hoverStyle={{
+            backgroundColor: "#ba7d1bff",
+            border: "2px solid #373737ff",
+          }}
+        />
       </Box>
     );
   }

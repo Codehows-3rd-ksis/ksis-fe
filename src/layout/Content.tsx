@@ -1,29 +1,21 @@
-import {Box} from '@mui/material'
-import  {type LayoutProps } from '../Types/Layout';
+import { Box } from "@mui/material";
+import { type LayoutProps } from "../Types/Layout";
 
-function Content({children}:LayoutProps) {
-  
+function Content({ children }: LayoutProps) {
   return (
     <Box
-        sx={{
-            // backgroundColor: '#fff',
-            // height: '100%',
-            // border: '3px solid #CDBAA6', 
-            // borderRadius: 3
-
-            backgroundColor: '#fff',
-            // flex: 1,          
-            height: '100%',
-            minHeight: 0,     
-            border: '3px solid #CDBAA6',
-            borderRadius: 3,
-            boxSizing: 'border-box',
-            // overflow: 'hidden', 
-        }}
+      sx={{
+        backgroundColor: "#fafaf9",
+        height: "100%",
+        minHeight: 0,
+        borderRadius: 3,
+        boxSizing: "border-box",
+        border: "3px solid rgba(86, 86, 86, 1)",
+      }}
     >
-            {children}
+      {children}
     </Box>
-  )
+  );
 }
 
-export default Content
+export default Content;

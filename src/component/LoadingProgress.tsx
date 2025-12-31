@@ -32,7 +32,7 @@ export default function LoadingProgress({ open }: LoadingProgressProps) {
             }
           }}
       >
-          <CircularProgress />
+          <CircularProgress sx={{color: '#F5A623'}} />
       </Dialog>
   );
 }
