@@ -2,7 +2,7 @@ import { type GridColDef, type GridRenderEditCellParams  } from '@mui/x-data-gri
 import CustomButton from '../../component/CustomButton'
 import CustomIconButton from '../../component/CustomIconButton';
 import CustomSelect from '../../component/CustomSelect';
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 
 export interface ConditionTableRows {
     id: number,
@@ -90,12 +90,14 @@ export const getColumns = ({
         </Box>
       )
     },
-    { field: 'conditionsKey', headerName: '추출값 명칭 지정(더블클릭 시 수정가능)', flex: 1,
+    { field: 'conditionsKey', headerName: '추출값 명칭 지정', flex: 1,
       editable: true, // 편집 가능 설정
       renderEditCell: (params) => <EditConditionsKey {...params} />, // 편집 모드 렌더링
       renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', pl: 1 }}>
-          {params.value}
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%', pl: 1,  }}>
+          <Typography sx={{color: params.value? 'black' : 'gray', fontSize: params.value? 16 : 14}}>
+            {params.value? params.value : '수정하려면 더블클릭을 해주세요.'}
+          </Typography>
         </Box>
       ),
     },
