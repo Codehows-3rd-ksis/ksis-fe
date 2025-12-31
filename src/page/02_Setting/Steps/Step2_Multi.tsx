@@ -42,7 +42,7 @@ const colors = [
 const pagingTypeList = [
         { value: 'Numeric', name: '페이지 형식' },
         { value: 'Next_Btn', name: '다음버튼 형식' },
-        { value: 'AJAX', name: 'AJAX' },
+        // { value: 'AJAX', name: 'AJAX' },
 ]
 
 interface Props {
