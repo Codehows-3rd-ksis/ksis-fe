@@ -36,7 +36,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 1.5,
     headerAlign: "center",
-    align: "left",
+    align: "center",
   },
   {
     field: "period",
@@ -50,7 +50,6 @@ export const getColumns = ({
     headerName: "주기",
     flex: 1.5,
     headerAlign: "center",
-    align: "center",
     renderCell: (params) => {
       const text = params.value || "";
       const parts = text.split(
@@ -62,7 +61,7 @@ export const getColumns = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "left",
+            justifyContent: "center",
             flexWrap: "wrap",
             fontSize: "0.875rem",
           }}
@@ -109,7 +108,7 @@ export const getColumns = ({
   {
     field: "edit",
     headerName: "수정",
-    width: 80,
+    width: 120,
     headerAlign: "center",
     align: "center",
     sortable: false,
@@ -123,7 +122,7 @@ export const getColumns = ({
   {
     field: "delete",
     headerName: "삭제",
-    width: 80,
+    width: 120,
     headerAlign: "center",
     align: "center",
     sortable: false,

@@ -87,7 +87,7 @@ function Status() {
     setSelectedRow(null);
   };
 
-  const columns = getColumns({ handleDetailOpen, handleStopClick });
+  const columns = getColumns({ handleStopClick });
 
   useEffect(() => {
     //데이터 로딩 확인
@@ -237,7 +237,11 @@ function Status() {
           }}
         >
           <Box sx={{ p: 1 }}>
-            <CommonTable columns={columns} rows={displayRows} />
+            <CommonTable
+              columns={columns}
+              rows={displayRows}
+              onRowClick={(params) => handleDetailOpen(params.row)}
+            />
           </Box>
         </Paper>
       </Container>

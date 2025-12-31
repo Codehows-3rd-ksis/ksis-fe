@@ -2,43 +2,24 @@
 //각 컬럼의 제목 + 모든 행의 표시 방식을 함께 정의
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
-import { Box, LinearProgress, Link } from "@mui/material";
+import { Box, LinearProgress } from "@mui/material";
 import dayjs from "dayjs";
 
 import { type StatusTableRows } from "../../API/03_StatusApi";
 
 export interface StatusTableColumnHandlers {
   handleStopClick: (row: StatusTableRows) => void;
-  handleDetailOpen: (row: StatusTableRows) => void;
 }
 
 export const getColumns = ({
   handleStopClick,
-  handleDetailOpen,
 }: StatusTableColumnHandlers): GridColDef[] => [
   {
     field: "settingName",
     headerName: "데이터수집명",
     flex: 2,
     headerAlign: "center",
-    align: "left",
-    renderCell: (params) => (
-      <Link
-        component="button"
-        onClick={() => handleDetailOpen(params.row)}
-        sx={{
-          color: 'black',
-          fontWeight: 'bold',
-          textDecoration: 'underline',
-          outline: 'none',
-          '&:focus': {
-            outline: 'none',
-          },
-        }}
-      >
-        {params.value}
-      </Link>
-    ),
+    align: "center",
   },
   {
     field: "startAt",
