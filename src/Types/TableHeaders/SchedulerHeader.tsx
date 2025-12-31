@@ -46,7 +46,7 @@ export const getColumns = ({
     align: "center",
   },
   {
-    field: "displayCycle",
+    field: "cycle",
     headerName: "주기",
     flex: 1.5,
     headerAlign: "center",

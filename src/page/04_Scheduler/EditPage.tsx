@@ -273,7 +273,7 @@ export default function EditPage() {
           </Typography>
 
           <Box sx={{ display: "flex", flexDirection: "column" }}>
-            {/* Row: 수집 기간 */}
+            {/* 수집 기간 */}
             <Box
               sx={{
                 display: "flex",
@@ -319,7 +319,7 @@ export default function EditPage() {
               </LocalizationProvider>
             </Box>
 
-            {/* Row: 수집 주기 */}
+            {/* 수집 주기 */}
             <Box
               sx={{
                 display: "flex",
@@ -386,7 +386,7 @@ export default function EditPage() {
               </Box>
             </Box>
 
-            {/* Row: 수집 시간 */}
+            {/* 수집 시간 */}
             <Box
               sx={{
                 display: "flex",
@@ -423,7 +423,7 @@ export default function EditPage() {
               </Box>
             </Box>
 
-            {/* Row: 수집 설정 (검색) */}
+            {/* 수집 설정 (검색) */}
             <Box
               sx={{
                 display: "flex",
@@ -599,6 +599,7 @@ export default function EditPage() {
         />
       </Box>
 
+      {/* Alert */}
       <Alert
         open={openCloseAlert}
         text="현재 수정한 정보가 사라집니다. 정말로 닫으시겠습니까?"

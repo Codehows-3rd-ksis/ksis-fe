@@ -71,7 +71,7 @@ export default function Scheduler() {
             updateAt: item.updateAt,
             collectAt: item.displayTime, // "오전 9시 40분"
             period: `${item.startDate} ~ ${item.endDate}`, //"2025-01-01 ~ 2025-12-31"
-            displayCycle: item.displayCycle, // "두번째 주 월요일 수요일"
+            cycle: item.displayCycle, // "두번째 주 월요일 수요일"
           };
         }
       );
