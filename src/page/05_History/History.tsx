@@ -10,6 +10,8 @@ import {
   Menu,
   MenuItem,
   ListItemText,
+  Container,
+  Paper,
 } from "@mui/material";
 // Table
 import PaginationServerTable from "../../component/PaginationServerTable";
@@ -223,117 +225,146 @@ export default function History() {
   return (
     <Box
       sx={{
-        height: "100%",
-        minHeight: 0,
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        pb: 4,
       }}
     >
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        데이터 수집이력
-      </Typography>
-
-      <Box sx={{ padding: 2 }}>
-        <SearchBarSet
-          value={{
-            type: searchState.type,
-            keyword: searchState.keyword,
-            startDate: searchState.startDate,
-            endDate: searchState.endDate,
+      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
+      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
+            fontWeight: 800,
+            color: "#1E293B",
+            letterSpacing: "-0.02em",
+            mb: 0.5,
           }}
-          totalCount={totalCount}
-          showDateRange={true}
-          showKeyword={true}
-          showSearchType={false}
-          showCount={isSearched}
-          onSearch={handleSearch}
-          onReset={handleReset}
-          showButton={false}
-          placeholder="수집명 입력"
-        />
-      </Box>
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}
         >
-          <FormControl>
-            <RadioGroup
-              row
-              value={searchState.type}
-              onChange={handleFilterChange}
-              sx={{ color: "black" }}
-            >
-              <FormControlLabel
-                value="all"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
-                  />
-                }
-                label="전체"
-              />
-              <FormControlLabel
-                value="스케줄러"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
-                  />
-                }
-                label="스케줄러"
-              />
-              <FormControlLabel
-                value="수동실행"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
-                  />
-                }
-                label="수동실행"
-              />
-            </RadioGroup>
-          </FormControl>
-        </Box>
+          데이터 수집이력
+        </Typography>
+        <Typography
+          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+        >
+          수집된 데이터의 이력을 조회하고 내보낼 수 있습니다.
+        </Typography>
       </Box>
-      {/* 테이블 영역 */}
-      <Box sx={{ padding: 2, overflowY: "auto" }}>
-        <PaginationServerTable
-          columns={columns}
-          rows={baseRows}
-          page={searchState.page}
-          pageSize={searchState.size}
-          totalCount={totalCount}
-          onPageChange={(newPage: number) => {
-            setSearchState((prev) => ({
-              ...prev,
-              page: newPage,
-            }));
+
+      <Container maxWidth={false} sx={{ px: 4 }}>
+        {/* 2. 검색 바 영역: 흰색 카드 스타일 및 여백 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
           }}
-        />
-      </Box>
+        >
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+              startDate: searchState.startDate,
+              endDate: searchState.endDate,
+            }}
+            totalCount={totalCount}
+            showDateRange={true}
+            showKeyword={true}
+            showSearchType={false}
+            showCount={isSearched}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={false}
+            placeholder="수집명 입력"
+          />
+
+          {/* 수집 타입 필터 */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <FormControl>
+              <RadioGroup
+                row
+                value={searchState.type}
+                onChange={handleFilterChange}
+                sx={{ color: "black" }}
+              >
+                <FormControlLabel
+                  value="all"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "gray",
+                        "&.Mui-checked": {
+                          color: "#F7941D",
+                        },
+                      }}
+                    />
+                  }
+                  label="전체"
+                />
+                <FormControlLabel
+                  value="스케줄러"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "gray",
+                        "&.Mui-checked": {
+                          color: "#F7941D",
+                        },
+                      }}
+                    />
+                  }
+                  label="스케줄러"
+                />
+                <FormControlLabel
+                  value="수동실행"
+                  control={
+                    <Radio
+                      sx={{
+                        color: "gray",
+                        "&.Mui-checked": {
+                          color: "#F7941D",
+                        },
+                      }}
+                    />
+                  }
+                  label="수동실행"
+                />
+              </RadioGroup>
+            </FormControl>
+          </Box>
+        </Paper>
+
+        {/* 3. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <PaginationServerTable
+              columns={columns}
+              rows={baseRows}
+              page={searchState.page}
+              pageSize={searchState.size}
+              totalCount={totalCount}
+              onPageChange={(newPage: number) => {
+                setSearchState((prev) => ({
+                  ...prev,
+                  page: newPage,
+                }));
+              }}
+            />
+          </Box>
+        </Paper>
+      </Container>
 
       <Menu
         anchorEl={exportAnchor}

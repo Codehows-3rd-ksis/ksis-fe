@@ -1,6 +1,7 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
 import type { WeekOfMonth } from "../../utils/cronUtils";
+import { Box } from "@mui/material";
 
 export interface SchedulerTableRows {
   id: number; // DataGrid row 식별용 (필수)
@@ -50,6 +51,51 @@ export const getColumns = ({
     flex: 1.5,
     headerAlign: "center",
     align: "center",
+    renderCell: (params) => {
+      const text = params.value || "";
+      // 요일(월~일)을 기준으로 텍스트를 분리합니다.
+      const parts = text.split(/(월|화|수|목|금|토|일)/);
+
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "left",
+            flexWrap: "wrap",
+            fontSize: "0.875rem",
+          }}
+        >
+          {parts.map((part: string, index: number) => {
+            // 분리된 파트가 요일일 경우 동그라미 배지로 렌더링
+            if (["월", "화", "수", "목", "금", "토", "일"].includes(part)) {
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    backgroundColor: "#F5A623",
+                    color: "black",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    mx: 0.3,
+                  }}
+                >
+                  {part}
+                </Box>
+              );
+            }
+            // '매주', '첫번째 주', ',' 등 일반 텍스트는 그대로 유지
+            return <span key={index}>{part}</span>;
+          })}
+        </Box>
+      );
+    },
   },
   {
     field: "collectAt",

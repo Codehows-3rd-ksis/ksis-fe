@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 // Mui
-import { Box, Dialog, Typography } from "@mui/material";
+import {
+  Box,
+  Dialog,
+  Typography,
+  Button,
+  Container,
+  Paper,
+} from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 // Table
 import PaginationServerTable from "../../component/PaginationServerTable";
 import {
@@ -183,59 +191,109 @@ function UserManagement() {
   return (
     <Box
       sx={{
-        height: "100%",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
+        pb: 4,
       }}
     >
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        유저관리
-      </Typography>
-      <Box sx={{ padding: 2 }}>
-        <SearchBarSet
-          value={{
-            type: searchState.type,
-            keyword: searchState.keyword,
+      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
+      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
+            fontWeight: 800,
+            color: "#1E293B",
+            letterSpacing: "-0.02em",
+            mb: 0.5,
           }}
-          totalCount={totalCount}
-          showDateRange={false}
-          showKeyword={true}
-          showSearchType={true}
-          showCount={isSearched}
-          searchCategories={getUserSearchCategory()}
-          onSearch={handleSearch}
-          onReset={handleReset}
-          showButton={true}
-          buttonLabel="유저 등록"
-          onButtonClick={handleOpenReg}
-        />
+        >
+          유저관리
+        </Typography>
+        <Typography
+          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+        >
+          시스템 사용자를 등록하고 계정 정보를 관리할 수 있습니다.
+        </Typography>
       </Box>
 
-      {/* 테이블 영역 */}
-      <Box sx={{ padding: 2, overflowY: "auto" }}>
-        <PaginationServerTable
-          columns={columns}
-          rows={baseRows}
-          page={searchState.page}
-          pageSize={searchState.size}
-          totalCount={totalCount}
-          onPageChange={(newPage: number) => {
-            setSearchState((prev) => ({
-              ...prev,
-              page: newPage,
-            }));
+      <Container maxWidth={false} sx={{ px: 4 }}>
+        {/* 2. 검색 바 영역: 흰색 카드 스타일 및 여백 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
           }}
-        />
-      </Box>
+        >
+          <SearchBarSet
+            value={{
+              type: searchState.type,
+              keyword: searchState.keyword,
+            }}
+            totalCount={totalCount}
+            showDateRange={false}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getUserSearchCategory()}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            showButton={false} // 등록 버튼을 위로 뺐으므로 false
+          />
+        </Paper>
+        {/* 등록 버튼 영역 */}
+        <Box sx={{ px: 4, mb: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            onClick={handleOpenReg}
+            sx={{
+              bgcolor: "#F5A623",
+              color: "black",
+              px: 2.5,
+              py: 1,
+              borderRadius: "8px",
+              fontWeight: 700,
+              textTransform: "none",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              "&:hover": { bgcolor: "#E59512" },
+            }}
+          >
+            유저 등록
+          </Button>
+        </Box>
+        {/* 3. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <PaginationServerTable
+              columns={columns}
+              rows={baseRows}
+              page={searchState.page}
+              pageSize={searchState.size}
+              totalCount={totalCount}
+              onPageChange={(newPage: number) => {
+                setSearchState((prev) => ({
+                  ...prev,
+                  page: newPage,
+                }));
+              }}
+            />
+          </Box>
+        </Paper>
+      </Container>
 
       {/* 등록 페이지 */}
       <Dialog

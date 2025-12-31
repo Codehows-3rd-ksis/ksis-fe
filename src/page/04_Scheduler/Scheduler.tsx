@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button, Container, Paper } from "@mui/material";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PaginationServerTable from "../../component/PaginationServerTable";
 import SearchBarSet from "../../component/SearchBarSet";
 import type { SearchConditions } from "../../component/SearchBarSet";
@@ -63,7 +64,9 @@ export default function Scheduler() {
           const daysArray = item.daysOfWeek.split(",") as DayOfWeekEN[]; // 요일 파싱 -> ["MON","WED","FRI"]
           // 요일을 SUN부터 차례대로 정렬
           const dayOrder = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-          const sortedDaysArray = daysArray.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+          const sortedDaysArray = daysArray.sort(
+            (a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b)
+          );
           return {
             //row 단위로 동작
             id: item.scheduleId,
@@ -163,60 +166,101 @@ export default function Scheduler() {
   return (
     <Box
       sx={{
-        height: "100%",
-        minHeight: 0,
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        pb: 4,
       }}
     >
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        스케줄러 관리
-      </Typography>
-
-      <Box
-        sx={{
-          padding: 2,
-          // display: "flex",
-          // flexDirection: "column",
-          // height: "100%",
-        }}
-      >
-        <SearchBarSet
-          value={searchState}
-          onSearch={handleSearch}
-          onReset={handleReset}
-          totalCount={totalCount}
-          showDateRange={true}
-          showKeyword={true}
-          showSearchType={true}
-          showCount={isSearched}
-          searchCategories={getSchedulerSearchCategory()}
-          showButton={true}
-          buttonLabel="스케줄 등록"
-          buttonWidth="100px"
-          onButtonClick={() => navigate("/scheduler/reg")}
-        />
-      </Box>
-      {/* 테이블 영역 */}
-      <Box sx={{ padding: 2, overflowY: "auto" }}>
-        <PaginationServerTable
-          columns={columns}
-          rows={rows}
-          page={searchState.page}
-          pageSize={searchState.size}
-          totalCount={totalCount}
-          onPageChange={handlePageChange}
-        />
+      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
+      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
+            fontWeight: 800,
+            color: "#1E293B",
+            letterSpacing: "-0.02em",
+            mb: 0.5,
+          }}
+        >
+          스케줄러 관리
+        </Typography>
+        <Typography
+          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+        >
+          데이터 수집 일정을 체계적으로 확인하고 관리할 수 있습니다.
+        </Typography>
       </Box>
 
+      <Container maxWidth={false} sx={{ px: 4 }}>
+        {/* 2. 검색 바 영역: 흰색 카드 스타일 및 여백 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2.5,
+            mb: 3,
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+          }}
+        >
+          <SearchBarSet
+            value={searchState}
+            onSearch={handleSearch}
+            onReset={handleReset}
+            totalCount={totalCount}
+            showDateRange={true}
+            showKeyword={true}
+            showSearchType={true}
+            showCount={isSearched}
+            searchCategories={getSchedulerSearchCategory()}
+            showButton={false} // 등록 버튼을 위로 뺐으므로 false
+          />
+        </Paper>
+        {/* 등록 버튼 영역  */}
+        <Box sx={{ px: 4, mb: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            onClick={() => navigate("/scheduler/reg")}
+            sx={{
+              bgcolor: "#F5A623",
+              color: "black",
+              px: 2.5,
+              py: 1,
+              borderRadius: "8px",
+              fontWeight: 700,
+              textTransform: "none",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+              "&:hover": { bgcolor: "#E59512" },
+            }}
+          >
+            스케줄 등록
+          </Button>
+        </Box>
+        {/* 3. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <PaginationServerTable
+              columns={columns}
+              rows={rows}
+              page={searchState.page}
+              pageSize={searchState.size}
+              totalCount={totalCount}
+              onPageChange={handlePageChange}
+            />
+          </Box>
+        </Paper>
+      </Container>
       {/* 삭제 팝업 */}
       <Alert
         open={openDeleteAlert}

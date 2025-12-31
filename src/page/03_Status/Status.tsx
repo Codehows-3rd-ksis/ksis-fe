@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Container, Paper } from "@mui/material";
 import CommonTable from "../../component/CommonTable";
 import { getColumns } from "../../Types/TableHeaders/StatusHeader";
 import Alert from "../../component/Alert";
@@ -199,40 +199,49 @@ function Status() {
   return (
     <Box
       sx={{
-        height: "100%",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        minHeight: 0,
-        color: "black",
+        pb: 4,
       }}
     >
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: 5,
-        }}
-      >
-        데이터 수집 현황
-      </Typography>
-      <Box
-        sx={{
-          padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-        }}
-      >
-        <Box sx={{ marginTop: 13 }}>
-          <CommonTable 
-          columns={columns} rows={displayRows} 
-          />
-        </Box>
+      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
+      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
+        <Typography
+          sx={{
+            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
+            fontWeight: 800,
+            color: "#1E293B",
+            letterSpacing: "-0.02em",
+            mb: 0.5,
+          }}
+        >
+          데이터 수집 현황
+        </Typography>
+        <Typography
+          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+        >
+          현재 진행 중인 데이터 수집 작업을 실시간으로 모니터링할 수 있습니다.
+        </Typography>
       </Box>
+
+      <Container maxWidth={false} sx={{ px: 4 }}>
+        {/* 2. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: "12px",
+            border: "1px solid #E2E8F0",
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <Box sx={{ p: 1 }}>
+            <CommonTable columns={columns} rows={displayRows} />
+          </Box>
+        </Paper>
+      </Container>
 
       <Alert
         open={alertOpen}

@@ -14,6 +14,7 @@ import {
   RadioGroup,
   FormControl,
   FormControlLabel,
+  Paper,
 } from "@mui/material";
 // Table
 import PaginationServerTable from "../../component/PaginationServerTable";
@@ -142,141 +143,181 @@ export default function LogPage() {
   };
 
   return (
-    <Box sx={{ height: "97%" }}>
-      {/* BreadCrumbs */}
-      <Box sx={{ paddingLeft: 2, marginTop: 1 }}>
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 1 }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#fafaf9",
+        borderRadius: 3,
+        overflow: "hidden",
+      }}
+    >
+      {/* 상단 헤더 */}
+      <Box sx={{ px: 4, pt: 3, pb: 2, flexShrink: 0 }}>
+        <Breadcrumbs
+          sx={{ mb: 0.5, "& .MuiTypography-root": { fontSize: 14 } }}
+        >
           <Link
             component={RouterLink}
             to="/user"
             underline="hover"
             color="inherit"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
           >
             유저관리
           </Link>
-          <Typography
-            color="text.primary"
-            sx={{ fontWeight: "bold", fontSize: 16 }}
-          >
+          <Typography color="text.secondary" sx={{ fontSize: 14 }}>
             {username} 의 데이터 수집 이력
           </Typography>
         </Breadcrumbs>
-      </Box>
-      <Typography
-        sx={{
-          fontSize: 60,
-          fontWeight: "bold",
-          color: "black",
-          paddingLeft: 2,
-          marginTop: -1,
-        }}
-      >
-        데이터 수집 이력
-      </Typography>
-      <Box sx={{ padding: 2 }}>
-        <SearchBarSet
-          value={{
-            type: searchState.type,
-            keyword: searchState.keyword,
-            startDate: searchState.startDate,
-            endDate: searchState.endDate,
+        <Typography
+          sx={{
+            fontSize: 32,
+            fontWeight: 800,
+            color: "#292524",
+            letterSpacing: "-0.03em",
           }}
-          totalCount={totalCount}
-          showDateRange={true}
-          showKeyword={true}
-          showSearchType={false}
-          showCount={isSearched}
-          onSearch={handleSearch}
-          onReset={handleReset}
-          showButton={false}
-          placeholder="수집명 입력"
-        />
-        {/* RadioBtn */}
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", paddingRight: 1 }}
         >
-          <FormControl>
-            <RadioGroup
-              row
-              value={searchState.type}
-              onChange={handleFilterChange}
-              sx={{ color: "black" }}
-            >
-              <FormControlLabel
-                value="all"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
+          데이터 수집 이력
+        </Typography>
+      </Box>
+
+      {/* 본문 영역: 스크롤 구역 */}
+      <Box sx={{ flex: 1, overflowY: "auto", px: 4, pb: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {/* 검색 영역 */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+              backgroundColor: "#fff",
+            }}
+          >
+            <SearchBarSet
+              value={{
+                type: searchState.type,
+                keyword: searchState.keyword,
+                startDate: searchState.startDate,
+                endDate: searchState.endDate,
+              }}
+              totalCount={totalCount}
+              showDateRange={true}
+              showKeyword={true}
+              showSearchType={false}
+              showCount={isSearched}
+              onSearch={handleSearch}
+              onReset={handleReset}
+              showButton={false}
+              placeholder="수집명 입력"
+            />
+
+            {/* 수집 타입 필터 */}
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+              <FormControl>
+                <RadioGroup
+                  row
+                  value={searchState.type}
+                  onChange={handleFilterChange}
+                  sx={{ color: "black" }}
+                >
+                  <FormControlLabel
+                    value="all"
+                    control={
+                      <Radio
+                        sx={{
+                          color: "gray",
+                          "&.Mui-checked": {
+                            color: "#F7941D",
+                          },
+                        }}
+                      />
+                    }
+                    label="전체"
                   />
-                }
-                label="전체"
-              />
-              <FormControlLabel
-                value="스케줄러"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
+                  <FormControlLabel
+                    value="스케줄러"
+                    control={
+                      <Radio
+                        sx={{
+                          color: "gray",
+                          "&.Mui-checked": {
+                            color: "#F7941D",
+                          },
+                        }}
+                      />
+                    }
+                    label="스케줄러"
                   />
-                }
-                label="스케줄러"
-              />
-              <FormControlLabel
-                value="수동실행"
-                control={
-                  <Radio
-                    sx={{
-                      color: "gray",
-                      "&.Mui-checked": {
-                        color: "#F7941D",
-                      },
-                    }}
+                  <FormControlLabel
+                    value="수동실행"
+                    control={
+                      <Radio
+                        sx={{
+                          color: "gray",
+                          "&.Mui-checked": {
+                            color: "#F7941D",
+                          },
+                        }}
+                      />
+                    }
+                    label="수동실행"
                   />
-                }
-                label="수동실행"
-              />
-            </RadioGroup>
-          </FormControl>
+                </RadioGroup>
+              </FormControl>
+            </Box>
+          </Paper>
+
+          {/* 테이블 영역 */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              borderRadius: 3,
+              border: "1px solid #e7e5e4",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.04)",
+              backgroundColor: "#fff",
+            }}
+          >
+            <PaginationServerTable
+              columns={columns}
+              rows={baseRows}
+              page={searchState.page}
+              pageSize={searchState.size}
+              totalCount={totalCount}
+              onPageChange={(newPage: number) => {
+                setSearchState((prev) => ({
+                  ...prev,
+                  page: newPage,
+                }));
+              }}
+            />
+          </Paper>
         </Box>
       </Box>
 
-      {/* 테이블 영역 */}
-      <Box sx={{ padding: 2 }}>
-        <PaginationServerTable
-          columns={columns}
-          rows={baseRows}
-          page={searchState.page}
-          pageSize={searchState.size}
-          totalCount={totalCount}
-          onPageChange={(newPage: number) => {
-            setSearchState((prev) => ({
-              ...prev,
-              page: newPage,
-            }));
-          }}
-        />
-      </Box>
-      <Box sx={{ display: "flex", justifyContent: "flex-start", padding: 2 }}>
+      {/* 하단 푸터 */}
+      <Box
+        sx={{
+          px: 4,
+          py: 2,
+          display: "flex",
+          justifyContent: "flex-start",
+          flexShrink: 0,
+        }}
+      >
         <CustomButton
           text="이전"
           onClick={handleClose}
           radius={2}
-          width="80px"
+          width="100px"
           backgroundColor="#F2F2F2"
           border="1px solid #757575"
           hoverStyle={{
             backgroundColor: "transparent",
-            border: "2px solid #373737ff"
+            border: "2px solid #373737ff",
           }}
         />
       </Box>
