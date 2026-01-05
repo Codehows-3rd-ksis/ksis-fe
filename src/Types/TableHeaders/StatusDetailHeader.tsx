@@ -255,7 +255,7 @@ export const DETAIL_SETTING_COLUMNS = ({
     align: "center",
   },
   {
-    field: "progress",
+    field: "progressRate",
     headerName: "진행도",
     flex: 1,
     minWidth: 250,

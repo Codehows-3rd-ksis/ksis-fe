@@ -73,7 +73,7 @@ export const getColumns = ({
     },
   },
   {
-    field: "progress",
+    field: "progressRate",
     headerName: "진행도",
     flex: 1,
     minWidth: 300, // 최소 너비 지정
@@ -137,7 +137,10 @@ export const getColumns = ({
           >
             <CustomIconButton
               icon="stop"
-              onClick={() => handleStopClick(params.row)}
+              onClick={(e) => {
+                e.stopPropagation(); //행클릭 이벤트전파 방지
+                handleStopClick(params.row);
+              }}
             />
           </Box>
         </Box>

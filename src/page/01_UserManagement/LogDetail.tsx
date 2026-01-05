@@ -58,9 +58,9 @@ export default function LogDetail() {
         setDetailData({
           ...data.basicInfo,
           id: data.basicInfo.workId,
-          totalCount: data.progress.totalCount,
-          failCount: data.progress.failCount,
-          collectCount: data.progress.collectCount,
+          totalCount: data.progressInfo.totalCount,
+          failCount: data.progressInfo.failCount,
+          collectCount: data.progressInfo.collectCount,
         });
         setFailureRows(
           data.failureList.map((row: any) => ({
