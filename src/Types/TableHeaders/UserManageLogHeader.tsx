@@ -118,7 +118,7 @@ export const getColumns = ({
                 width: "100%",
               }}
           >
-              <Typography sx={{ 
+              <Typography sx={{
                 color: 'black',
                 borderRadius: 3,
                 bgcolor: 'rgba(237,108,2,0.3)',
@@ -129,7 +129,7 @@ export const getColumns = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1
-              }}> 
+              }}>
               <ErrorOutline sx={{fontSize:15}}/>
                {'부분완료 (실패:'}
                <Typography sx={{color: 'red'}}>{failCount}</Typography>
@@ -138,7 +138,37 @@ export const getColumns = ({
           </Box>
         );
       }
-      else return (
+      else if (params.value === "STOPPED") {
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography sx={{
+              color: 'black',
+              borderRadius: 3,
+              bgcolor: '#E0E0E0',
+              pl: 1,
+              pr: 2,
+              pt: 0.5,
+              pb: 0.5,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
+            }}>
+            <HighlightOff sx={{fontSize:15}}/>
+             수집중지
+            </Typography>
+          </Box>
+        )
+      }
+      else if (params.value === "RUNNING") {
+        return (
         <Box
           sx={{
             display: "flex",
@@ -148,7 +178,7 @@ export const getColumns = ({
             width: "100%",
           }}
         >
-          <Typography sx={{ 
+          <Typography sx={{
               color: 'black',
               borderRadius: 3,
               bgcolor: 'rgba(247,148,29,0.15)',
@@ -159,12 +189,14 @@ export const getColumns = ({
               display: 'flex',
               alignItems: 'center',
               gap: 1
-          }}> 
+          }}>
             <PlayCircleOutline sx={{fontSize:15}}/>
              진행중
             </Typography>
         </Box>
-      )
+        )
+      }
+      else return params.value; // 알 수 없는 값은 그대로 표시
     },
   },
   { field: 'startAt',    headerName: '수집시작',       flex: 1,  headerAlign: 'center',  align: 'center',
