@@ -52,9 +52,9 @@ export const getColumns = ({
     headerAlign: "center",
     renderCell: (params) => {
       const text = params.value || "";
-      const parts = text.split(
-        /(일요일|월요일|화요일|수요일|목요일|금요일|토요일)/
-      );
+      const parts = text
+        .split(/(일요일|월요일|화요일|수요일|목요일|금요일|토요일)/)
+        .filter((part: string) => part.trim()); // 빈 문자열과 공백 제거
 
       return (
         <Box
@@ -73,25 +73,30 @@ export const getColumns = ({
                 <Box
                   key={index}
                   sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: "50%",
-                    backgroundColor: "#F5A623",
-                    color: "black",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "0.8rem",
-                    fontWeight: "600",
-                    mx: 0.3,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "6px",
+                    fontSize: "0.85rem",
+                    fontWeight: 600, // 글자를 두껍게 하여 가독성 확보
+                    bgcolor: "#FFF7ED",
+                    color: "#c27413ff",
+                    border: "1px solid #FFEDD5", // 미세한 테두리로 형태감 부여
+                    mr: 0.5,
                   }}
                 >
                   {part[0]}
                 </Box>
               );
             }
-            // '매주', '첫번째 주' 등 일반 텍스트는 그대로 표시
-            return <span key={index}>{part}</span>;
+            // '매주', '첫번째 주' 등 일반 텍스트는 간격 추가
+            return (
+              <span key={index} style={{ marginRight: "0.5rem" }}>
+                {part}
+              </span>
+            );
           })}
         </Box>
       );

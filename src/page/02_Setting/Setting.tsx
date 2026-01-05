@@ -146,28 +146,65 @@ function Setting() {
         pb: 4,
       }}
     >
-      {/* 1. 헤더 섹션: 타이틀 폰트 조정 및 설명 추가 */}
-      <Box sx={{ px: 4, pt: 6, pb: 2 }}>
-        <Typography
+      {/* 1. 헤더 섹션: 타이틀과 버튼을 한 행(Row)에 배치 */}
+      <Box
+        sx={{
+          px: 4,
+          pt: 6,
+          pb: 3,
+          display: "flex",
+          justifyContent: "space-between", // 양 끝으로 배치
+          alignItems: "flex-end", // 텍스트 하단 라인에 버튼을 맞춤
+        }}
+      >
+        {/* 텍스트 영역 */}
+        <Box>
+          <Typography
+            sx={{
+              fontSize: "1.85rem",
+              fontWeight: 800,
+              color: "#1E293B",
+              letterSpacing: "-0.02em",
+              mb: 0.5,
+            }}
+          >
+            데이터 수집 설정
+          </Typography>
+          <Typography
+            sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
+          >
+            데이터 수집 대상 및 조건을 설정합니다.
+          </Typography>
+        </Box>
+
+        {/* 버튼 영역: 헤더 안으로 이동 */}
+        <Button
+          variant="contained"
+          startIcon={<AddRoundedIcon />}
+          onClick={handleOpenReg}
           sx={{
-            fontSize: "1.85rem", // 60px에서 세련된 크기로 하향 조정
-            fontWeight: 800,
-            color: "#1E293B",
-            letterSpacing: "-0.02em",
-            mb: 0.5,
+            bgcolor: "#F5A623",
+            color: "black",
+            px: 3, // 가로 여백 살짝 증가
+            py: 1.2,
+            borderRadius: "10px", // 좀 더 둥글게 조정
+            fontWeight: 700,
+            fontSize: "0.95rem",
+            textTransform: "none",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+            "&:hover": {
+              bgcolor: "#E59512",
+              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+            },
           }}
         >
-          데이터 수집 설정
-        </Typography>
-        <Typography
-          sx={{ color: "#64748B", fontSize: "0.95rem", fontWeight: 500 }}
-        >
-          데이터 수집 대상 및 조건을 설정합니다.
-        </Typography>
+          설정 등록
+        </Button>
       </Box>
 
       <Container maxWidth={false} sx={{ px: 4 }}>
-        {/* 2. 검색 바 영역: 흰색 카드 스타일 및 여백 조정 */}
+        {/* 2. 검색 바 영역 */}
         <Paper
           elevation={0}
           sx={{
@@ -191,31 +228,9 @@ function Setting() {
             searchCategories={getSettingSearchCategory()}
             onSearch={handleSearch}
             onReset={handleReset}
-            showButton={false} // 등록 버튼을 위로 뺐으므로 false
+            showButton={false}
           />
         </Paper>
-
-        {/* 등록 버튼 영역  */}
-        <Box sx={{ px: 4, mb: 2, display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            variant="contained"
-            startIcon={<AddRoundedIcon />}
-            onClick={handleOpenReg}
-            sx={{
-              bgcolor: "#F5A623",
-              color: "black",
-              px: 2.5,
-              py: 1,
-              borderRadius: "8px",
-              fontWeight: 700,
-              textTransform: "none",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              "&:hover": { bgcolor: "#E59512" },
-            }}
-          >
-            설정 등록
-          </Button>
-        </Box>
 
         {/* 3. 테이블 영역: 카드 스타일 및 내부 패딩 조정 */}
         <Paper

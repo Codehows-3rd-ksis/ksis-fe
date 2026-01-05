@@ -10,7 +10,7 @@ function Content({ children }: LayoutProps) {
         minHeight: 0,
         borderRadius: 3,
         boxSizing: "border-box",
-        border: "3px solid rgba(86, 86, 86, 1)",
+        border: "1px solid rgba(86, 86, 86, 1)",
       }}
     >
       {children}

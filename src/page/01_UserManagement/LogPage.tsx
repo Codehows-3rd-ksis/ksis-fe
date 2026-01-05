@@ -81,7 +81,7 @@ export default function LogPage() {
       const result = res.content.map((row: UserLogTableRows, i: number) => ({
         ...row,
         id: row.workId,
-        index: page * size + i + 1, // 🔥 전체 기준 index
+        index: page * size + i + 1, // 전체 기준 index
       }));
 
       setBaseRows(result);
