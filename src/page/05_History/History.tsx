@@ -147,13 +147,40 @@ export default function History() {
     const jsonString = JSON.stringify(jsonData, null, 2);
     downloadFile(jsonString, filename + ".json", "application/json");
   };
+  //20260106 CSV 수정
+  const escapeCSV = (value: any) => {
+  if (value === null || value === undefined) return "";
+
+  const str = String(value);
+  const needQuote = /[|\n"]/g.test(str);
+
+  if (!needQuote) return str;
+
+  return `"${str.replace(/"/g, '""')}"`;
+};
+
   const exportCSV = (jsonData: any, filename: string) => {
-    const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
-    const headers = Object.keys(arr[0]).join(",");
-    const rows = arr.map((row) => Object.values(row).join(",")).join("\n");
-    const csv = headers + "\n" + rows;
-    downloadFile(csv, filename + ".csv", "text/csv;charset=utf-8;");
-  };
+  const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
+  if (arr.length === 0) return;
+
+  // 컬럼 동적 생성
+  const columnSet = new Set<string>();
+  arr.forEach((row) =>
+    Object.keys(row).forEach((key) => columnSet.add(key))
+  );
+  const columns = Array.from(columnSet);
+
+  const headers = columns.join("|");
+
+  const rows = arr.map((row) =>
+    columns.map((col) => escapeCSV(row[col])).join("|")
+  );
+
+  const csv = headers + "\n" + rows.join("\n");
+
+  // BOM 포함 (한글 + 엑셀)
+  downloadFile("\uFEFF" + csv, filename + ".csv", "text/csv;charset=utf-8;");
+};
   const exportExcel = (jsonData: any, filename: string) => {
     const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
     const worksheet = XLSX.utils.json_to_sheet(arr);
