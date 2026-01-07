@@ -38,12 +38,19 @@ const colors = [
   "rgba(100, 181, 246, 0.8)",  // 파란색
   "rgba(129, 199, 132, 0.8)",  // 초록색
   "rgba(244, 143, 177, 0.8)",  // 핑크색
+  "rgba(255, 183, 77, 0.8)",   // 오렌지
+  "rgba(186, 104, 200, 0.8)",  // 보라색
+  "rgba(121, 134, 203, 0.8)",  // 인디고
+  "rgba(77, 182, 172, 0.8)",   // 청록
 ];
+
 const pagingTypeList = [
         { value: 'Numeric', name: '페이지 형식' },
         { value: 'Next_Btn', name: '다음버튼 형식' },
         // { value: 'AJAX', name: 'AJAX' },
 ]
+
+type SelectMode = "search" | "preview" | "detailPreview" | "confirm" | null;
 
 interface Props {
     previewData: PreviewData;
@@ -70,6 +77,7 @@ export default React.memo(function Step2_Multi({
     isDetail,
     setIsDetail,
 }: Props) {
+    const nextIdRef = useRef(0);
     const [highlightNodesMap, setHighlightNodesMap] = useState<Record<string, Element | undefined>>({});
     const [mainRects, setMainRects] = useState<HighlightPos[]>([]);
     const [mainImageSize, setMainImageSize] = useState({
@@ -87,7 +95,8 @@ export default React.memo(function Step2_Multi({
       displayHeight: 0
     });
     const detailImgRef = useRef<HTMLImageElement>(null);
-    const [selectTarget, setSelectTarget] = useState<any>(null); // 영역선택 포커스
+    const [selectTarget, setSelectTarget] = useState<any>("search");
+    const [selectMode, setSelectMode] = useState<SelectMode>("search");
     const [openErrorAlert, setOpenErrorAlert] = useState(false)
     const [alertMsg, setAlertMsg] = useState('')
 
@@ -254,16 +263,17 @@ export default React.memo(function Step2_Multi({
     };
 
     const handleAddCondition = () => {
+      const newId = nextIdRef.current++;
       setCondition(prev => [
         ...prev,
         {
-          id: prev.length + 1,
+          id: newId,
           conditionsValue: "",
           attr: "",
           conditionsKey: ""
         }
       ]);
-      setSelectTarget(null)
+      // setSelectTarget("search")
     };
 
     const handleInputChange = (key: keyof typeof newData, value: string) => {
@@ -282,10 +292,28 @@ export default React.memo(function Step2_Multi({
       setNewData((prev) => ({ ...prev, [key]: event.target.value }));
     };
     const handleAreaSelect = (target: any) => {
+      clearPreviewByTarget(selectTarget);
       setSelectTarget(target);
+      setSelectMode("preview");
     };
     const handleAreaSelectTable = (rowId: number) => {
+      clearPreviewByTarget(selectTarget);
       setSelectTarget(rowId);
+      setSelectMode("detailPreview");
+    };
+
+    const getColorIndexByTarget = (target: string | number) => {
+      // 조건 테이블 rowId
+      if (!isNaN(Number(target))) {
+        return Number(target) % colors.length;
+      }
+      if (typeof target === "string") {
+        const order = ["listArea", "pagingArea", "pagingNextbtn", "linkArea"];
+        const idx = order.indexOf(target);
+        return idx >= 0 ? idx : 0;
+      }
+      
+      return 0;
     };
 
     const getCssSelector = (el:any) => {
@@ -352,13 +380,32 @@ export default React.memo(function Step2_Multi({
       return null;
     };
 
+    const clearPreviewByTarget = (target: any) => {
+      if (!target || target === "search") return;
+
+      // main preview 제거
+      setMainRects(prev =>
+        prev.filter(rect => rect.target !== target)
+      );
+    
+      // detail preview 제거
+      setDetailRects(prev =>
+        prev.filter(rect => rect.target !== target)
+      );
+    
+      // inspector highlight 제거
+      setHighlightNodesMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[target];
+        return newMap;
+      });
+    };
+
     // 다중페이지 영역선택 클릭시
     const handleInspectorClick = (element: Element) => {
       try {
-        if(selectTarget === null) return;
-
         const selector = getCssSelector(element);
-        if(selector === null) return;
+        if(!selector) return;
 
         // 로컬 preview(domRects)에서 selector로 rect 검색
         const rect = findRectFromLocal(selector, previewData);
@@ -398,17 +445,15 @@ export default React.memo(function Step2_Multi({
 
           return newMap;
         });
-        // ✔ highlight 업데이트 이후 따로 호출
-        const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
+        
+        // const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
 
-        // ★ newData도 토글 ON/OFF에 따라 동기화
-        setNewData(prev => ({
-          ...prev,
-          [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
-          [`${selectTarget}`]: isToggleOff ? "" : selector,
-        }));
+        // setNewData(prev => ({
+        //   ...prev,
+        //   [`${selectTarget}Selector`]: isToggleOff ? "" : selector,
+        //   [`${selectTarget}`]: isToggleOff ? "" : selector,
+        // }));
 
-        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -421,11 +466,9 @@ export default React.memo(function Step2_Multi({
     // 추출조건 테이블 내 영역선택 버튼 클릭시
     const handleInspectorTableClick = (element: Element) => {
       try {
-        if(selectTarget === null) return;
-
         const selector = getCssSelector(element);
-        if(selector === null) return;       
-        // 로컬 preview(domRects)에서 selector로 rect 검색
+        if(!selector) return;       
+        
         const rect = findRectFromLocal(selector, detailData);
         if (!rect) {
           console.warn("Rect not found for selector", selector);
@@ -461,20 +504,19 @@ export default React.memo(function Step2_Multi({
           return newMap;
         });
         
-        const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
+        // const isToggleOff = highlightNodesMap[selectTarget]?.isSameNode(element);
 
-        setCondition((prev) =>
-          prev.map((row) =>
-            row.id === selectTarget
-              ? {
-                  ...row,
-                  conditionsValue: isToggleOff ? "" : (selector ?? ""),
-                }
-              : row
-          )
-        );
+        // setCondition((prev) =>
+        //   prev.map((row) =>
+        //     row.id === selectTarget
+        //       ? {
+        //           ...row,
+        //           conditionsValue: isToggleOff ? "" : (selector ?? ""),
+        //         }
+        //       : row
+        //   )
+        // );
 
-        // setSelectTarget(null)
         setLoading(false)
       }
       catch(err) {
@@ -485,6 +527,67 @@ export default React.memo(function Step2_Multi({
       }
       
     };
+
+    const confirmSelection = () => {
+      if (selectTarget === null) return;
+
+      const element = highlightNodesMap[selectTarget];
+      if (!element) return;
+
+      const selector = getCssSelector(element);
+      if (!selector) return;
+
+      if (typeof selectTarget === "string") {
+        // main 영역
+        setNewData(prev => ({
+          ...prev,
+          [selectTarget]: selector,
+          [`${selectTarget}Selector`]: selector,
+        }));
+      } else {
+        // 조건 테이블
+        setCondition(prev =>
+          prev.map(row =>
+            row.id === selectTarget
+              ? { ...row, conditionsValue: selector }
+              : row
+          )
+        );
+      }
+    
+      // ✅ 모드 종료
+      setSelectTarget("search");
+      setSelectMode("search");
+    }
+
+    const getConditionIndex = (targetId: number) => {
+      return conditionData.findIndex(row => row.id === targetId);
+    };
+
+    const transAreaText = (target: string | number) => {
+      let text = ""
+      if(typeof target === 'string') {
+        switch (target) {
+          case 'listArea':
+            text = "게시물 영역";
+            break;
+          case 'linkArea':
+            text = "상세 링크 영역";
+            break;
+          case 'pagingArea':
+            text = "페이지네이션 영역";
+            break;
+          case 'pagingNextbtn':
+            text = "다음 버튼 영역";
+            break;
+        }
+      }
+      else {
+        const idx = getConditionIndex(Number(target));
+        text = `조건 ${idx + 1} 영역`;
+      }
+      return text;        
+    }
 
     const handleDetailLoad = async () => {
         try {
@@ -541,6 +644,7 @@ export default React.memo(function Step2_Multi({
         handleAreaSelect: handleAreaSelectTable,
         handleSelectChange: handleConditionSelectChange,
         handleCancel,
+        selectTarget,
     })
 
     return (
@@ -596,14 +700,14 @@ export default React.memo(function Step2_Multi({
                         {mainRects.map((pos, idx) => {
                           const scaleX = mainImageSize.displayWidth / mainImageSize.naturalWidth;
                           const scaleY = mainImageSize.displayHeight / mainImageSize.naturalHeight;
-
+                          
                           return (
                             <Box
                               key={idx}
                               sx={{
                                 position: "absolute",
-                                border: `2px solid ${colors[idx % colors.length]}`,
-                                backgroundColor: `${colors[idx % colors.length].replace("0.8", "0.25")}`, // 살짝 투명하게
+                                border: pos.target === "search" ? `2px solid rgba(189, 189, 189, 0.8)` : `2px solid ${colors[getColorIndexByTarget(pos.target)]}`,
+                                backgroundColor: pos.target === "search" ? `rgba(189, 189, 189, 0.25)` : `${colors[getColorIndexByTarget(pos.target)].replace("0.8", "0.25")}`, // 살짝 투명하게
                                 pointerEvents: "none",
                                 top: pos.y * scaleY,
                                 left: pos.x * scaleX,
@@ -623,50 +727,96 @@ export default React.memo(function Step2_Multi({
                       flexDirection: "column",
                       border: '1px solid black'
                     }}>
-                      <Box 
-                        sx={{ 
-                          display:'flex', 
-                          gap:2, 
-                          height: 60,
-                          pl:2, 
-                          alignItems: 'center',
-                          // bgcolor: '#ccc'
-                          background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
-                      }}>
-                        <SearchBar
-                          placeholder="태그 검색"
-                          onSearch={runMainSearch}
-                        />
-                        <CustomButton 
-                          text="<" 
-                          width="40px" 
-                          border="1px solid #757575"
-                          backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""}
-                          hoverStyle={currentIndex+1 <= 1 ?{}:{
-                            backgroundColor: "#ba7d1bff",
-                            border: "2px solid #373737ff",
-                          }} 
-                          radius={1} 
-                          onClick={findPrev} 
-                          disabled={currentIndex+1 <= 1} 
-                        />
-                        <CustomButton 
-                          text=">" 
-                          width="40px" 
-                          border="1px solid #757575"
-                          backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} 
-                          hoverStyle={(currentIndex+1 === searchResults.length || searchResults.length === 0)? {}:{
-                            backgroundColor: "#ba7d1bff",
-                            border: "2px solid #373737ff",
-                          }} 
-                          radius={1} 
-                          onClick={findNext} 
-                          disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} 
-                        />
-                        {searchResults.length > 0 ?
-                          <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
-                          : <></>
-                        }
+                      <Box sx={{background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',}}>
+                        <Box 
+                          sx={{ 
+                            display:'flex', 
+                            justifyContent: 'space-between',
+                            gap:2, 
+                            height: 60,
+                            pl:2, 
+                            alignItems: 'center',
+                            // bgcolor: '#ccc'
+                        }}>
+                          {/* 태그 페이지네이션 */}
+                          <Box sx={{display: 'flex', gap: 1, alignItems: 'center',}}>
+                            <SearchBar
+                              placeholder="태그 검색"
+                              onSearch={runMainSearch}
+                            />
+                            <CustomButton 
+                              text="<" 
+                              width="40px" 
+                              border="1px solid #757575"
+                              backgroundColor={currentIndex+1 <= 1 ?"#BABABA" : ""}
+                              hoverStyle={currentIndex+1 <= 1 ?{}:{
+                                backgroundColor: "#ba7d1bff",
+                                border: "2px solid #373737ff",
+                              }} 
+                              radius={1} 
+                              onClick={findPrev} 
+                              disabled={currentIndex+1 <= 1} 
+                            />
+                            <CustomButton 
+                              text=">" 
+                              width="40px" 
+                              border="1px solid #757575"
+                              backgroundColor={(currentIndex+1 === searchResults.length || searchResults.length === 0)? "#BABABA" : ""} 
+                              hoverStyle={(currentIndex+1 === searchResults.length || searchResults.length === 0)? {}:{
+                                backgroundColor: "#ba7d1bff",
+                                border: "2px solid #373737ff",
+                              }} 
+                              radius={1} 
+                              onClick={findNext} 
+                              disabled={currentIndex+1 === searchResults.length || searchResults.length === 0} 
+                            />
+                            {searchResults.length > 0 ?
+                              <Typography sx={{color: 'black'}}>{currentIndex+1} / {searchResults.length}</Typography>
+                              : <></>
+                            }
+                          </Box>
+                          {/* 영역 관련 버튼 */}
+                          <Box sx={{display: 'flex', gap:1, alignItems: 'center', pr: 2}}>
+                            <CustomButton
+                              text="영역탐색"
+                              radius={1}
+                              height="40px"
+                              onClick={() => {
+                                clearPreviewByTarget(selectTarget);
+                                setSelectMode("search");
+                                setSelectTarget("search");
+                              }}
+                              backgroundColor={selectMode === "search" ? "#1b5bbac4" : ""}
+                              color={selectMode === "search" ? "white" : "black"}
+                              hoverStyle={{
+                                backgroundColor: selectMode === "search" ? "#1b5bbaff" : "#ba7d1bff",
+                              }}
+                            />
+                            <CustomButton 
+                              text="영역확정"
+                              radius={1}
+                              height="40px"
+                              disabled={selectTarget === "search"}
+                              onClick={()=>confirmSelection()}
+                              hoverStyle={{
+                                backgroundColor: "#ba7d1bff",
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                        <Box sx={{ pl: 2, pb: 1 }}>
+                          {selectMode === "search" && (
+                            <Typography sx={{ color: "#1b5bbaff", fontWeight: "bold" }}>
+                              🔍 자유 탐색 중입니다 (클릭하면 미리보기만 표시됩니다)
+                            </Typography>
+                          )}
+
+                          {selectMode === "preview" && selectTarget && (
+                            <Typography sx={{ color: "#ba7d1bff", fontWeight: "bold" }}>
+                              ◎ 선택 대상: {String(transAreaText(selectTarget))} 미리보기 중
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
                       <Box 
                         sx={{
@@ -724,9 +874,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('listArea')}
+                                    backgroundColor={selectTarget === 'listArea' ? "#1b5bbac4" : ""}
+                                    color={selectTarget === 'listArea' ? "white" : "black"}
                                     hoverStyle={{
-                                      backgroundColor: "#ba7d1bff",
-                                      border: "2px solid #373737ff",
+                                      backgroundColor: selectTarget === 'listArea' ? "#1b5bbaff" : "#ba7d1bff",
                                     }}
                                 />
                             </InputAdornment>  
@@ -763,9 +914,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingArea')}
+                                    backgroundColor={selectTarget === 'pagingArea' ? "#1b5bbac4" : ""}
+                                    color={selectTarget === 'pagingArea' ? "white" : "black"}
                                     hoverStyle={{
-                                      backgroundColor: "#ba7d1bff",
-                                      border: "2px solid #373737ff",
+                                      backgroundColor: selectTarget === 'pagingArea' ? "#1b5bbaff" : "#ba7d1bff",
                                     }}
                                 />
                             </InputAdornment>  
@@ -786,9 +938,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('pagingNextbtn')}
+                                    backgroundColor={selectTarget === 'pagingNextbtn' ? "#1b5bbac4" : ""}
+                                    color={selectTarget === 'pagingNextbtn' ? "white" : "black"}
                                     hoverStyle={{
-                                      backgroundColor: "#ba7d1bff",
-                                      border: "2px solid #373737ff",
+                                      backgroundColor: selectTarget === 'pagingNextbtn' ? "#1b5bbaff" : "#ba7d1bff",
                                     }}
                                 />
                             </InputAdornment>  
@@ -834,9 +987,10 @@ export default React.memo(function Step2_Multi({
                                     radius={1}
                                     height="40px"
                                     onClick={()=>handleAreaSelect('linkArea')}
+                                    backgroundColor={selectTarget === 'linkArea' ? "#1b5bbac4" : ""}
+                                    color={selectTarget === 'linkArea' ? "white" : "black"}
                                     hoverStyle={{
-                                      backgroundColor: "#ba7d1bff",
-                                      border: "2px solid #373737ff",
+                                      backgroundColor: selectTarget === 'linkArea' ? "#1b5bbaff" : "#ba7d1bff",
                                     }}
                                 />
                             </InputAdornment>  
@@ -921,8 +1075,8 @@ export default React.memo(function Step2_Multi({
                                   key={idx}
                                   sx={{
                                     position: 'absolute',
-                                    border: `2px solid ${colors[idx % colors.length]}`,
-                                    backgroundColor: `${colors[idx % colors.length].replace("0.8", "0.25")}`, // 살짝 투명하게
+                                    border: pos.target === "search" ? `2px solid rgba(189, 189, 189, 0.8)` : `2px solid ${colors[getColorIndexByTarget(pos.target)]}`,
+                                    backgroundColor: pos.target === "search" ? `rgba(189, 189, 189, 0.25)` : `${colors[getColorIndexByTarget(pos.target)].replace("0.8", "0.25")}`, // 살짝 투명하게
                                     pointerEvents: 'none',
                                     top: pos.y * scaleY,
                                     left: pos.x * scaleX,
@@ -942,49 +1096,95 @@ export default React.memo(function Step2_Multi({
                         flexDirection: "column",
                         border: '1px solid black'
                       }}>
-                        <Box 
-                          sx={{ 
-                            display:'flex', 
-                            gap:2, 
-                            pl: 2,
-                            height: 60,
-                            alignItems: 'center',
-                            background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',
-                        }}>
-                          <SearchBar
-                            placeholder="태그 검색"
-                            onSearch={runDetailSearch}
-                          />
-                          <CustomButton 
-                            text="<" 
-                            width="40px" 
-                            border="1px solid #757575"
-                            backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} 
-                            hoverStyle={currentDetailIndex+1 <= 1 ?{}:{
-                              backgroundColor: "#ba7d1bff",
-                              border: "2px solid #373737ff",
-                            }} 
-                            radius={1} 
-                            onClick={findPrevDetail} 
-                            disabled={currentDetailIndex+1 <= 1} 
-                          />
-                          <CustomButton 
-                            text=">" 
-                            width="40px" 
-                            border="1px solid #757575"
-                            backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} 
-                            hoverStyle={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? {}:{
-                              backgroundColor: "#ba7d1bff",
-                              border: "2px solid #373737ff",
-                            }} 
-                            radius={1} 
-                            onClick={findNextDetail} 
-                            disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} 
-                          />
-                          {searchDetailResults.length > 0 ?
-                            <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
-                            : <></>
-                          }
+                        <Box sx={{background: 'linear-gradient(180deg, #EDECEC 0%, #DBD9DB 100%)',}}>
+                          <Box 
+                            sx={{ 
+                              display:'flex', 
+                              justifyContent: 'space-between',
+                              gap:2, 
+                              pl: 2,
+                              height: 60,
+                              alignItems: 'center',
+                          }}>
+                            {/* 태그 페이지네이션 */}
+                            <Box sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
+                              <SearchBar
+                                placeholder="태그 검색"
+                                onSearch={runDetailSearch}
+                              />
+                              <CustomButton 
+                                text="<" 
+                                width="40px" 
+                                border="1px solid #757575"
+                                backgroundColor={currentDetailIndex+1 <= 1? '#BABABA' : ""} 
+                                hoverStyle={currentDetailIndex+1 <= 1 ?{}:{
+                                  backgroundColor: "#ba7d1bff",
+                                  border: "2px solid #373737ff",
+                                }} 
+                                radius={1} 
+                                onClick={findPrevDetail} 
+                                disabled={currentDetailIndex+1 <= 1} 
+                              />
+                              <CustomButton 
+                                text=">" 
+                                width="40px" 
+                                border="1px solid #757575"
+                                backgroundColor={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? '#BABABA' : ""} 
+                                hoverStyle={(currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0)? {}:{
+                                  backgroundColor: "#ba7d1bff",
+                                  border: "2px solid #373737ff",
+                                }} 
+                                radius={1} 
+                                onClick={findNextDetail} 
+                                disabled={currentDetailIndex+1 === searchDetailResults.length || searchDetailResults.length === 0} 
+                              />
+                              {searchDetailResults.length > 0 ?
+                                <Typography sx={{color: 'black'}}>{currentDetailIndex+1} / {searchDetailResults.length}</Typography>
+                                : <></>
+                              }
+                            </Box>
+                            {/* 영역 관련 버튼 */}
+                            <Box sx={{display: 'flex', gap:1, alignItems: 'center', pr: 2}}>
+                              <CustomButton
+                                text="영역탐색"
+                                radius={1}
+                                height="40px"
+                                onClick={() => {
+                                  clearPreviewByTarget(selectTarget);
+                                  setSelectMode("search");
+                                  setSelectTarget("search");
+                                }}
+                                backgroundColor={selectMode === "search" ? "#1b5bbac4" : ""}
+                                color={selectMode === "search" ? "white" : "black"}
+                                hoverStyle={{
+                                  backgroundColor: selectMode === "search" ? "#1b5bbaff" : "#ba7d1bff",
+                                }}
+                              />
+                              <CustomButton 
+                                text="영역확정"
+                                radius={1}
+                                height="40px"
+                                disabled={selectTarget === "search"}
+                                onClick={()=>confirmSelection()}
+                                hoverStyle={{
+                                  backgroundColor: "#ba7d1bff",
+                                }}
+                              />
+                            </Box>
+                          </Box>
+                          <Box sx={{ pl: 2, pb: 1 }}>
+                            {selectMode === "search" && (
+                              <Typography sx={{ color: "#1b5bbaff", fontWeight: "bold" }}>
+                                🔍 자유 탐색 중입니다 (클릭하면 미리보기만 표시됩니다)
+                              </Typography>
+                            )}
+
+                            {selectMode === "detailPreview" && selectTarget !== null && (
+                              <Typography sx={{ color: "#ba7d1bff", fontWeight: "bold" }}>
+                                ◎ 선택 대상: {String(transAreaText(selectTarget))} 미리보기 중
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
                         <Box 
                           sx={{
