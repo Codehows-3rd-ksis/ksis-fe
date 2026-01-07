@@ -46,6 +46,8 @@ function CommonTable(props: CommonTableProps) {
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[3, 5, 10]}
         checkboxSelection={check || false}
+        disableColumnMenu
+        disableColumnSorting
         getRowClassName={(params) => {
           const classes = [];
 

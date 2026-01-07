@@ -57,6 +57,8 @@ export default function PaginationServerTable(props: CommonTableProps) {
           onRowSelectionChange?.(selectedIds);
         }}
         checkboxSelection={check || false}
+        disableColumnMenu
+        disableColumnSorting
         getRowClassName={(params) => {
           const classes = [];
 
