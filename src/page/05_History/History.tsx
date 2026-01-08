@@ -30,6 +30,7 @@ import { getHistory, getHistoryExport } from "../../API/05_HistoryApi";
 // Export
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import Papa from "papaparse";
 // Parse
 import { parseResultValueRows } from "../../utils/resultValueParser";
 
@@ -147,40 +148,21 @@ export default function History() {
     const jsonString = JSON.stringify(jsonData, null, 2);
     downloadFile(jsonString, filename + ".json", "application/json");
   };
-  //20260106 CSV 수정
-  const escapeCSV = (value: any) => {
-  if (value === null || value === undefined) return "";
-
-  const str = String(value);
-  const needQuote = /[|\n"]/g.test(str);
-
-  if (!needQuote) return str;
-
-  return `"${str.replace(/"/g, '""')}"`;
-};
 
   const exportCSV = (jsonData: any, filename: string) => {
-  const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
-  if (arr.length === 0) return;
+    const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
+    if (arr.length === 0) return;
 
-  // 컬럼 동적 생성
-  const columnSet = new Set<string>();
-  arr.forEach((row) =>
-    Object.keys(row).forEach((key) => columnSet.add(key))
-  );
-  const columns = Array.from(columnSet);
+    // papaparse를 사용하여 CSV 생성 (파이프 구분자)
+    const csv = Papa.unparse(arr, {
+      delimiter: ",",
+      header: true,
+      skipEmptyLines: true,
+    });
 
-  const headers = columns.join("|");
-
-  const rows = arr.map((row) =>
-    columns.map((col) => escapeCSV(row[col])).join("|")
-  );
-
-  const csv = headers + "\n" + rows.join("\n");
-
-  // BOM 포함 (한글 + 엑셀)
-  downloadFile("\uFEFF" + csv, filename + ".csv", "text/csv;charset=utf-8;");
-};
+    // BOM 포함 (한글 + 엑셀)
+    downloadFile("\uFEFF" + csv, filename + ".csv", "text/csv;charset=utf-8;");
+  };
   const exportExcel = (jsonData: any, filename: string) => {
     const arr = Array.isArray(jsonData) ? jsonData : [jsonData];
     const worksheet = XLSX.utils.json_to_sheet(arr);
