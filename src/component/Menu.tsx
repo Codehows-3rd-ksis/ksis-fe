@@ -158,19 +158,19 @@ function Menu() {
                     // borderLeft: '1px solid gray',
                     border: "1px solid rgba(86, 86, 86, 1)",
                     boxShadow: "1px 3px 0 1px rgba(0, 0, 0, 0.42)",
-                    backgroundColor: location.pathname.startsWith(item.path)
-                      ? "#EDA634"
-                      : "inherit",
+                    backgroundColor: "inherit",
                     color: location.pathname.startsWith(item.path)
-                      ? "black"
+                      ? "#EDA634"
                       : "white",
                     "&:hover": {
-                      backgroundColor: location.pathname.startsWith(item.path)
-                        ? "#eda634d3"
-                        : "#EDA634",
-                      color: location.pathname.startsWith(item.path)
-                        ? "black"
-                        : "white",
+                      backgroundColor: "rgba(237, 166, 52, 0.4)",
+                      color: "white",
+                      "& .MuiListItemIcon-root": {
+                        color: "white",
+                      },
+                      "& .MuiSvgIcon-root": {
+                        color: "white",
+                      },
                     },
                   }}
                 >
@@ -178,7 +178,7 @@ function Menu() {
                     sx={{
                       minWidth: 40,
                       color: location.pathname.startsWith(item.path)
-                        ? "black"
+                        ? "#EDA634"
                         : "white",
                     }}
                   >
@@ -220,26 +220,26 @@ function Menu() {
                 // borderLeft: '1px solid gray',
                 border: "1px solid rgba(86, 86, 86, 1)",
                 boxShadow: "1px 3px 0 1px rgba(0, 0, 0, 0.42)",
-                backgroundColor: location.pathname.startsWith(item.path)
-                  ? "#EDA634"
-                  : "inherit",
+                backgroundColor: "inherit",
                 color: location.pathname.startsWith(item.path)
-                  ? "black"
+                  ? "#EDA634"
                   : "white",
                 "&:hover": {
-                  backgroundColor: location.pathname.startsWith(item.path)
-                    ? "#eda634d3"
-                    : "#EDA634",
-                  color: location.pathname.startsWith(item.path)
-                    ? "black"
-                    : "white",
+                  backgroundColor: "rgba(237, 166, 52, 0.4)",
+                  color: "white",
+                  "& .MuiListItemIcon-root": {
+                    color: "white",
+                  },
+                  "& .MuiSvgIcon-root": {
+                    color: "white",
+                  },
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   color: location.pathname.startsWith(item.path)
-                    ? "black"
+                    ? "#EDA634"
                     : "white",
                 }}
               >
