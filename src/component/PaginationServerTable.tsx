@@ -112,6 +112,10 @@ export default function PaginationServerTable(props: CommonTableProps) {
           "& .even-row": {
             backgroundColor: "#FCF7F2",
           },
+          // 모든 행에 투명 border 추가 (hover 시 레이아웃 변화 방지)
+          "& .MuiDataGrid-row": {
+            borderLeft: "3px solid transparent",
+          },
           // 마우스오버 색변경
           "& .MuiDataGrid-row:hover": {
             // backgroundColor: '#FFEFD6 !important',
@@ -129,7 +133,7 @@ export default function PaginationServerTable(props: CommonTableProps) {
           // 선택된 행 색 변경
           "& .MuiDataGrid-row.Mui-selected": {
             backgroundColor: "#FFD699 !important",
-            borderLeft: "4px solid #F5A623",
+            borderLeft: "3px solid #F5A623",
             "&:hover": {
               backgroundColor: "#FFC266 !important",
             },
