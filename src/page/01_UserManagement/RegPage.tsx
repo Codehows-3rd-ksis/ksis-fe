@@ -166,7 +166,7 @@ export default function RegPage(props: RegPageProps) {
     <Box
       sx={{
         width: "600px",
-        height: "55vh",
+        height: "700px",
         backgroundColor: "white",
         display: "flex",
         flexDirection: "column",
@@ -175,7 +175,7 @@ export default function RegPage(props: RegPageProps) {
     >
       <Box
         sx={{
-          bgcolor: "#FFC98B",
+          background: "linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)",
           display: "flex",
           justifyContent: "space-between",
         }}
@@ -186,13 +186,15 @@ export default function RegPage(props: RegPageProps) {
             fontWeight: "bold",
             marginLeft: "20px",
             padding: 2,
+            color: "white",
           }}
         >
-          사용자 등록
+          유저 등록
         </Typography>
         <CustomIconButton
           icon="close"
-          backgroundColor="#FFC98B"
+          backgroundColor="transparent"
+          color="white"
           onClick={() => setOpenCancelAlert(true)}
         />
       </Box>
