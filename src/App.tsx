@@ -72,7 +72,7 @@ function App() {
     return (
       <Box
         sx={{
-          width: "100vw",
+          width: "100%",
           height: "100vh",
           display: "flex",
           justifyContent: "center",
@@ -87,7 +87,7 @@ function App() {
   return (
     <Box
       sx={{
-        width: "100vw",
+        width: "100%",
         height: "100vh", // 여기에만 100vh
         display: "flex",
         // backgroundColor: '#FEF4EA',
@@ -96,7 +96,7 @@ function App() {
         p: 1,
         gap: 1,
         boxSizing: "border-box",
-        // overflow: 'hidden',
+        overflow: 'hidden',
       }}
     >
       {shouldHideLayout ? (
@@ -113,7 +113,7 @@ function App() {
         <>
           <Box
             sx={{
-              width: "14.5vw",
+              width: "15.5%",
               minWidth: "260px",
               display: "flex",
               flexDirection: "column",
@@ -127,7 +127,7 @@ function App() {
               </ProtectedRoute>
             </Side>
           </Box>
-          <Box sx={{ width: "84.5vw" }}>
+          <Box sx={{ width: "84.5%" }}>
             <Content>
               <Routes>
                 <Route

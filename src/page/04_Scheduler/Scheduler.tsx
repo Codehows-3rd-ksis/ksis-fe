@@ -154,7 +154,6 @@ export default function Scheduler() {
         display: "flex",
         flexDirection: "column",
         pb: 4,
-        backgroundColor: "#F8FAFC", // 배경색을 아주 살짝 깔아주면 카드가 더 돋보입니다
       }}
     >
       {/* 1. 헤더 섹션: 타이틀과 버튼을 한 행(Row)에 배치 */}
