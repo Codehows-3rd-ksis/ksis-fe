@@ -55,7 +55,9 @@ export interface SettingTableColumnHandlers {
 }
 
 // 선택용 컬럼 (스케줄러 등록/수정 페이지에서 사용)
-export const getSettingSelectColumns = (): GridColDef[] => [
+export const getSettingSelectColumns = (
+  handleDetailOpen?: (row: SettingTableRows) => void
+): GridColDef[] => [
   {
     field: "id",
     headerName: "ID",
@@ -69,6 +71,31 @@ export const getSettingSelectColumns = (): GridColDef[] => [
     flex: 2,
     headerAlign: "center",
     align: "center",
+    renderCell: handleDetailOpen
+      ? (params) => (
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              color: "black",
+              textDecoration: "underline",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+              fontWeight: "bold",
+              fontSize: 16,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDetailOpen(params.row);
+            }}
+          >
+            {params.value}
+          </Typography>
+        )
+      : undefined,
   },
   {
     field: "url",

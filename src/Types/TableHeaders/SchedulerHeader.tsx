@@ -32,13 +32,6 @@ export const getColumns = ({
   handleDeleteOpen,
 }: SchedulerTableColumnHandlers): GridColDef[] => [
   {
-    field: "settingName",
-    headerName: "데이터 수집명",
-    flex: 1.5,
-    headerAlign: "center",
-    align: "center",
-  },
-  {
     field: "period",
     headerName: "기간",
     flex: 1.5,
@@ -109,7 +102,13 @@ export const getColumns = ({
     headerAlign: "center",
     align: "center",
   },
-
+  {
+    field: "settingName",
+    headerName: "데이터 수집명",
+    flex: 1.5,
+    headerAlign: "center",
+    align: "center",
+  },
   {
     field: "edit",
     headerName: "수정",

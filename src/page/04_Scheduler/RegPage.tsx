@@ -8,6 +8,7 @@ import {
   Autocomplete,
   TextField,
   Paper,
+  Dialog,
 } from "@mui/material";
 
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -41,6 +42,7 @@ import {
 import SearchBarSet from "../../component/SearchBarSet";
 import type { SearchConditions } from "../../component/SearchBarSet";
 import { getSettingSearchCategory } from "../../Types/Search";
+import DetailPage from "../02_Setting/DetailPage";
 
 export default function RegPage() {
   const navigate = useNavigate();
@@ -48,6 +50,9 @@ export default function RegPage() {
   const [openCloseAlert, setOpenCloseAlert] = useState(false);
   const [openRegAlert, setOpenRegAlert] = useState(false);
   const [openRegDoneAlert, setOpenRegDoneAlert] = useState(false);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<SettingTableRows | null>(null);
 
   const [settingId, setSettingId] = useState<number | "">("");
   const [startDate, setStartDate] = useState("");
@@ -111,8 +116,14 @@ export default function RegPage() {
     setSearchState((prev) => ({ ...prev, page: newPage }));
   };
 
+  // 상세 페이지 열기
+  const handleDetailOpen = (row: SettingTableRows) => {
+    setSelectedRow(row);
+    setDetailOpen(true);
+  };
+
   // 데이터 설정 테이블 컬럼 정의 (ID 컬럼 제외)
-  const settingColumns = getSettingSelectColumns().filter(
+  const settingColumns = getSettingSelectColumns(handleDetailOpen).filter(
     (col) => col.field !== "id"
   );
 
@@ -588,6 +599,28 @@ export default function RegPage() {
           navigate("/scheduler");
         }}
       />
+
+      {/* 상세 페이지 */}
+      <Dialog
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        maxWidth={false}
+        disableEnforceFocus
+        disableRestoreFocus
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '1200px',
+            maxWidth: '75vw',
+            maxHeight: '70vh',
+            overflow: 'auto'
+          }
+        }}
+      >
+        <DetailPage
+          row={selectedRow}
+          handleCancel={() => setDetailOpen(false)}
+        />
+      </Dialog>
     </Box>
   );
 }
