@@ -60,7 +60,6 @@ function StatusDetail() {
   const collectCount = currentProgress?.collectCount ?? 0;
   const failCount = currentProgress?.failCount ?? 0;
   const expectEndAt = currentProgress?.expectEndAt ?? "계산 중...";
-  // const progress = currentProgress?.progress ?? 0;
 
   // Alert
   const [alertOpen, setAlertOpen] = useState(false);
@@ -138,9 +137,9 @@ function StatusDetail() {
         type: "COLLECT_UPDATE",
         workId,
         data: {
-          ...data.progress, // totalCount, collectCount, failCount, expectEndAt
+          ...data.progressInfo, // totalCount, collectCount, failCount, expectEndAt
           state: data.basicInfo.state, // API 응답의 최신 state 사용
-          progress: data.basicInfo.progress, // API 응답의 진행률 사용
+          progressRate: data.basicInfo.progressRate, // API 응답의 진행률 사용
         },
       });
     } catch (error) {
@@ -357,7 +356,7 @@ function StatusDetail() {
                 ? [
                     {
                       ...detailData,
-                      progress: currentProgress?.progress ?? 0,
+                      progressRate: currentProgress?.progressRate ?? 0,
                       state: currentProgress?.state ?? detailData.state,
                       failCount: currentProgress?.failCount ?? 0,
                     },

@@ -32,7 +32,7 @@ function Status() {
   // UI State
   const [alertOpen, setAlertOpen] = useState(false);
   const [openErrorAlert, setOpenErrorAlert] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("")
+  const [errorMsg, setErrorMsg] = useState("");
   const [alertStopResultOpen, setAlertStopResultOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<StatusTableRows | null>(null);
 
@@ -87,7 +87,7 @@ function Status() {
     setSelectedRow(null);
   };
 
-  const columns = getColumns({ handleDetailOpen, handleStopClick });
+  const columns = getColumns({ handleStopClick });
 
   useEffect(() => {
     //데이터 로딩 확인
@@ -106,20 +106,19 @@ function Status() {
 
     //데이터 병합 [ 목록데이터(baseRows) + Websocket(progressInfo) ]
     setDisplayRows([
-      ...baseRows
-      .map((row) => {
+      ...baseRows.map((row) => {
         const progressInfo = progressMap.get(row.workId);
         if (!progressInfo) return row; // 없으면 API원본 그대로
 
-        //progressInfo 있으면 업데이트
+        //웹소켓 데이터 progressInfo 있으면 업데이트
         return {
           ...row,
-          progress: progressInfo.progress,
+          progressRate: progressInfo.progressRate,
           state: progressInfo.state,
         };
       }),
     ]);
-    
+
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseRows, progressMap]);
 
@@ -148,37 +147,14 @@ function Status() {
 
         handleCrawlingProgress({
           workId: crawlingMessage.workId,
-          data: { progress: crawlingMessage.progress },
+          data: { progressRate: crawlingMessage.progress },
         } as CrawlingMessage);
-
-        // setBaseRows((prevRows) => {
-        //   const exists = prevRows.some(
-        //     (row) => row.workId === crawlingMessage.workId
-        //   );
-        //   if (!exists) {
-        //     console.log(
-        //       `[Status] 신규 작업 감지 (ID: ${crawlingMessage.workId}) -> 목록 갱신 요청`
-        //     );
-        //     fetchStatusList();
-        //   }
-
-        //   baseRows.map((row) => {
-        //     const progressInfo = progressMap.get(row.workId);
-        //     if (!progressInfo) return row;
-
-        //     //workid 있으면 progressInfo 업데이트
-        //     return {
-        //       ...row,
-        //       progress: progressInfo.progress,
-        //       state: progressInfo.state,
-        //     };
-        //   });
-        //   return prevRows;
-        // });
 
         setBaseRows((prev) => {
           // 신규 작업만 감지해서 목록 갱신
-          const exists = prev.some(row => row.workId === crawlingMessage.workId);
+          const exists = prev.some(
+            (row) => row.workId === crawlingMessage.workId
+          );
           if (!exists) fetchStatusList();
           return prev;
         });
@@ -237,7 +213,11 @@ function Status() {
           }}
         >
           <Box sx={{ p: 1 }}>
-            <CommonTable columns={columns} rows={displayRows} />
+            <CommonTable
+              columns={columns}
+              rows={displayRows}
+              onRowClick={(params) => handleDetailOpen(params.row)}
+            />
           </Box>
         </Paper>
       </Container>

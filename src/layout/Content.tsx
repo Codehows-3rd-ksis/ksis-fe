@@ -5,12 +5,13 @@ function Content({ children }: LayoutProps) {
   return (
     <Box
       sx={{
-        backgroundColor: "#fafaf9",
+        // backgroundColor: "#fafaf9",
+        backgroundColor: "#F8FAFC",
         height: "100%",
         minHeight: 0,
         borderRadius: 3,
         boxSizing: "border-box",
-        border: "3px solid rgba(86, 86, 86, 1)",
+        border: "1px solid rgba(86, 86, 86, 1)",
       }}
     >
       {children}

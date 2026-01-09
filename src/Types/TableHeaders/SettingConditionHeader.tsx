@@ -22,6 +22,7 @@ export interface ConditionTableColumnHandlers {
   handleAreaSelect: (rowId: number) => void;
   handleSelectChange: (row: ConditionTableRows, value: string) => void;
   handleCancel: (id: number) => void;
+  selectTarget: number | null;
 }
 
 // 편집 모드 input 컴포넌트
@@ -55,7 +56,8 @@ function EditConditionsKey(props: GridRenderEditCellParams) {
 export const getColumns = ({
   handleAreaSelect,
   handleSelectChange,
-  handleCancel
+  handleCancel,
+  selectTarget
 }: ConditionTableColumnHandlers): GridColDef[] => {
   return [
     { field: 'conditionsValue', headerName: '추출영역', flex:2,
@@ -67,10 +69,10 @@ export const getColumns = ({
                 text="영역선택"
                 onClick={()=>handleAreaSelect(params.row.id)} 
                 radius={2}
-                border="1px solid #757575"
+                backgroundColor={selectTarget === params.row.id ? "#1b5bbac4" : ""}
+                color={selectTarget === params.row.id ? "white" : "black"}
                 hoverStyle={{
-                  backgroundColor: "#ba7d1bff",
-                  border: "2px solid #373737ff",
+                  backgroundColor: selectTarget === params.row.id ? "#1b5bbaff" : "#ba7d1bff",
                 }}
               />
               {params.value}

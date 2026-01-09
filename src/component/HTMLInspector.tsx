@@ -30,6 +30,21 @@ const colors = [
   "rgba(244, 143, 177, 0.8)",
 ];
 
+const getColorIndexByTarget = (target: string | number) => {
+  // 조건 테이블 rowId
+  if (!isNaN(Number(target))) {
+    return Number(target) % colors.length;
+  }
+
+  if (typeof target === "string") {
+    const order = ["listArea", "pagingArea", "pagingNextbtn", "linkArea"];
+    const idx = order.indexOf(target);
+    return idx >= 0 ? idx : 0;
+  }
+  
+  return 0;
+};
+
 const DomNode: React.FC<DomNodeProps> = React.memo(
   ({ 
     node, 
@@ -46,16 +61,26 @@ const DomNode: React.FC<DomNodeProps> = React.memo(
         registerDomRef(node, divRef.current); 
       }
     }, [node]);
-    const entries = Object.entries(highlightNodes);
-
     let isHighlighted = false;
     let highlightColor = "transparent";
-
-    for (let i = 0; i < entries.length; i++) {
-      const [, el] = entries[i];
+    
+    // const entries = Object.entries(highlightNodes);
+    // for (let i = 0; i < entries.length; i++) {
+    //   const [, el] = entries[i];
+    //   if (el?.isSameNode(node)) {
+    //     isHighlighted = true;
+    //     highlightColor = colors[i % colors.length];
+    //     break;
+    //   }
+    // }
+    for (const [target, el] of Object.entries(highlightNodes)) {
       if (el?.isSameNode(node)) {
+        if (target === "search") {
+          highlightColor = "rgba(189, 189, 189, 0.8)"; // 회색
+        } else {
+          highlightColor = colors[getColorIndexByTarget(target)];
+        }
         isHighlighted = true;
-        highlightColor = colors[i % colors.length];
         break;
       }
     }

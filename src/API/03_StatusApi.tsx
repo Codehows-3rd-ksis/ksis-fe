@@ -20,7 +20,7 @@ export interface StatusTableRows {
   startAt?: string; // 수집시작
   endAt?: string; // 수집완료
   state?: string; // 진행 상태
-  progress?: number; // 진행도
+  progressRate?: number; // 진행도 (API 원본)
 }
 
 // 상세 조회 백엔드 응답 타입
@@ -39,7 +39,7 @@ export interface StatusDetailResponse {
     }>;
   };
 
-  progress: {
+  progressInfo: {
     totalCount: number;
     collectCount: number;
     failCount: number;
