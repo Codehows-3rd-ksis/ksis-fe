@@ -331,8 +331,16 @@ function Setting() {
         maxWidth={false}
         disableEnforceFocus
         disableRestoreFocus
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '1200px',
+            maxWidth: '75vw',
+            maxHeight: '70vh',
+            overflow: 'auto'
+          }
+        }}
       >
-        <DetailPage 
+        <DetailPage
           row={selectedRow}
           handleCancel={()=>setDetailOpen(false)}
         />
