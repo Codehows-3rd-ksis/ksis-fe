@@ -46,6 +46,8 @@ function CommonTable(props: CommonTableProps) {
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[3, 5, 10]}
         checkboxSelection={check || false}
+        disableColumnMenu
+        disableColumnSorting
         getRowClassName={(params) => {
           const classes = [];
 
@@ -98,6 +100,10 @@ function CommonTable(props: CommonTableProps) {
           // 짝수행 색변경
           "& .even-row": {
             backgroundColor: "#FCF7F2",
+          },
+          // 모든 행에 투명 border 추가 (hover 시 레이아웃 변화 방지)
+          "& .MuiDataGrid-row": {
+            borderLeft: "3px solid transparent",
           },
           // 마우스오버 색변경
           // '& .MuiDataGrid-row:hover': {

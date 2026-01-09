@@ -1,6 +1,6 @@
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
-import { Link } from "@mui/material"
+import { Link, Typography } from "@mui/material";
 
 export interface SettingTableRows {
   id: number;
@@ -48,13 +48,16 @@ const userAgentList = [
 
 // 외부에서 받을 핸들러들을 타입으로 정의
 export interface SettingTableColumnHandlers {
+  handleDetailOpen: (row: SettingTableRows) => void;
   handleEditOpen: (row: SettingTableRows) => void;
   handleDeleteOpen: (row: SettingTableRows) => void;
   handleRunCrawl: (row: SettingTableRows) => void;
 }
 
 // 선택용 컬럼 (스케줄러 등록/수정 페이지에서 사용)
-export const getSettingSelectColumns = (): GridColDef[] => [
+export const getSettingSelectColumns = (
+  handleDetailOpen?: (row: SettingTableRows) => void
+): GridColDef[] => [
   {
     field: "id",
     headerName: "ID",
@@ -67,7 +70,32 @@ export const getSettingSelectColumns = (): GridColDef[] => [
     headerName: "데이터수집명",
     flex: 2,
     headerAlign: "center",
-    align: "left",
+    align: "center",
+    renderCell: handleDetailOpen
+      ? (params) => (
+          <Typography
+            variant="body2"
+            sx={{
+              cursor: "pointer",
+              color: "black",
+              textDecoration: "underline",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+              fontWeight: "bold",
+              fontSize: 16,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDetailOpen(params.row);
+            }}
+          >
+            {params.value}
+          </Typography>
+        )
+      : undefined,
   },
   {
     field: "url",
@@ -110,6 +138,7 @@ export const getSettingSelectColumns = (): GridColDef[] => [
 
 // 핸들러를 주입받아 columns를 반환하는 함수
 export const getColumns = ({
+  handleDetailOpen,
   handleEditOpen,
   handleDeleteOpen,
   handleRunCrawl,
@@ -119,7 +148,27 @@ export const getColumns = ({
     headerName: "데이터수집명",
     flex: 1,
     headerAlign: "center",
-    align: "left",
+    align: "center",
+    renderCell: (params) => (
+      <Typography
+        variant="body2"
+        sx={{
+          cursor: "pointer",
+          color: "black",
+          textDecoration: "underline",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          width: "100%",
+          fontWeight: "bold",
+          fontSize: 16,
+        }}
+        onClick={() => handleDetailOpen(params.row)}
+      >
+        {params.value}
+      </Typography>
+    ),
   },
   {
     field: "url",
@@ -129,7 +178,7 @@ export const getColumns = ({
     align: "left",
     renderCell: (params) => {
       const url = params.value as string;
-      
+
       return (
         <Link
           href={url}
@@ -165,8 +214,8 @@ export const getColumns = ({
     headerAlign: "center",
     align: "center",
     renderCell: (params) => {
-        return params.value + ' 초'
-    }
+      return params.value + " 초";
+    },
   },
   {
     field: "edit",

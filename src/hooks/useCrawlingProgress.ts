@@ -5,7 +5,7 @@ import { type CrawlingMessage } from "../Types/WebSocket";
 Status, StatusDetal에서 Websocket progress 사용 */
 
 export interface CrawlingProgress {
-  progress: number;
+  progressRate: number; // 진행률 (0~100)
   state?: string;
   totalCount?: number;
   collectCount?: number;
@@ -28,7 +28,7 @@ const useCrawlingProgress = () => {
 
       // 업데이트 전의 현재 진행 상태 (없으면 기본값 사용)
       const currentProgress = newMap.get(workId) || {
-        progress: 0,
+        progressRate: 0,
         state: "대기중",
         totalCount: 0,
         collectCount: 0,

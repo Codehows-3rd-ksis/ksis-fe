@@ -1,7 +1,12 @@
 import { Box, Typography } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
 import CustomIconButton from "../../component/CustomIconButton";
-import { PlayCircleOutline, HighlightOff, ErrorOutline, CheckCircleOutline  } from "@mui/icons-material";
+import {
+  PlayCircleOutline,
+  HighlightOff,
+  ErrorOutline,
+  CheckCircleOutline,
+} from "@mui/icons-material";
 import dayjs from "dayjs";
 
 export interface HistoryTableRows {
@@ -48,7 +53,7 @@ export const getColumns = ({
     headerName: "데이터 수집명",
     flex: 1.5,
     headerAlign: "center",
-    align: "left",
+    align: "center",
     renderCell: (params) => (
       <Typography
         variant="body2"
@@ -58,7 +63,7 @@ export const getColumns = ({
           textDecoration: "underline",
           display: "flex",
           alignItems: "center",
-          // justifyContent: "center",
+          justifyContent: "center",
           height: "100%",
           width: "100%",
           fontWeight: "bold",
@@ -78,35 +83,36 @@ export const getColumns = ({
     align: "center",
     renderCell: (params) => {
       if (params.value === "SUCCESS") {
-          return (
-            <Box
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                width: "100%",
-              }}
-            >
-              <Typography sx={{ 
-                color: 'black',
+                color: "black",
                 borderRadius: 2,
-                bgcolor: '#A5D6A7',
+                bgcolor: "#A5D6A7",
                 pl: 1,
                 pr: 2,
                 pt: 0.5,
                 pb: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}> 
-                <CheckCircleOutline sx={{fontSize:15}}/>
-                수집완료
-              </Typography>
-            </Box>
-          )
-      }
-      else if (params.value === "FAILED") {
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <CheckCircleOutline sx={{ fontSize: 15 }} />
+              수집완료
+            </Typography>
+          </Box>
+        );
+      } else if (params.value === "FAILED") {
         return (
           <Box
             sx={{
@@ -117,25 +123,26 @@ export const getColumns = ({
               width: "100%",
             }}
           >
-            <Typography sx={{ 
-              color: 'black',
-              borderRadius: 3,
-              bgcolor: '#EF9A9A',
-              pl: 1,
-              pr: 2,
-              pt: 0.5,
-              pb: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}> 
-            <HighlightOff sx={{fontSize:15}}/>
-             수집실패
+            <Typography
+              sx={{
+                color: "black",
+                borderRadius: 3,
+                bgcolor: "#EF9A9A",
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <HighlightOff sx={{ fontSize: 15 }} />
+              수집실패
             </Typography>
           </Box>
-        )
-      }
-      else if (params.value === "STOPPED") {
+        );
+      } else if (params.value === "STOPPED") {
         return (
           <Box
             sx={{
@@ -146,83 +153,90 @@ export const getColumns = ({
               width: "100%",
             }}
           >
-            <Typography sx={{ 
-              color: 'black',
-              borderRadius: 3,
-              bgcolor: '#E0E0E0',
-              pl: 1,
-              pr: 2,
-              pt: 0.5,
-              pb: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}> 
-            <HighlightOff sx={{fontSize:15}}/>
-             수집중지
+            <Typography
+              sx={{
+                color: "black",
+                borderRadius: 3,
+                bgcolor: "#E0E0E0",
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <HighlightOff sx={{ fontSize: 15 }} />
+              수집중지
             </Typography>
           </Box>
-        )
-      }
-      else if (params.value === "PARTIAL") {
+        );
+      } else if (params.value === "PARTIAL") {
         const failCount = params.row.failCount || 0;
         return (
           <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                width: "100%",
-              }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
           >
-              <Typography sx={{ 
-                color: 'black',
+            <Typography
+              sx={{
+                color: "black",
                 borderRadius: 3,
-                bgcolor: '#FFCC80',
+                bgcolor: "#FFCC80",
                 pl: 1,
                 pr: 2,
                 pt: 0.5,
                 pb: 0.5,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}> 
-              <ErrorOutline sx={{fontSize:15}}/>
-               {'부분완료 (실패:'}
-               <Typography component="span" sx={{color: 'red'}}>{failCount}</Typography>
-               {'건)'}
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <ErrorOutline sx={{ fontSize: 15 }} />
+              {"부분완료 (실패:"}
+              <Typography component="span" sx={{ color: "red" }}>
+                {failCount}
               </Typography>
+              {"건)"}
+            </Typography>
           </Box>
         );
-      }
-      else return (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            width: "100%",
-          }}
-        >
-          <Typography sx={{ 
-              color: 'black',
-              borderRadius: 3,
-              bgcolor: '#90CAF9',
-              pl: 1,
-              pr: 2,
-              pt: 0.5,
-              pb: 0.5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-          }}> 
-            <PlayCircleOutline sx={{fontSize:15}}/>
-             진행중
+      } else
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "black",
+                borderRadius: 3,
+                bgcolor: "#90CAF9",
+                pl: 1,
+                pr: 2,
+                pt: 0.5,
+                pb: 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <PlayCircleOutline sx={{ fontSize: 15 }} />
+              진행중
             </Typography>
-        </Box>
-      )
+          </Box>
+        );
     },
   },
   {

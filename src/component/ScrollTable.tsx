@@ -71,6 +71,8 @@ function ScrollTable(props: ScrollTableProps & {
             }}
 
             checkboxSelection={check || false}
+            disableColumnMenu
+            disableColumnSorting
 
             // 편집 모드 설정
             editMode="cell" // 또는 "row"
