@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 // Mui
-import { Box, Typography, Button, Container, Paper, Dialog } from "@mui/material";
+import { Box, Typography, Button, Container, Paper } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 // Table
 import PaginationServerTable from "../../component/PaginationServerTable";
@@ -18,8 +18,6 @@ import Alert from "../../component/Alert";
 import LoadingProgress from "../../component/LoadingProgress";
 // API
 import { getSetting, deleteSetting, runCrawl } from "../../API/02_SettingApi";
-// Detail
-import DetailPage from "./DetailPage"
 
 function Setting() {
   const navigate = useNavigate();
@@ -35,8 +33,6 @@ function Setting() {
   const [totalCount, setTotalCount] = useState(0);
   const [baseRows, setBaseRows] = useState<SettingTableRows[]>([]);
   const [selectedRow, setSelectedRow] = useState<SettingTableRows | null>(null);
-
-  const [detailOpen, setDetailOpen] = useState(false)
 
   // Alert
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
@@ -100,11 +96,6 @@ function Setting() {
   const handleOpenReg = () => {
     navigate("/setting/reg");
   };
-  /**  퀵 상세/검토 페이지 확인  */
-  const handleDetailOpen = (row: SettingTableRows) => {
-    setSelectedRow(row)
-    setDetailOpen(true)
-  }
   /**  수정 페이지  =========================================== */
   const handleEditOpen = (row: SettingTableRows) => {
     navigate("/setting/edit", { state: { row } });
@@ -141,7 +132,6 @@ function Setting() {
     }
   };
   const columns = getColumns({
-    handleDetailOpen,
     handleEditOpen,
     handleDeleteOpen,
     handleRunCrawl,
@@ -324,19 +314,6 @@ function Setting() {
         }}
       />
       <LoadingProgress open={loading} />
-      {/* 상세 페이지 */}
-      <Dialog
-        open={detailOpen}
-        onClose={()=>setDetailOpen(false)}
-        maxWidth={false}
-        disableEnforceFocus
-        disableRestoreFocus
-      >
-        <DetailPage 
-          row={selectedRow}
-          handleCancel={()=>setDetailOpen(false)}
-        />
-      </Dialog>
     </Box>
   );
 }
