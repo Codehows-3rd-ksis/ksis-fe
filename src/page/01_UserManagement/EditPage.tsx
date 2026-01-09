@@ -107,15 +107,15 @@ export default function EditPage(props: EditPageProps) {
     return (
         <Box sx={{
             width: '600px',
-            height: '500px',
+            height: '65vh',
             backgroundColor: 'white',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between'
         }}>
-            <Box sx={{background: "linear-gradient(90deg, #202021ff 0%, #4B4B4F 100%)", display: 'flex', justifyContent: 'space-between'}}>
-                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px', color: 'white'}}>유저 정보 수정</Typography>
-                <CustomIconButton icon="close" backgroundColor='transparent' color="white" onClick={()=>setOpenCancelAlert(true)}/>
+            <Box sx={{bgcolor: '#FFC98B', display: 'flex', justifyContent: 'space-between'}}>
+                <Typography sx={{fontSize: 48, fontWeight: 'bold', marginLeft: '20px'}}>사용자 정보 수정</Typography>
+                <CustomIconButton icon="close" backgroundColor='#FFC98B' onClick={()=>setOpenCancelAlert(true)}/>
             </Box>
             <Box sx={{
                 border: '2px solid #abababff',
