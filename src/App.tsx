@@ -72,7 +72,7 @@ function App() {
     return (
       <Box
         sx={{
-          width: "100%",
+          width: "100vw",
           height: "100vh",
           display: "flex",
           justifyContent: "center",
@@ -87,7 +87,7 @@ function App() {
   return (
     <Box
       sx={{
-        width: "100%",
+        width: "100vw",
         height: "100vh", // 여기에만 100vh
         display: "flex",
         // backgroundColor: '#FEF4EA',
