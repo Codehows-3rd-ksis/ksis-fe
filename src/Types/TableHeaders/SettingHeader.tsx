@@ -73,27 +73,32 @@ export const getSettingSelectColumns = (
     align: "center",
     renderCell: handleDetailOpen
       ? (params) => (
-          <Typography
-            variant="body2"
-            sx={{
-              cursor: "pointer",
-              color: "black",
-              textDecoration: "underline",
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
               width: "100%",
-              fontWeight: "bold",
-              fontSize: 16,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDetailOpen(params.row);
             }}
           >
-            {params.value}
-          </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                cursor: "pointer",
+                color: "black",
+                textDecoration: "underline",
+                fontWeight: "bold",
+                fontSize: 16,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDetailOpen(params.row);
+              }}
+            >
+              {params.value}
+            </Typography>
+          </div>
         )
       : undefined,
   },
